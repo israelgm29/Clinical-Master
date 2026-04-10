@@ -1,0 +1,241 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/template.xhtml">
+
+    <ui:define name="titulo">Catálogo - Exámenes</ui:define>
+
+    <ui:define name="contenido">
+
+        <style>
+            .exam-grid {
+                display: grid;
+                grid-template-columns: 280px 1fr;
+                gap: 1rem;
+            }
+
+            @media (max-width: 768px) {
+                .exam-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+        <h:form id="form">
+            <p:growl id="messages" showDetail="true" />
+
+            <!-- Header -->
+            <div class="flex-between mb-4">
+                <div>
+                    <h2 class="text-primary font-bold m-0">Catálogo de Exámenes</h2>
+                    <div class="text-muted" style="font-size: 14px;">
+                        Seleccione un tipo para ver sus exámenes
+                    </div>
+                </div>
+            </div>
+
+            <!-- MASTER-DETAIL LAYOUT -->
+            <div class="exam-grid">
+
+                <!-- 🎯 PANEL IZQUIERDO: Tipos de Examen -->
+                <div class="col-12 md:col-3 lg:col-3">
+                    <div class="card shadow-sm h-full">
+                        <div class="flex align-items-center gap-2 mb-3 p-3 surface-ground border-round">
+                            <i class="pi pi-folder-open text-primary text-xl"></i>
+                            <span class="font-bold text-primary">Tipos de Examen</span>
+                        </div>
+
+                        
+                        <p:selectOneButton value="#{examController.filterExamtypeId}" 
+                                           styleClass="examtype-button-list"
+                                           unselectable="false">
+                            <f:selectItems value="#{examController.examtypes}" 
+                                           var="et" 
+                                           itemLabel="#{et.name} (#{et.examCollection.size()})" 
+                                           itemValue="#{et.id}"/>
+                            <p:ajax event="change" 
+                                    listener="#{examController.onExamtypeChange}" 
+                                    update=":form:panel-exams :form:header-exams"/>
+                        </p:selectOneButton>
+                    </div>
+                </div>
+
+                <!-- 🔬 PANEL DERECHO: Exámenes -->
+                <div class="col-12 md:col-9 lg:col-9">
+                    <div class="card shadow-sm h-full">
+
+                        <p:outputPanel id="header-exams">
+                            <div class="flex-between align-items-center mb-4 p-3 surface-ground border-round">
+                                <div class="flex align-items-center gap-2">
+                                    <i class="pi pi-file-edit text-accent text-xl"></i>
+                                    <div>
+                                        <span class="font-bold text-primary text-lg">
+                                            #{examController.filterExamtypeId != null 
+                                              ? examController.selectedExamtypeName 
+                                              : 'Seleccione un tipo'}
+                                        </span>
+                                        <div class="text-sm text-muted" style="font-size: 12px;">
+                                            #{examController.filteredItems.size()} exámenes registrados
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p:commandButton value="Nuevo Examen" 
+                                                 icon="pi pi-plus" 
+                                                 actionListener="#{examController.prepareCreate}"
+                                                 disabled="#{examController.filterExamtypeId == null}"
+                                                 update=":dialogs:manage-exam-content" 
+                                                 oncomplete="PF('manageExamDialog').show()"
+                                                 styleClass="ui-button-success">
+                                    <f:setPropertyActionListener value="#{examController.selectedExamtype}" 
+                                                                 target="#{examController.selected.examtypeid}" />
+                                </p:commandButton>
+                            </div>
+                        </p:outputPanel>
+
+                        <p:outputPanel id="panel-exams">
+                            <!-- Estados vacíos -->
+                            <h:panelGroup rendered="#{examController.filterExamtypeId == null}">
+                                <div class="text-center p-6 text-muted">
+                                    <i class="pi pi-arrow-left text-4xl mb-3 text-primary"></i>
+                                    <h4>Seleccione un tipo de examen</h4>
+                                    <p>Haga clic en un tipo de la lista izquierda</p>
+                                </div>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{examController.filterExamtypeId != null and empty examController.filteredItems}">
+                                <div class="text-center p-6 text-muted">
+                                    <i class="pi pi-inbox text-4xl mb-3"></i>
+                                    <h4>No hay exámenes en esta categoría</h4>
+                                    <p class="mb-3">Cree el primer examen para este tipo</p>
+                                    <p:commandButton value="Crear Examen" 
+                                                     icon="pi pi-plus" 
+                                                     actionListener="#{examController.prepareCreate}"
+                                                     update=":dialogs:manage-exam-content" 
+                                                     oncomplete="PF('manageExamDialog').show()"
+                                                     styleClass="ui-button-success">
+                                        <f:setPropertyActionListener value="#{examController.selectedExamtype}" 
+                                                                     target="#{examController.selected.examtypeid}" />
+                                    </p:commandButton>
+                                </div>
+                            </h:panelGroup>
+
+                            <!-- Tabla de exámenes -->
+                            <h:panelGroup rendered="#{not empty examController.filteredItems}">
+                                <p:dataTable id="dt-exams" 
+                                             widgetVar="dtExams" 
+                                             var="e" 
+                                             value="#{examController.filteredItems}"
+                                             reflow="true" 
+                                             rowKey="#{e.id}" 
+                                             paginator="true" 
+                                             rows="10" 
+                                             paginatorPosition="bottom">
+
+                                    <p:column headerText="ID" style="width: 80px;">
+                                        <span class="text-muted font-medium">##{e.id}</span>
+                                    </p:column>
+
+                                    <p:column headerText="Nombre del Examen" sortBy="#{e.name}">
+                                        <div class="flex align-items-center gap-2">
+                                            <i class="pi pi-file-edit text-accent"></i>
+                                            <span class="font-medium">#{e.name}</span>
+                                        </div>
+                                    </p:column>
+
+                                    <p:column headerText="Acciones" style="width: 100px; text-align: center">
+                                        <div class="flex-center gap-2">
+                                            <p:commandButton icon="pi pi-pencil" 
+                                                             title="Editar"
+                                                             actionListener="#{examController.prepareEdit(e)}"
+                                                             update=":dialogs:manage-exam-content"
+                                                             oncomplete="PF('manageExamDialog').show()"
+                                                             styleClass="ui-button-flat ui-button-secondary" 
+                                                             process="@this"/>
+
+                                            <p:commandButton icon="pi pi-trash" 
+                                                             title="Eliminar"
+                                                             actionListener="#{examController.delete(e)}"
+                                                             update=":form:panel-exams :form:header-exams :form:messages" 
+                                                             styleClass="ui-button-flat ui-button-danger"
+                                                             process="@this">
+                                                <p:confirm header="Confirmar" 
+                                                           message="¿Eliminar '#{e.name}'?" 
+                                                           icon="pi pi-exclamation-triangle"/>
+                                            </p:commandButton>
+                                        </div>
+                                    </p:column>
+                                </p:dataTable>
+                            </h:panelGroup>
+                        </p:outputPanel>
+                    </div>
+                </div>
+            </div>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí" type="button" styleClass="ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- Diálogo de gestión -->
+        <h:form id="dialogs">
+            <p:dialog header="#{examController.editMode ? 'Editar' : 'Nuevo'} Examen" 
+                      widgetVar="manageExamDialog" 
+                      modal="true" 
+                      responsive="true" 
+                      width="500" 
+                      resizable="false" 
+                      showEffect="fade">
+
+                <p:outputPanel id="manage-exam-content" class="ui-fluid">
+                    <p:outputPanel rendered="#{not empty examController.selected}">
+
+                        <!-- Info del tipo seleccionado -->
+                        <div class="field mb-3">
+                            <p:outputLabel value="Tipo de Examen" styleClass="font-bold text-primary"/>
+                            <div class="p-2 surface-ground border-round">
+                                <i class="pi pi-folder text-primary mr-2"></i>
+                                <span class="font-medium">#{examController.selected.examtypeid.name}</span>
+                            </div>
+                            <!-- PF 15: No necesitas converter, usa el objeto directamente -->
+                            <h:inputHidden value="#{examController.selected.examtypeid.id}" />
+                        </div>
+
+                        <div class="field">
+                            <p:outputLabel for="examName">
+                                Nombre del Examen <span style="color: var(--danger);">*</span>
+                            </p:outputLabel>
+                            <p:inputText id="examName" 
+                                         value="#{examController.selected.name}" 
+                                         required="true"
+                                         requiredMessage="El nombre es obligatorio"
+                                         maxlength="100"
+                                         placeholder="Ej: Hemograma completo, Radiografía de tórax..." />
+                        </div>
+
+                    </p:outputPanel>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div class="flex justify-content-end gap-2">
+                        <p:commandButton value="Cancelar" 
+                                         icon="pi pi-times" 
+                                         onclick="PF('manageExamDialog').hide()" 
+                                         styleClass="ui-button-secondary" 
+                                         type="button" />
+
+                        <p:commandButton value="#{examController.editMode ? 'Actualizar' : 'Guardar'}" 
+                                         icon="pi pi-save" 
+                                         actionListener="#{examController.save}"
+                                         update="manage-exam-content :form:panel-exams :form:header-exams :form:messages" 
+                                         process="manage-exam-content @this"
+                                         oncomplete="if (!args.validationFailed) { PF('manageExamDialog').hide(); }"
+                                         styleClass="ui-button-primary" />
+                    </div>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+    </ui:define>
+</ui:composition>

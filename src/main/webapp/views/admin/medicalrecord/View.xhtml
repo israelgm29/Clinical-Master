@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="MedicalrecordViewDlg" widgetVar="MedicalrecordViewDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.ViewMedicalrecordTitle}">
+            <h:form id="MedicalrecordViewForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{medicalrecordController.selected != null}">
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_createdat}"/>
+                        <h:outputText value="#{medicalrecordController.selected.createdat}" title="#{bundle.ViewMedicalrecordTitle_createdat}">
+                            <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
+                        </h:outputText>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_createdby}"/>
+                        <h:outputText value="#{medicalrecordController.selected.createdby}" title="#{bundle.ViewMedicalrecordTitle_createdby}"/>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_editedat}"/>
+                        <h:outputText value="#{medicalrecordController.selected.editedat}" title="#{bundle.ViewMedicalrecordTitle_editedat}">
+                            <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
+                        </h:outputText>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_editedby}"/>
+                        <h:outputText value="#{medicalrecordController.selected.editedby}" title="#{bundle.ViewMedicalrecordTitle_editedby}"/>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_deleted}"/>
+                        <p:selectBooleanCheckbox value="#{medicalrecordController.selected.deleted}" disabled="true"/>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_deletedat}"/>
+                        <h:outputText value="#{medicalrecordController.selected.deletedat}" title="#{bundle.ViewMedicalrecordTitle_deletedat}">
+                            <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
+                        </h:outputText>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_deletedby}"/>
+                        <h:outputText value="#{medicalrecordController.selected.deletedby}" title="#{bundle.ViewMedicalrecordTitle_deletedby}"/>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_id}"/>
+                        <h:outputText value="#{medicalrecordController.selected.id}" title="#{bundle.ViewMedicalrecordTitle_id}"/>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_reason}"/>
+                        <h:outputText value="#{medicalrecordController.selected.reason}" title="#{bundle.ViewMedicalrecordTitle_reason}"/>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_currentillness}"/>
+                        <h:outputText value="#{medicalrecordController.selected.currentillness}" title="#{bundle.ViewMedicalrecordTitle_currentillness}"/>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_done}"/>
+                        <p:selectBooleanCheckbox value="#{medicalrecordController.selected.done}" disabled="true"/>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_canceled}"/>
+                        <p:selectBooleanCheckbox value="#{medicalrecordController.selected.canceled}" disabled="true"/>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_medicid}"/>
+                        <h:outputText value="#{medicalrecordController.selected.medicid}" title="#{bundle.ViewMedicalrecordTitle_medicid}"/>
+                        <h:outputText value="#{bundle.ViewMedicalrecordLabel_patientid}"/>
+                        <h:outputText value="#{medicalrecordController.selected.patientid}" title="#{bundle.ViewMedicalrecordTitle_patientid}"/>
+                    </p:panelGrid>
+                    <p:commandButton value="#{bundle.Close}" onclick="MedicalrecordViewDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

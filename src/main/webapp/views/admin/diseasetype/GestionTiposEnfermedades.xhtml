@@ -1,0 +1,130 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/template.xhtml">
+
+    <ui:define name="titulo">Catálogo - Tipos de Enfermedad</ui:define>
+
+    <ui:define name="contenido">
+        <h:form id="form">
+            <p:growl id="messages" showDetail="true" />
+
+            <div class="flex-between mb-6">
+                <div>
+                    <h2 class="text-primary font-bold m-0">Tipos de Enfermedad</h2>
+                    <div class="text-muted" style="font-size: 14px;">
+                        Categorías del CIE-10 (Clasificación Internacional)
+                    </div>
+                </div>
+                <p:commandButton value="Nuevo Tipo" 
+                                 icon="pi pi-plus" 
+                                 actionListener="#{diseasetypeController.prepareCreate}"
+                                 update=":dialogs:manage-diseasetype-content" 
+                                 oncomplete="PF('manageDiseasetypeDialog').show()"
+                                 styleClass="ui-button-success" />
+            </div>
+
+            <div class="card shadow-sm">
+                <p:dataTable id="dt-diseasetypes" widgetVar="dtDiseasetypes" var="dt" 
+                             value="#{diseasetypeController.items}"
+                             reflow="true" rowKey="#{dt.id}" 
+                             paginator="true" rows="10" paginatorPosition="bottom"
+                             emptyMessage="No se encontraron tipos de enfermedad">
+
+                    <p:column headerText="ID" style="width: 80px;">
+                        <span class="text-muted font-medium">##{dt.id}</span>
+                    </p:column>
+
+                    <p:column headerText="Nombre" sortBy="#{dt.name}" filterBy="#{dt.name}">
+                        <div class="flex align-items-center gap-2">
+                            <i class="pi pi-folder text-primary"></i>
+                            <span class="font-bold">#{dt.name}</span>
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Enfermedades" style="width: 120px; text-align: center;">
+                        <span class="exam-count-badge">#{dt.diseaseCollection.size()}</span>
+                    </p:column>
+
+                    <p:column headerText="Acciones" exportable="false" style="width: 120px; text-align: center">
+                        <div class="flex-center gap-2">
+                            <p:commandButton icon="pi pi-pencil" 
+                                             title="Editar"
+                                             actionListener="#{diseasetypeController.prepareEdit(dt)}"
+                                             update=":dialogs:manage-diseasetype-content"
+                                             oncomplete="PF('manageDiseasetypeDialog').show()"
+                                             styleClass="ui-button-flat ui-button-success" 
+                                             process="@this"/>
+
+                            <p:commandButton icon="pi pi-trash" 
+                                             title="Eliminar"
+                                             actionListener="#{diseasetypeController.delete(dt)}"
+                                             update=":form:dt-diseasetypes :form:messages"
+                                             styleClass="ui-button-flat ui-button-danger"
+                                             process="@this">
+                                <p:confirm header="Confirmar" 
+                                           message="¿Eliminar '#{dt.name}'? Las enfermedades asociadas quedarán sin categoría." 
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+                        </div>
+                    </p:column>
+                </p:dataTable>
+            </div>
+            
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí" type="button" styleClass="ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- Diálogo de gestión -->
+        <h:form id="dialogs">
+            <p:dialog header="#{diseasetypeController.editMode ? 'Editar' : 'Nuevo'} Tipo de Enfermedad" 
+                      widgetVar="manageDiseasetypeDialog" 
+                      modal="true" 
+                      responsive="true" 
+                      width="500" 
+                      resizable="false" 
+                      showEffect="fade">
+
+                <p:outputPanel id="manage-diseasetype-content" class="ui-fluid">
+                    <p:outputPanel rendered="#{not empty diseasetypeController.selected}">
+                        
+                        <div class="field">
+                            <p:outputLabel for="name">
+                                Nombre <span style="color: var(--danger);">*</span>
+                            </p:outputLabel>
+                            <p:inputText id="name" 
+                                         value="#{diseasetypeController.selected.name}" 
+                                         required="true"
+                                         requiredMessage="El nombre es obligatorio"
+                                         maxlength="100"
+                                         placeholder="Ej: Enfermedades infecciosas y parasitarias" />
+                        </div>
+
+                    </p:outputPanel>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div class="flex justify-content-end gap-2">
+                        <p:commandButton value="Cancelar" 
+                                         icon="pi pi-times" 
+                                         onclick="PF('manageDiseasetypeDialog').hide()" 
+                                         styleClass="ui-button-secondary" 
+                                         type="button" />
+                        
+                        <p:commandButton value="#{diseasetypeController.editMode ? 'Actualizar' : 'Guardar'}" 
+                                         icon="pi pi-save" 
+                                         actionListener="#{diseasetypeController.save}"
+                                         update="manage-diseasetype-content :form:dt-diseasetypes :form:messages" 
+                                         process="manage-diseasetype-content @this"
+                                         oncomplete="if (!args.validationFailed) { PF('manageDiseasetypeDialog').hide(); }"
+                                         styleClass="ui-button-primary" />
+                    </div>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+    </ui:define>
+</ui:composition>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="MedicalexamCreateDlg" widgetVar="MedicalexamCreateDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.CreateMedicalexamTitle}">
+            <h:form id="MedicalexamCreateForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{medicalexamController.selected != null}">
+                        <p:outputLabel value="#{bundle.CreateMedicalexamLabel_createdat}" for="createdat" />
+                        <p:calendar id="createdat" pattern="MM/dd/yyyy HH:mm:ss" value="#{medicalexamController.selected.createdat}" title="#{bundle.EditMedicalexamTitle_createdat}" required="true" requiredMessage="#{bundle.EditMedicalexamRequiredMessage_createdat}" showOn="button"/>
+                        <p:outputLabel value="#{bundle.CreateMedicalexamLabel_createdby}" for="createdby" />
+                        <p:inputText id="createdby" value="#{medicalexamController.selected.createdby}" title="#{bundle.CreateMedicalexamTitle_createdby}" required="true" requiredMessage="#{bundle.CreateMedicalexamRequiredMessage_createdby}"/>
+                        <p:outputLabel value="#{bundle.CreateMedicalexamLabel_editedat}" for="editedat" />
+                        <p:calendar id="editedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{medicalexamController.selected.editedat}" title="#{bundle.EditMedicalexamTitle_editedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.CreateMedicalexamLabel_editedby}" for="editedby" />
+                        <p:inputText id="editedby" value="#{medicalexamController.selected.editedby}" title="#{bundle.CreateMedicalexamTitle_editedby}" />
+                        <p:outputLabel value="#{bundle.CreateMedicalexamLabel_deleted}" for="deleted" />
+                        <p:selectBooleanCheckbox id="deleted" value="#{medicalexamController.selected.deleted}" />
+                        <p:outputLabel value="#{bundle.CreateMedicalexamLabel_deletedat}" for="deletedat" />
+                        <p:calendar id="deletedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{medicalexamController.selected.deletedat}" title="#{bundle.EditMedicalexamTitle_deletedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.CreateMedicalexamLabel_deletedby}" for="deletedby" />
+                        <p:inputText id="deletedby" value="#{medicalexamController.selected.deletedby}" title="#{bundle.CreateMedicalexamTitle_deletedby}" />
+                        <p:outputLabel value="#{bundle.CreateMedicalexamLabel_id}" for="id" />
+                        <p:inputText id="id" value="#{medicalexamController.selected.id}" title="#{bundle.CreateMedicalexamTitle_id}" required="true" requiredMessage="#{bundle.CreateMedicalexamRequiredMessage_id}"/>
+                        <p:outputLabel value="#{bundle.CreateMedicalexamLabel_examid}" for="examid" />
+                        <p:selectOneMenu id="examid" value="#{medicalexamController.selected.examid}" required="true" requiredMessage="#{bundle.EditMedicalexamRequiredMessage_examid}">
+                            <f:selectItems value="#{examController.itemsAvailableSelectOne}"
+                                           var="examidItem"
+                                           itemValue="#{examidItem}"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="#{bundle.CreateMedicalexamLabel_medicalrecordid}" for="medicalrecordid" />
+                        <p:selectOneMenu id="medicalrecordid" value="#{medicalexamController.selected.medicalrecordid}" required="true" requiredMessage="#{bundle.EditMedicalexamRequiredMessage_medicalrecordid}">
+                            <f:selectItems value="#{medicalrecordController.itemsAvailableSelectOne}"
+                                           var="medicalrecordidItem"
+                                           itemValue="#{medicalrecordidItem}"/>
+                        </p:selectOneMenu>
+                    </p:panelGrid>
+                    <p:commandButton actionListener="#{medicalexamController.create}" value="#{bundle.Save}" update="display,:MedicalexamListForm:datalist,:growl" oncomplete="handleSubmit(args,'MedicalexamCreateDialog');"/>
+                    <p:commandButton value="#{bundle.Cancel}" onclick="MedicalexamCreateDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

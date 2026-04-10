@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="TgroupCreateDlg" widgetVar="TgroupCreateDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.CreateTgroupTitle}">
+            <h:form id="TgroupCreateForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{tgroupController.selected != null}">
+                        <p:outputLabel value="#{bundle.CreateTgroupLabel_id}" for="id" />
+                        <p:inputText id="id" value="#{tgroupController.selected.id}" title="#{bundle.CreateTgroupTitle_id}" required="true" requiredMessage="#{bundle.CreateTgroupRequiredMessage_id}"/>
+                        <p:outputLabel value="#{bundle.CreateTgroupLabel_name}" for="name" />
+                        <p:inputText id="name" value="#{tgroupController.selected.name}" title="#{bundle.CreateTgroupTitle_name}" required="true" requiredMessage="#{bundle.CreateTgroupRequiredMessage_name}"/>
+                    </p:panelGrid>
+                    <p:commandButton actionListener="#{tgroupController.create}" value="#{bundle.Save}" update="display,:TgroupListForm:datalist,:growl" oncomplete="handleSubmit(args,'TgroupCreateDialog');"/>
+                    <p:commandButton value="#{bundle.Cancel}" onclick="TgroupCreateDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="RoleViewDlg" widgetVar="RoleViewDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.ViewRoleTitle}">
+            <h:form id="RoleViewForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{roleController.selected != null}">
+                        <h:outputText value="#{bundle.ViewRoleLabel_createdat}"/>
+                        <h:outputText value="#{roleController.selected.createdat}" title="#{bundle.ViewRoleTitle_createdat}">
+                            <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
+                        </h:outputText>
+                        <h:outputText value="#{bundle.ViewRoleLabel_createdby}"/>
+                        <h:outputText value="#{roleController.selected.createdby}" title="#{bundle.ViewRoleTitle_createdby}"/>
+                        <h:outputText value="#{bundle.ViewRoleLabel_editedat}"/>
+                        <h:outputText value="#{roleController.selected.editedat}" title="#{bundle.ViewRoleTitle_editedat}">
+                            <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
+                        </h:outputText>
+                        <h:outputText value="#{bundle.ViewRoleLabel_editedby}"/>
+                        <h:outputText value="#{roleController.selected.editedby}" title="#{bundle.ViewRoleTitle_editedby}"/>
+                        <h:outputText value="#{bundle.ViewRoleLabel_deleted}"/>
+                        <p:selectBooleanCheckbox value="#{roleController.selected.deleted}" disabled="true"/>
+                        <h:outputText value="#{bundle.ViewRoleLabel_deletedat}"/>
+                        <h:outputText value="#{roleController.selected.deletedat}" title="#{bundle.ViewRoleTitle_deletedat}">
+                            <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
+                        </h:outputText>
+                        <h:outputText value="#{bundle.ViewRoleLabel_deletedby}"/>
+                        <h:outputText value="#{roleController.selected.deletedby}" title="#{bundle.ViewRoleTitle_deletedby}"/>
+                        <h:outputText value="#{bundle.ViewRoleLabel_id}"/>
+                        <h:outputText value="#{roleController.selected.id}" title="#{bundle.ViewRoleTitle_id}"/>
+                        <h:outputText value="#{bundle.ViewRoleLabel_name}"/>
+                        <h:outputText value="#{roleController.selected.name}" title="#{bundle.ViewRoleTitle_name}"/>
+                        <h:outputText value="#{bundle.ViewRoleLabel_description}"/>
+                        <h:outputText value="#{roleController.selected.description}" title="#{bundle.ViewRoleTitle_description}"/>
+                    </p:panelGrid>
+                    <p:commandButton value="#{bundle.Close}" onclick="RoleViewDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

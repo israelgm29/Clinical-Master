@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="ProfileEditDlg" widgetVar="ProfileEditDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.EditProfileTitle}">
+            <h:form id="ProfileEditForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{profileController.selected != null}">
+                        <p:outputLabel value="#{bundle.EditProfileLabel_createdat}" for="createdat" />
+                        <p:calendar id="createdat" pattern="MM/dd/yyyy HH:mm:ss" value="#{profileController.selected.createdat}" title="#{bundle.EditProfileTitle_createdat}" required="true" requiredMessage="#{bundle.EditProfileRequiredMessage_createdat}" showOn="button"/>
+                        <p:outputLabel value="#{bundle.EditProfileLabel_createdby}" for="createdby" />
+                        <p:inputText id="createdby" value="#{profileController.selected.createdby}" title="#{bundle.EditProfileTitle_createdby}" required="true" requiredMessage="#{bundle.EditProfileRequiredMessage_createdby}"/>
+                        <p:outputLabel value="#{bundle.EditProfileLabel_editedat}" for="editedat" />
+                        <p:calendar id="editedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{profileController.selected.editedat}" title="#{bundle.EditProfileTitle_editedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.EditProfileLabel_editedby}" for="editedby" />
+                        <p:inputText id="editedby" value="#{profileController.selected.editedby}" title="#{bundle.EditProfileTitle_editedby}" />
+                        <p:outputLabel value="#{bundle.EditProfileLabel_deleted}" for="deleted" />
+                        <p:selectBooleanCheckbox id="deleted" value="#{profileController.selected.deleted}" />
+                        <p:outputLabel value="#{bundle.EditProfileLabel_deletedat}" for="deletedat" />
+                        <p:calendar id="deletedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{profileController.selected.deletedat}" title="#{bundle.EditProfileTitle_deletedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.EditProfileLabel_deletedby}" for="deletedby" />
+                        <p:inputText id="deletedby" value="#{profileController.selected.deletedby}" title="#{bundle.EditProfileTitle_deletedby}" />
+                        <p:outputLabel value="#{bundle.EditProfileLabel_id}" for="id" />
+                        <p:inputText id="id" value="#{profileController.selected.id}" title="#{bundle.EditProfileTitle_id}" required="true" requiredMessage="#{bundle.EditProfileRequiredMessage_id}"/>
+                        <p:outputLabel value="#{bundle.EditProfileLabel_dni}" for="dni" />
+                        <p:inputText id="dni" value="#{profileController.selected.dni}" title="#{bundle.EditProfileTitle_dni}" />
+                        <p:outputLabel value="#{bundle.EditProfileLabel_passport}" for="passport" />
+                        <p:inputText id="passport" value="#{profileController.selected.passport}" title="#{bundle.EditProfileTitle_passport}" />
+                        <p:outputLabel value="#{bundle.EditProfileLabel_lastname}" for="lastname" />
+                        <p:inputText id="lastname" value="#{profileController.selected.lastname}" title="#{bundle.EditProfileTitle_lastname}" required="true" requiredMessage="#{bundle.EditProfileRequiredMessage_lastname}"/>
+                        <p:outputLabel value="#{bundle.EditProfileLabel_firstname}" for="firstname" />
+                        <p:inputText id="firstname" value="#{profileController.selected.firstname}" title="#{bundle.EditProfileTitle_firstname}" required="true" requiredMessage="#{bundle.EditProfileRequiredMessage_firstname}"/>
+                        <p:outputLabel value="#{bundle.EditProfileLabel_telephone}" for="telephone" />
+                        <p:inputText id="telephone" value="#{profileController.selected.telephone}" title="#{bundle.EditProfileTitle_telephone}" />
+                        <p:outputLabel value="#{bundle.EditProfileLabel_mobile}" for="mobile" />
+                        <p:inputText id="mobile" value="#{profileController.selected.mobile}" title="#{bundle.EditProfileTitle_mobile}" />
+                        <p:outputLabel value="#{bundle.EditProfileLabel_email}" for="email" />
+                        <p:inputText id="email" value="#{profileController.selected.email}" title="#{bundle.EditProfileTitle_email}" required="true" requiredMessage="#{bundle.EditProfileRequiredMessage_email}"/>
+                        <p:outputLabel value="#{bundle.EditProfileLabel_image}" for="image" />
+                        <p:inputText id="image" value="#{profileController.selected.image}" title="#{bundle.EditProfileTitle_image}" />
+                        <p:outputLabel value="#{bundle.EditProfileLabel_address}" for="address" />
+                        <p:inputText id="address" value="#{profileController.selected.address}" title="#{bundle.EditProfileTitle_address}" required="true" requiredMessage="#{bundle.EditProfileRequiredMessage_address}"/>
+                    </p:panelGrid>
+                    <p:commandButton actionListener="#{profileController.update}" value="#{bundle.Save}" update="display,:ProfileListForm:datalist,:growl" oncomplete="handleSubmit(args, 'ProfileEditDialog');"/>
+                    <p:commandButton value="#{bundle.Cancel}" onclick="ProfileEditDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

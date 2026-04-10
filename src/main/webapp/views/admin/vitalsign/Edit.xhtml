@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="VitalsignEditDlg" widgetVar="VitalsignEditDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.EditVitalsignTitle}">
+            <h:form id="VitalsignEditForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{vitalsignController.selected != null}">
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_createdat}" for="createdat" />
+                        <p:calendar id="createdat" pattern="MM/dd/yyyy HH:mm:ss" value="#{vitalsignController.selected.createdat}" title="#{bundle.EditVitalsignTitle_createdat}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_createdat}" showOn="button"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_createdby}" for="createdby" />
+                        <p:inputText id="createdby" value="#{vitalsignController.selected.createdby}" title="#{bundle.EditVitalsignTitle_createdby}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_createdby}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_editedat}" for="editedat" />
+                        <p:calendar id="editedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{vitalsignController.selected.editedat}" title="#{bundle.EditVitalsignTitle_editedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_editedby}" for="editedby" />
+                        <p:inputText id="editedby" value="#{vitalsignController.selected.editedby}" title="#{bundle.EditVitalsignTitle_editedby}" />
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_deleted}" for="deleted" />
+                        <p:selectBooleanCheckbox id="deleted" value="#{vitalsignController.selected.deleted}" />
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_deletedat}" for="deletedat" />
+                        <p:calendar id="deletedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{vitalsignController.selected.deletedat}" title="#{bundle.EditVitalsignTitle_deletedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_deletedby}" for="deletedby" />
+                        <p:inputText id="deletedby" value="#{vitalsignController.selected.deletedby}" title="#{bundle.EditVitalsignTitle_deletedby}" />
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_id}" for="id" />
+                        <p:inputText id="id" value="#{vitalsignController.selected.id}" title="#{bundle.EditVitalsignTitle_id}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_id}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_temperature}" for="temperature" />
+                        <p:inputText id="temperature" value="#{vitalsignController.selected.temperature}" title="#{bundle.EditVitalsignTitle_temperature}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_temperature}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_systolicpressure}" for="systolicpressure" />
+                        <p:inputText id="systolicpressure" value="#{vitalsignController.selected.systolicpressure}" title="#{bundle.EditVitalsignTitle_systolicpressure}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_systolicpressure}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_diastolicpressure}" for="diastolicpressure" />
+                        <p:inputText id="diastolicpressure" value="#{vitalsignController.selected.diastolicpressure}" title="#{bundle.EditVitalsignTitle_diastolicpressure}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_diastolicpressure}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_pulse}" for="pulse" />
+                        <p:inputText id="pulse" value="#{vitalsignController.selected.pulse}" title="#{bundle.EditVitalsignTitle_pulse}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_pulse}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_breathingfrequency}" for="breathingfrequency" />
+                        <p:inputText id="breathingfrequency" value="#{vitalsignController.selected.breathingfrequency}" title="#{bundle.EditVitalsignTitle_breathingfrequency}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_breathingfrequency}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_oxygensaturation}" for="oxygensaturation" />
+                        <p:inputText id="oxygensaturation" value="#{vitalsignController.selected.oxygensaturation}" title="#{bundle.EditVitalsignTitle_oxygensaturation}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_oxygensaturation}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_tall}" for="tall" />
+                        <p:inputText id="tall" value="#{vitalsignController.selected.tall}" title="#{bundle.EditVitalsignTitle_tall}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_tall}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_weight}" for="weight" />
+                        <p:inputText id="weight" value="#{vitalsignController.selected.weight}" title="#{bundle.EditVitalsignTitle_weight}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_weight}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_mass}" for="mass" />
+                        <p:inputText id="mass" value="#{vitalsignController.selected.mass}" title="#{bundle.EditVitalsignTitle_mass}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_mass}"/>
+                        <p:outputLabel value="#{bundle.EditVitalsignLabel_medicalrecordid}" for="medicalrecordid" />
+                        <p:selectOneMenu id="medicalrecordid" value="#{vitalsignController.selected.medicalrecordid}" required="true" requiredMessage="#{bundle.EditVitalsignRequiredMessage_medicalrecordid}">
+                            <f:selectItem itemLabel="#{bundle.SelectOneMessage}"/>
+                            <f:selectItems value="#{medicalrecordController.itemsAvailableSelectOne}"
+                                           var="medicalrecordidItem"
+                                           itemValue="#{medicalrecordidItem}"/>
+                        </p:selectOneMenu>
+                    </p:panelGrid>
+                    <p:commandButton actionListener="#{vitalsignController.update}" value="#{bundle.Save}" update="display,:VitalsignListForm:datalist,:growl" oncomplete="handleSubmit(args, 'VitalsignEditDialog');"/>
+                    <p:commandButton value="#{bundle.Cancel}" onclick="VitalsignEditDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

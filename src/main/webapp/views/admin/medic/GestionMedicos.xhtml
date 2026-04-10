@@ -1,0 +1,356 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/template.xhtml">
+
+    <ui:define name="titulo">Gestión de Personal Médico</ui:define>
+
+    <ui:define name="contenido">
+        <h:form id="form">
+            <p:growl id="messages" showDetail="true" />
+
+            <div class="flex-between mb-6">
+                <div>
+                    <h2 class="text-primary font-bold m-0">Directorio Médico</h2>
+                    <div class="text-muted" style="font-size: 14px;">
+                        Total: <span class="font-bold">#{medicController.items.size()}</span> especialistas
+                    </div>
+                </div>
+                <p:commandButton value="Registrar Médico"
+                                 icon="pi pi-user-plus"
+                                 actionListener="#{medicController.prepareNewMedic()}"
+                                 update=":dialogs:manage-medic-content"
+                                 oncomplete="PF('manageMedicDialog').show()"
+                                 styleClass="ui-button-success" />
+            </div>
+
+            <div class="card">
+                <p:dataTable id="dt-medics" widgetVar="dtMedics" var="m"
+                             value="#{medicController.items}"
+                             reflow="true" rowKey="#{m.id}"
+                             paginator="true" rows="10" paginatorPosition="bottom"
+                             emptyMessage="No se encontraron médicos registrados">
+
+                    <p:column headerText="Identificación" sortBy="#{m.dni}" filterBy="#{m.dni}">
+                        <h:outputText value="#{m.dni}" />
+                    </p:column>
+
+                    <p:column headerText="Especialista" sortBy="#{m.lastname}" filterBy="#{m.lastname}">
+                        <span class="font-semibold">#{m.lastname} #{m.firstname}</span><br/>
+                        <span class="text-muted" style="font-size: 12px;">#{m.specialtiesNames}</span>
+                    </p:column>
+
+                    <p:column headerText="Reg. Profesional" style="text-align: center;">
+                        <span class="hc-badge" style="background: #e8f5e9; color: var(--accent-dark);">
+                            #{m.regprofessional}
+                        </span>
+                    </p:column>
+
+                    <p:column headerText="Contacto">
+                        <h:outputText value="#{m.email}" />
+                    </p:column>
+
+                    <!-- ✅ Botones idénticos a GestionPacientes: style inline -->
+                    <p:column headerText="Acciones" exportable="false" style="width: 100px; text-align: center">
+                        <div style="display: flex; gap: 6px; justify-content: center;">
+                            <p:commandButton icon="pi pi-pencil"
+                                             title="Editar"
+                                             update=":dialogs:manage-medic-content"
+                                             oncomplete="PF('manageMedicDialog').show()"
+                                             styleClass="ui-button-flat"
+                                             style="background: #f0f0f0; border-radius: 6px; padding: 6px 10px;"
+                                             process="@this">
+                                <f:setPropertyActionListener value="#{m}" target="#{medicController.selectedMedic}" />
+                            </p:commandButton>
+
+                            <p:commandButton icon="pi pi-id-card"
+                                             title="Ver Perfil"
+                                             update=":view-dialog:view-medic-content"
+                                             oncomplete="PF('viewMedicDialog').show()"
+                                             styleClass="ui-button-info ui-button-flat"
+                                             style="background: #e3f2fd; border-radius: 6px; padding: 6px 10px;"
+                                             process="@this">
+                                <f:setPropertyActionListener value="#{m}" target="#{medicController.selectedMedic}" />
+                            </p:commandButton>
+                        </div>
+                    </p:column>
+
+                </p:dataTable>
+            </div>
+        </h:form>
+
+
+        <!-- DIÁLOGO DE GESTIÓN (Crear / Editar) -->
+        <h:form id="dialogs">
+            <p:dialog header="#{medicController.editMode ? 'Editar Especialista' : 'Registrar Especialista'}"
+                      widgetVar="manageMedicDialog"
+                      modal="true"
+                      responsive="true"
+                      width="860"
+                      resizable="false"
+                      showEffect="fade"
+                      hideEffect="fade"
+                      fitViewport="true"
+                      >
+
+                <p:outputPanel id="manage-medic-content" class="ui-fluid">
+
+                    <!-- IDENTIFICACIÓN -->
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; margin-top:4px;">
+                        <div style="background:var(--primary); width:4px; height:20px; border-radius:2px;"></div>
+                        <h4 style="margin:0;" class="text-primary font-bold">Identificación</h4>
+                    </div>
+
+                    <div class="form-grid form-grid-3">
+                        <div class="field">
+                            <p:outputLabel for="dni">Cédula / DNI</p:outputLabel>
+                            <p:inputText id="dni" value="#{medicController.newMedic.dni}"
+                                         maxlength="10" placeholder="1712345678" style="width:100%;">
+                                <p:keyFilter mask="num" />
+                            </p:inputText>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="passport">Pasaporte</p:outputLabel>
+                            <p:inputText id="passport" value="#{medicController.newMedic.passport}"
+                                         maxlength="13" placeholder="ABC1234567890"
+                                         style="width:100%; text-transform:uppercase;">
+                                <p:keyFilter regEx="/[a-zA-Z0-9]/" />
+                            </p:inputText>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="regprofessional">
+                                Reg. Profesional <span style="color:var(--danger);">*</span>
+                            </p:outputLabel>
+                            <p:inputText id="regprofessional" value="#{medicController.newMedic.regprofessional}"
+                                         required="true" requiredMessage="El registro profesional es obligatorio"
+                                         maxlength="15" placeholder="Ej: 1005-2023-1234567" style="width:100%;" />
+                        </div>
+                    </div>
+
+                    <p:divider />
+
+                    <!-- DATOS PERSONALES -->
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                        <div style="background:var(--primary); width:4px; height:20px; border-radius:2px;"></div>
+                        <h4 style="margin:0;" class="text-primary font-bold">Datos Personales</h4>
+                    </div>
+
+                    <div class="form-grid form-grid-2">
+                        <div class="field">
+                            <p:outputLabel for="lastname">Apellidos <span style="color:var(--danger);">*</span></p:outputLabel>
+                            <p:inputText id="lastname" value="#{medicController.newMedic.lastname}"
+                                         required="true" requiredMessage="Los apellidos son obligatorios"
+                                         maxlength="25" style="width:100%;" />
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="firstname">Nombres <span style="color:var(--danger);">*</span></p:outputLabel>
+                            <p:inputText id="firstname" value="#{medicController.newMedic.firstname}"
+                                         required="true" requiredMessage="Los nombres son obligatorios"
+                                         maxlength="25" style="width:100%;" />
+                        </div>
+                    </div>
+
+                    <div class="field" style="margin-top:12px;">
+                        <p:outputLabel for="image">URL de Foto / Imagen</p:outputLabel>
+                        <div style="display:flex; gap:8px;">
+                            <p:inputText id="image" value="#{medicController.newMedic.image}"
+                                         maxlength="75" placeholder="https://ejemplo.com/foto.jpg" style="flex:1;" />
+                            <p:button icon="pi pi-image" styleClass="ui-button-secondary"
+                                      disabled="#{empty medicController.newMedic.image}"
+                                      onclick="window.open('#{medicController.newMedic.image}', '_blank'); return false;"
+                                      title="Ver imagen" />
+                        </div>
+                        <small class="text-muted">Ruta local o URL completa de la fotografía</small>
+                    </div>
+
+                    <p:divider />
+
+                    <!-- CONTACTO -->
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                        <div style="background:#10b981; width:4px; height:20px; border-radius:2px;"></div>
+                        <h4 style="margin:0;" class="text-primary font-bold">Información de Contacto</h4>
+                    </div>
+
+                    <div class="form-grid form-grid-2">
+                        <div class="field">
+                            <p:outputLabel for="telephone">Teléfono Fijo</p:outputLabel>
+                            <p:inputMask id="telephone" value="#{medicController.newMedic.telephone}"
+                                         mask="(99) 999-9999" placeholder="(03) 296-1234" style="width:100%;" />
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="mobile">Celular</p:outputLabel>
+                            <p:inputMask id="mobile" value="#{medicController.newMedic.mobile}"
+                                         mask="0999999999" placeholder="0912345678" style="width:100%;" />
+                        </div>
+                    </div>
+
+                    <div class="field" style="margin-top:12px;">
+                        <p:outputLabel for="email">
+                            Correo Electrónico <span style="color:var(--danger);">*</span>
+                        </p:outputLabel>
+                        <p:inputText id="email" value="#{medicController.newMedic.email}"
+                                     maxlength="50" placeholder="doctor@hospital.com" style="width:100%;">
+                            <f:validateRegex pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+                        </p:inputText>
+                    </div>
+
+                    <div class="field" style="margin-top:12px;">
+                        <p:outputLabel for="address">
+                            Dirección <span style="color:var(--danger);">*</span>
+                        </p:outputLabel>
+                        <p:inputText id="address" value="#{medicController.newMedic.address}"
+                                     required="true" requiredMessage="La dirección es obligatoria"
+                                     maxlength="100" placeholder="Av. Principal 123 y Calle Secundaria, Ciudad"
+                                     style="width:100%;" />
+                    </div>
+
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div style="display:flex; gap:12px; justify-content:flex-end; padding:8px 0;">
+                        <p:commandButton value="Cancelar" icon="pi pi-times"
+                                         onclick="PF('manageMedicDialog').hide()"
+                                         styleClass="ui-button-secondary"
+                                         style="background:#f0f0f0; border:none; padding:10px 24px;"
+                                         immediate="true" />
+                        <p:commandButton value="Guardar Especialista" icon="pi pi-save"
+                                         actionListener="#{medicController.saveMedic}"
+                                         update=":dialogs:manage-medic-content :form:dt-medics :form:messages"
+                                         process="manage-medic-content @this"
+                                         oncomplete="if (!args.validationFailed) { PF('manageMedicDialog').hide(); PF('dtMedics').clearFilters(); }"
+                                         styleClass="ui-button-primary"
+                                         style="padding:10px 28px;" />
+                    </div>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+
+
+        <!-- DIÁLOGO DE VISTA / PERFIL PROFESIONAL COMPLETO -->
+        <h:form id="view-dialog">
+            <p:dialog header="Perfil Profesional"
+                      widgetVar="viewMedicDialog"
+                      modal="true"
+                      showEffect="fade"
+                      responsive="true"
+                      width="680"
+                      resizable="false">
+
+                <p:outputPanel id="view-medic-content">
+                    <h:panelGroup rendered="#{medicController.selectedMedic != null}">
+
+                        <!-- CABECERA: Foto + Nombre + Especialidad -->
+                        <div style="display:flex; gap:16px; align-items:center; background:#f8f9fb; border-radius:12px; padding:16px; margin-bottom:20px;">
+                            <div style="width:72px; height:72px; border-radius:50%; overflow:hidden; background:var(--primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <h:panelGroup rendered="#{not empty medicController.selectedMedic.image}">
+                                    <h:graphicImage value="#{medicController.selectedMedic.image}"
+                                                    style="width:72px; height:72px; object-fit:cover;" />
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{empty medicController.selectedMedic.image}">
+                                    <i class="pi pi-user" style="color:white; font-size:32px;"></i>
+                                </h:panelGroup>
+                            </div>
+                            <div>
+                                <h3 style="margin:0; font-size:18px;" class="text-primary font-bold">
+                                    Dr(a). #{medicController.selectedMedic.lastname} #{medicController.selectedMedic.firstname}
+                                </h3>
+                                <div style="margin-top:4px;">
+                                    <span class="hc-badge" style="background:#e8f5e9; color:var(--accent-dark);">
+                                        Reg. #{medicController.selectedMedic.regprofessional}
+                                    </span>
+                                </div>
+                                <div style="margin-top:6px; font-size:13px; color:#6b7280;">
+                                    <i class="pi pi-briefcase" style="margin-right:4px;"></i>
+                                    #{medicController.selectedMedic.specialtiesNames}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- IDENTIFICACIÓN -->
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                            <div style="background:var(--primary); width:4px; height:18px; border-radius:2px;"></div>
+                            <span class="font-bold text-primary">Identificación</span>
+                        </div>
+                        <div class="form-grid form-grid-2" style="margin-bottom:16px;">
+                            <div>
+                                <span style="display:block; font-size:11px;" class="text-muted">DNI / Cédula</span>
+                                <span class="font-semibold">#{empty medicController.selectedMedic.dni ? 'No registrado' : medicController.selectedMedic.dni}</span>
+                            </div>
+                            <div>
+                                <span style="display:block; font-size:11px;" class="text-muted">Pasaporte</span>
+                                <span class="font-semibold">#{empty medicController.selectedMedic.passport ? 'N/A' : medicController.selectedMedic.passport}</span>
+                            </div>
+                        </div>
+
+                        <p:divider />
+
+                        <!-- CONTACTO -->
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                            <div style="background:#10b981; width:4px; height:18px; border-radius:2px;"></div>
+                            <span class="font-bold text-primary">Contacto</span>
+                        </div>
+                        <div class="form-grid form-grid-2" style="margin-bottom:8px;">
+                            <div class="field">
+                                <span style="display:block; font-size:11px;" class="text-muted">Correo Electrónico</span>
+                                <span class="font-semibold" style="color:var(--primary);">
+                                    #{empty medicController.selectedMedic.email ? 'No registrado' : medicController.selectedMedic.email}
+                                </span>
+                            </div>
+                            <div class="field">
+                                <span style="display:block; font-size:11px;" class="text-muted">Celular</span>
+                                <span class="font-semibold">#{empty medicController.selectedMedic.mobile ? 'No registrado' : medicController.selectedMedic.mobile}</span>
+                            </div>
+                            <div class="field">
+                                <span style="display:block; font-size:11px;" class="text-muted">Teléfono Fijo</span>
+                                <span class="font-semibold">#{empty medicController.selectedMedic.telephone ? 'No registrado' : medicController.selectedMedic.telephone}</span>
+                            </div>
+                            <div class="field">
+                                <span style="display:block; font-size:11px;" class="text-muted">Dirección</span>
+                                <span class="font-semibold">#{empty medicController.selectedMedic.address ? 'No registrada' : medicController.selectedMedic.address}</span>
+                            </div>
+                        </div>
+
+                        <p:divider />
+
+                        <!-- AUDITORÍA -->
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                            <div style="background:#6366f1; width:4px; height:18px; border-radius:2px;"></div>
+                            <span class="font-bold text-primary">Registro del Sistema</span>
+                        </div>
+                        <div class="form-grid form-grid-2">
+                            <div>
+                                <span style="display:block; font-size:11px;" class="text-muted">Fecha de Registro</span>
+                                <span class="font-semibold">
+                                    <h:outputText value="#{medicController.selectedMedic.createdat}">
+                                        <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm" />
+                                    </h:outputText>
+                                </span>
+                            </div>
+                            <div>
+                                <span style="display:block; font-size:11px;" class="text-muted">Última Modificación</span>
+                                <h:outputText value="#{medicController.selectedMedic.editedat}"
+                                              rendered="#{medicController.selectedMedic.editedat != null}">
+                                    <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm" />
+                                </h:outputText>
+                                <h:outputText value="Sin modificaciones"
+                                              rendered="#{medicController.selectedMedic.editedat == null}" />
+                            </div>
+                        </div>
+
+                    </h:panelGroup>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div style="text-align:right;">
+                        <p:commandButton value="Cerrar" icon="pi pi-times"
+                                         onclick="PF('viewMedicDialog').hide()"
+                                         styleClass="ui-button-flat" />
+                    </div>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+
+    </ui:define>
+</ui:composition>

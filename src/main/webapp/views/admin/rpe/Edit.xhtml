@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="RpeEditDlg" widgetVar="RpeEditDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.EditRpeTitle}">
+            <h:form id="RpeEditForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{rpeController.selected != null}">
+                        <p:outputLabel value="#{bundle.EditRpeLabel_createdat}" for="createdat" />
+                        <p:calendar id="createdat" pattern="MM/dd/yyyy HH:mm:ss" value="#{rpeController.selected.createdat}" title="#{bundle.EditRpeTitle_createdat}" required="true" requiredMessage="#{bundle.EditRpeRequiredMessage_createdat}" showOn="button"/>
+                        <p:outputLabel value="#{bundle.EditRpeLabel_createdby}" for="createdby" />
+                        <p:inputText id="createdby" value="#{rpeController.selected.createdby}" title="#{bundle.EditRpeTitle_createdby}" required="true" requiredMessage="#{bundle.EditRpeRequiredMessage_createdby}"/>
+                        <p:outputLabel value="#{bundle.EditRpeLabel_editedat}" for="editedat" />
+                        <p:calendar id="editedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{rpeController.selected.editedat}" title="#{bundle.EditRpeTitle_editedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.EditRpeLabel_editedby}" for="editedby" />
+                        <p:inputText id="editedby" value="#{rpeController.selected.editedby}" title="#{bundle.EditRpeTitle_editedby}" />
+                        <p:outputLabel value="#{bundle.EditRpeLabel_deleted}" for="deleted" />
+                        <p:selectBooleanCheckbox id="deleted" value="#{rpeController.selected.deleted}" />
+                        <p:outputLabel value="#{bundle.EditRpeLabel_deletedat}" for="deletedat" />
+                        <p:calendar id="deletedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{rpeController.selected.deletedat}" title="#{bundle.EditRpeTitle_deletedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.EditRpeLabel_deletedby}" for="deletedby" />
+                        <p:inputText id="deletedby" value="#{rpeController.selected.deletedby}" title="#{bundle.EditRpeTitle_deletedby}" />
+                        <p:outputLabel value="#{bundle.EditRpeLabel_id}" for="id" />
+                        <p:inputText id="id" value="#{rpeController.selected.id}" title="#{bundle.EditRpeTitle_id}" required="true" requiredMessage="#{bundle.EditRpeRequiredMessage_id}"/>
+                        <p:outputLabel value="#{bundle.EditRpeLabel_head}" for="head" />
+                        <p:selectBooleanCheckbox id="head" value="#{rpeController.selected.head}" />
+                        <p:outputLabel value="#{bundle.EditRpeLabel_neck}" for="neck" />
+                        <p:selectBooleanCheckbox id="neck" value="#{rpeController.selected.neck}" />
+                        <p:outputLabel value="#{bundle.EditRpeLabel_chest}" for="chest" />
+                        <p:selectBooleanCheckbox id="chest" value="#{rpeController.selected.chest}" />
+                        <p:outputLabel value="#{bundle.EditRpeLabel_abdomen}" for="abdomen" />
+                        <p:selectBooleanCheckbox id="abdomen" value="#{rpeController.selected.abdomen}" />
+                        <p:outputLabel value="#{bundle.EditRpeLabel_pelvis}" for="pelvis" />
+                        <p:selectBooleanCheckbox id="pelvis" value="#{rpeController.selected.pelvis}" />
+                        <p:outputLabel value="#{bundle.EditRpeLabel_extremities}" for="extremities" />
+                        <p:selectBooleanCheckbox id="extremities" value="#{rpeController.selected.extremities}" />
+                        <p:outputLabel value="#{bundle.EditRpeLabel_observations}" for="observations" />
+                        <p:inputText id="observations" value="#{rpeController.selected.observations}" title="#{bundle.EditRpeTitle_observations}" />
+                        <p:outputLabel value="#{bundle.EditRpeLabel_medicalrecordid}" for="medicalrecordid" />
+                        <p:selectOneMenu id="medicalrecordid" value="#{rpeController.selected.medicalrecordid}" required="true" requiredMessage="#{bundle.EditRpeRequiredMessage_medicalrecordid}">
+                            <f:selectItem itemLabel="#{bundle.SelectOneMessage}"/>
+                            <f:selectItems value="#{medicalrecordController.itemsAvailableSelectOne}"
+                                           var="medicalrecordidItem"
+                                           itemValue="#{medicalrecordidItem}"/>
+                        </p:selectOneMenu>
+                    </p:panelGrid>
+                    <p:commandButton actionListener="#{rpeController.update}" value="#{bundle.Save}" update="display,:RpeListForm:datalist,:growl" oncomplete="handleSubmit(args, 'RpeEditDialog');"/>
+                    <p:commandButton value="#{bundle.Cancel}" onclick="RpeEditDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

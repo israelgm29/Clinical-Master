@@ -1,0 +1,346 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/template.xhtml">
+
+    <ui:define name="titulo">Catálogo de Enfermedades - CIE-10</ui:define>
+
+    <ui:define name="contenido">
+        
+        <!-- CSS Personalizado -->
+        <style>
+            .search-panel {
+                background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+            .search-badge {
+                background: #0d9488;
+                color: white;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            .code-badge {
+                background: #1e40af;
+                color: white;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-family: monospace;
+                font-weight: bold;
+                font-size: 13px;
+            }
+            .result-count {
+                color: #6b7280;
+                font-size: 14px;
+            }
+        </style>
+
+        <h:form id="form">
+            <p:growl id="messages" showDetail="true" />
+
+            <!-- HEADER -->
+            <div class="flex-between mb-4">
+                <div>
+                    <h2 class="text-primary font-bold m-0">
+                        <i class="pi pi-book mr-2"></i>Catálogo de Enfermedades
+                    </h2>
+                    <div class="text-muted" style="font-size: 14px;">
+                        Clasificación Internacional de Enfermedades (CIE-10)
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <p:commandButton value="Nueva Enfermedad" 
+                                     icon="pi pi-plus" 
+                                     actionListener="#{diseaseController.prepareCreate}"
+                                     update=":dialogs:manage-disease-content" 
+                                     oncomplete="PF('manageDiseaseDialog').show()"
+                                      />
+                    
+                    <p:button value="Tipos" 
+                              icon="pi pi-folder" 
+                              styleClass="ui-button-secondary" />
+                </div>
+            </div>
+
+            <!-- 🔍 PANEL DE BÚSQUEDA AVANZADA -->
+            <div class="search-panel card">
+                <div class="grid">
+                    
+                    <!-- Búsqueda rápida -->
+                    <div class="col-12 md:col-4">
+                        <div class="field">
+                            <p:outputLabel value="Buscar (código o nombre)" styleClass="font-bold"/>
+                            <div class="flex gap-2">
+                                <p:inputText value="#{diseaseController.searchTerm}" 
+                                             placeholder="Ej: A00, cólera, diabetes..."
+                                             style="flex: 1;">
+                                    <p:ajax event="keyup" 
+                                            listener="#{diseaseController.search}" 
+                                            update=":form:dt-diseases :form:result-info"
+                                            delay="500"/>
+                                </p:inputText>
+                                <p:commandButton icon="pi pi-search" 
+                                                 actionListener="#{diseaseController.search}"
+                                                 update=":form:dt-diseases :form:result-info"
+                                                 styleClass="ui-button-primary"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filtro por tipo -->
+                    <div class="col-12 md:col-3">
+                        <div class="field">
+                            <p:outputLabel value="Tipo de enfermedad" styleClass="font-bold"/>
+                            <p:selectOneMenu value="#{diseaseController.filterTypeId}" 
+                                             style="width: 100%;">
+                                <f:selectItem itemLabel="Todos los tipos" itemValue="#{null}"/>
+                                <f:selectItems value="#{diseaseController.diseasetypes}" 
+                                               var="dt" 
+                                               itemLabel="#{dt.name}" 
+                                               itemValue="#{dt.id}"/>
+                                <p:ajax event="change" 
+                                        listener="#{diseaseController.searchAdvanced}" 
+                                        update=":form:dt-diseases :form:result-info"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </div>
+
+                    <!-- Filtro por prefijo de código -->
+                    <div class="col-12 md:col-3">
+                        <div class="field">
+                            <p:outputLabel value="Categoría CIE-10" styleClass="font-bold"/>
+                            <p:selectOneMenu value="#{diseaseController.filterCodePrefix}" 
+                                             style="width: 100%;">
+                                <f:selectItem itemLabel="Todas las categorías" itemValue="#{null}"/>
+                                <f:selectItem itemLabel="A00-A09 - Intestinales" itemValue="A00"/>
+                                <f:selectItem itemLabel="A15-A19 - Tuberculosis" itemValue="A15"/>
+                                <f:selectItem itemLabel="E00-E90 - Endocrinas" itemValue="E"/>
+                                <f:selectItem itemLabel="I00-I99 - Circulatorias" itemValue="I"/>
+                                <f:selectItem itemLabel="J00-J99 - Respiratorias" itemValue="J"/>
+                                <f:selectItem itemLabel="K00-K93 - Digestivas" itemValue="K"/>
+                                <f:selectItem itemLabel="O00-O99 - Obstétricas" itemValue="O"/>
+                                <p:ajax event="change" 
+                                        listener="#{diseaseController.searchAdvanced}" 
+                                        update=":form:dt-diseases :form:result-info"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </div>
+
+                    <!-- Botón limpiar -->
+                    <div class="col-12 md:col-2">
+                        <div class="field">
+                            <p:outputLabel value="Acciones" styleClass="font-bold"/>
+                            <p:commandButton value="Limpiar" 
+                                             icon="pi pi-filter-slash"
+                                             actionListener="#{diseaseController.clearFilters}"
+                                             update=":form:dt-diseases :form:result-info @form"
+                                             styleClass="ui-button-secondary w-full"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INFO DE RESULTADOS -->
+            <p:outputPanel id="result-info" class="flex-between align-items-center mb-3">
+                <div class="result-count">
+                    <i class="pi pi-list mr-2"></i>
+                    Mostrando <span class="font-bold text-primary">#{diseaseController.items.size()}</span> enfermedades
+                </div>
+                <div class="flex gap-2">
+                    <p:commandButton value="Exportar" 
+                                     icon="pi pi-download" 
+                                     styleClass="ui-button-sm ui-button-secondary"/>
+                </div>
+            </p:outputPanel>
+
+            <!-- TABLA DE RESULTADOS -->
+            <div class="card shadow-sm">
+                <p:dataTable id="dt-diseases" 
+                             widgetVar="dtDiseases" 
+                             var="d" 
+                             value="#{diseaseController.items}"
+                             reflow="true" 
+                             rowKey="#{d.id}" 
+                             paginator="true" 
+                             rows="15" 
+                             paginatorPosition="bottom"
+                             emptyMessage="No se encontraron enfermedades con los criterios de búsqueda"
+                             sortMode="multiple">
+
+                    <p:column headerText="Código CIE-10" sortBy="#{d.code}" style="width: 120px;">
+                        <span class="code-badge">#{d.code != null ? d.code : 'N/A'}</span>
+                    </p:column>
+
+                    <p:column headerText="Nombre" sortBy="#{d.name}">
+                        <div class="flex flex-column gap-1">
+                            <span class="font-bold text-primary">#{d.name}</span>
+                            <span class="text-sm text-muted" style="font-size: 12px;">
+                                #{d.description != null ? (d.description.length() > 60 ? d.description.substring(0, 60).concat('...') : d.description) : ''}
+                            </span>
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Tipo" sortBy="#{d.diseasetypeid.name}" style="width: 180px;">
+                        <span class="search-badge">#{d.diseasetypeid.name}</span>
+                    </p:column>
+
+                    <p:column headerText="Acciones" exportable="false" style="width: 120px; text-align: center">
+                        <div class="flex-center gap-2">
+                            <p:commandButton icon="pi pi-pencil" 
+                                             title="Editar"
+                                             actionListener="#{diseaseController.prepareEdit(d)}"
+                                            update=":dialogs:dialog-wrapper"
+                                             oncomplete="PF('manageDiseaseDialog').show()"
+                                             styleClass="ui-button-flat ui-button-success" 
+                                             process="@this"/>
+
+                            <p:commandButton icon="pi pi-trash" 
+                                             title="Eliminar"
+                                             actionListener="#{diseaseController.delete(d)}"
+                                             update=":form:dt-diseases :form:result-info :form:messages" 
+                                             styleClass="ui-button-flat ui-button-danger"
+                                             process="@this">
+                                <p:confirm header="Confirmar" 
+                                           message="¿Eliminar la enfermedad '#{d.name}'?" 
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+                        </div>
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí" type="button" styleClass="ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- DIÁLOGO DE GESTIÓN -->
+        <h:form id="dialogs">
+            <p:outputPanel id="dialog-wrapper">
+            <p:dialog header="#{diseaseController.editMode ? 'Editar' : 'Nueva'} Enfermedad" 
+                      widgetVar="manageDiseaseDialog" 
+                      modal="true" 
+                      responsive="true" 
+                      width="700" 
+                      resizable="false" 
+                      showEffect="fade">
+
+                <p:outputPanel id="manage-disease-content" class="ui-fluid">
+                    <p:outputPanel rendered="#{not empty diseaseController.selected}">
+                        
+                        <div class="grid">
+                            
+                            <!-- Código CIE-10 -->
+                            <div class="col-12 md:col-4">
+                                <div class="field">
+                                    <p:outputLabel for="code">
+                                        Código CIE-10 <span style="color: var(--danger);">*</span>
+                                    </p:outputLabel>
+                                    <p:inputText id="code" 
+                                                 value="#{diseaseController.selected.code}" 
+                                                 required="true"
+                                                 requiredMessage="El código CIE-10 es obligatorio"
+                                                 maxlength="10"
+                                                 placeholder="Ej: A00.0"
+                                                 style="text-transform: uppercase; font-family: monospace;">
+                                        <p:ajax />
+                                    </p:inputText>
+                                    <small class="text-muted">Formato: Letra + números (ej: E11.9)</small>
+                                </div>
+                            </div>
+
+                            <!-- Tipo de enfermedad -->
+                            <div class="col-12 md:col-8">
+                                <div class="field">
+                                    <p:outputLabel for="diseasetype">
+                                        Tipo de Enfermedad <span style="color: var(--danger);">*</span>
+                                    </p:outputLabel>
+                                    <p:selectOneMenu id="diseasetype" 
+                                                     value="#{diseaseController.selected.diseasetypeid}"
+                                                     required="true"
+                                                     requiredMessage="Debe seleccionar un tipo"
+                                                     converter="diseasetypeConverter"
+                                                     style="width: 100%;">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{diseaseController.diseasetypes}" 
+                                                       var="dt" 
+                                                       itemLabel="#{dt.name}" 
+                                                       itemValue="#{dt}"/>
+                                    </p:selectOneMenu>
+                                </div>
+                            </div>
+
+                            <!-- Nombre -->
+                            <div class="col-12">
+                                <div class="field">
+                                    <p:outputLabel for="name">
+                                        Nombre <span style="color: var(--danger);">*</span>
+                                    </p:outputLabel>
+                                    <p:inputText id="name" 
+                                                 value="#{diseaseController.selected.name}" 
+                                                 required="true"
+                                                 requiredMessage="El nombre es obligatorio"
+                                                 maxlength="255"
+                                                 placeholder="Nombre completo de la enfermedad" />
+                                </div>
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="col-12">
+                                <div class="field">
+                                    <p:outputLabel for="description">Descripción / Síntomas</p:outputLabel>
+                                    <p:inputTextarea id="description" 
+                                                     value="#{diseaseController.selected.description}" 
+                                                     rows="3"
+                                                     maxlength="4000"
+                                                     placeholder="Descripción clínica, síntomas principales, criterios diagnósticos..."
+                                                     autoResize="true"/>
+                                </div>
+                            </div>
+
+                            <!-- Acciones terapéuticas -->
+                            <div class="col-12">
+                                <div class="field">
+                                    <p:outputLabel for="actions">Acciones Terapéuticas / Tratamiento</p:outputLabel>
+                                    <p:inputTextarea id="actions" 
+                                                     value="#{diseaseController.selected.actions}" 
+                                                     rows="3"
+                                                     maxlength="4000"
+                                                     placeholder="Tratamiento recomendado, medicamentos, intervenciones..."
+                                                     autoResize="true"/>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </p:outputPanel>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div class="flex justify-content-end gap-2">
+                        <p:commandButton value="Cancelar" 
+                                         icon="pi pi-times" 
+                                         onclick="PF('manageDiseaseDialog').hide()" 
+                                         styleClass="ui-button-secondary" 
+                                         type="button" />
+                        
+                        <p:commandButton value="#{diseaseController.editMode ? 'Actualizar' : 'Guardar'}" 
+                                         icon="pi pi-save" 
+                                         actionListener="#{diseaseController.save}"
+                                         update="manage-disease-content :form:dt-diseases :form:result-info :form:messages" 
+                                         process="manage-disease-content @this"
+                                         oncomplete="if (!args.validationFailed) { PF('manageDiseaseDialog').hide(); }"
+                                          />
+                    </div>
+                </f:facet>
+            </p:dialog>
+            </p:outputPanel>
+        </h:form>
+    </ui:define>
+</ui:composition>

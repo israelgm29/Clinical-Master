@@ -1,0 +1,121 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets">
+
+    <aside class="sidebar">
+        
+        <!-- Header simple -->
+        <div class="sidebar-header">
+            <span class="material-symbols-outlined">local_hospital</span>
+            <div>
+                <div class="logo">Hospital General</div>
+                <div class="subtitle">Sistema Clínico</div>
+            </div>
+        </div>
+
+        <!-- Menú principal -->
+        <nav class="menu">
+            
+            <!-- Dashboard -->
+            <h:link outcome="/index.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">space_dashboard</span>
+                <span>Dashboard</span>
+            </h:link>
+
+            <div class="menu-divider">Gestión Principal</div>
+
+            <!-- Pacientes -->
+            <h:link outcome="/views/admin/patient/GestionPacientes.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">personal_injury</span>
+                <span>Pacientes</span>
+            </h:link>
+
+            <!-- Hospital -->
+            <h:link outcome="/views/admin/company/GestionHospital.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">local_hospital</span>
+                <span>Hospital</span>
+            </h:link>
+
+            <!-- Médicos -->
+            <h:link outcome="/views/admin/medic/GestionMedicos.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">stethoscope</span>
+                <span>Médicos</span>
+            </h:link>
+
+            <div class="menu-divider">Catálogos Médicos</div>
+
+            <!-- Enfermedades -->
+            <h:link outcome="/views/admin/disease/GestionEnfermedades.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">microbiology</span>
+                <span>Enfermedades</span>
+            </h:link>
+
+            <!-- Tipos de Enfermedades -->
+            <h:link outcome="/views/admin/diseasetype/GestionTiposEnfermedades.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">coronavirus</span>
+                <span>Tipos de Enfermedades</span>
+            </h:link>
+
+            <!-- Exámenes -->
+            <h:link outcome="/views/admin/exam/GestionExamenes.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">biotech</span>
+                <span>Exámenes</span>
+            </h:link>
+
+            <!-- Tipos de Exámenes -->
+            <h:link outcome="/views/admin/exam/GestionExamenes.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">science</span>
+                <span>Tipos de Exámenes</span>
+            </h:link>
+
+            <div class="menu-divider">Configuración del Sistema</div>
+
+            <!-- Configuración de Opciones -->
+            <h:link outcome="/views/admin/exam/GestionExamenes.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">tune</span>
+                <span>Configuración de Opciones</span>
+            </h:link>
+
+            <!-- Configuración de Permisos -->
+            <h:link outcome="/views/admin/exam/GestionExamenes.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">admin_panel_settings</span>
+                <span>Configuración de Permisos</span>
+            </h:link>
+
+            <!-- Configuración de Módulos -->
+            <h:link outcome="/views/admin/exam/GestionExamenes.xhtml" styleClass="menu-item">
+                <span class="material-symbols-outlined">widgets</span>
+                <span>Configuración de Módulos</span>
+            </h:link>
+
+        </nav>
+
+        <!-- Footer mínimo -->
+         <div class="sidebar-footer">
+            <div class="footer-content">
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <span class="material-symbols-outlined">terminal</span>
+                        <span>#{appInfo.jakartaVersion}</span>
+                    </div>
+                    <div class="tech-item">
+                        <span class="material-symbols-outlined">auto_awesome</span>
+                        <span>#{appInfo.primeFacesVersion}</span>
+                    </div>
+                </div>
+                <div class="system-info-footer">
+                    <div class="tech-item">
+                        <span class="material-symbols-outlined">deployed_code</span>
+                        <span>Java #{appInfo.javaVersion}</span>
+                    </div>
+                </div>
+                <div class="copyright">
+                    <small>© #{sidebarInfo.year} Hospital General</small>
+                    <br/>
+                    <small>Todos los derechos reservados</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+</ui:composition>

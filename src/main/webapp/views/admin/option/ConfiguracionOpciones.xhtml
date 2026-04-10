@@ -1,0 +1,307 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/template.xhtml">
+
+    <ui:define name="titulo">Administración de Catálogos</ui:define>
+
+    <ui:define name="contenido">
+
+        <style>
+            .group-item {
+                padding: 12px;
+                border-radius: 8px;
+                margin-bottom: 4px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .group-item:hover {
+                background: #f3f4f6;
+            }
+            .group-item.selected {
+                background: #f0fdfa;
+                border-left: 4px solid #0d9488;
+            }
+            .option-badge {
+                background: #e0f2fe;
+                color: #0369a1;
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+            .clickable-row {
+                cursor: pointer;
+            }
+
+            .clickable-row td {
+                width: 100%;
+                display: block;
+            }
+
+            /* Alternativa más compatible */
+            .ui-datatable .clickable-row td:first-child {
+                width: 100%;
+            }
+        </style>
+
+        <h:form id="form">
+
+            <p:growl id="messages" showDetail="true" />
+
+            <!-- HEADER -->
+            <div class="flex-between mb-4">
+                <div>
+                    <h2 class="text-primary font-bold m-0">
+                        <i class="pi pi-tags mr-2"></i>Catálogos del Sistema
+                    </h2>
+                    <div class="text-muted" style="font-size: 14px;">
+                        Administre grupos y opciones dinámicas
+                    </div>
+                </div>
+            </div>
+
+            <!-- MASTER-DETAIL LAYOUT -->
+            <div style="display: grid; grid-template-columns: 350px 1fr; gap: 1rem;">
+
+                <!-- 🏷️ PANEL IZQUIERDO: Grupos (Master) -->
+                <div class="card shadow-sm">
+                    <div class="flex-between align-items-center mb-3 p-3 surface-ground border-round">
+                        <div class="flex align-items-center gap-2">
+                            <i class="pi pi-folder-open text-primary text-xl"></i>
+                            <span class="font-bold text-primary">Grupos</span>
+                        </div>
+                        <p:commandButton icon="pi pi-plus" 
+                                         title="Nuevo Grupo"
+                                         actionListener="#{catalogController.prepareNewGroup}"
+                                         update=":dialogs:manage-group-content" 
+                                         oncomplete="PF('manageGroupDialog').show()"
+                                         styleClass="ui-button-sm ui-button-success"/>
+                    </div>
+
+                    <!-- Lista de grupos -->
+                    <p:dataTable id="dt-groups" 
+                                 value="#{catalogController.groups}" 
+                                 var="g"
+                                 selectionMode="single"
+                                 selection="#{catalogController.selectedGroup}"
+                                 rowKey="#{g.id}"
+                                 styleClass="group-table"
+                                 scrollable="true"
+                                 scrollHeight="400px"
+                                 rowStyleClass="clickable-row">
+
+                        <p:ajax event="rowSelect" 
+                                listener="#{catalogController.onGroupSelect}" 
+                                update=":form:panel-options :form:header-options"/>
+
+                        <p:column style="padding: 12px;">
+                            <div class="flex align-items-center justify-content-between">
+                                <div class="flex align-items-center gap-2">
+                                    <i class="pi pi-folder text-primary"></i>
+                                    <span class="#{catalogController.selectedGroup.id eq g.id ? 'font-bold text-primary' : ''}">
+                                        #{g.name}
+                                    </span>
+                                </div>
+                                <span class="option-badge">
+                                    #{g.optionCollection != null ? g.optionCollection.size() : 0}
+                                </span>
+                            </div>
+                        </p:column>
+                    </p:dataTable>
+                </div>
+
+                <!-- 🔧 PANEL DERECHO: Opciones (Detail) -->
+                <div class="card shadow-sm">
+
+                    <p:outputPanel id="header-options">
+                        <div class="flex-between align-items-center mb-4 p-3 surface-ground border-round">
+                            <div class="flex align-items-center gap-2">
+                                <i class="pi pi-list text-accent text-xl"></i>
+                                <div>
+                                    <span class="font-bold text-primary text-lg">
+                                        #{catalogController.selectedGroup != null 
+                                          ? 'Opciones: '.concat(catalogController.selectedGroup.name.toString()) 
+                                          : 'Seleccione un grupo'}
+                                    </span>
+                                    <div class="text-sm text-muted" style="font-size: 12px;">
+                                        #{catalogController.options != null ? catalogController.options.size() : 0} opciones
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p:commandButton value="Nueva Opción" 
+                                             icon="pi pi-plus" 
+                                             actionListener="#{catalogController.prepareNewOption}"
+                                             disabled="#{catalogController.selectedGroup == null}"
+                                             update=":dialogs:manage-option-content" 
+                                             oncomplete="PF('manageOptionDialog').show()"
+                                             styleClass="ui-button-success"/>
+                        </div>
+                    </p:outputPanel>
+
+                    <p:outputPanel id="panel-options">
+                        <!-- Estado vacío: Sin grupo seleccionado -->
+                        <h:panelGroup rendered="#{catalogController.selectedGroup == null}">
+                            <div class="text-center p-6 text-muted">
+                                <i class="pi pi-arrow-left text-4xl mb-3 text-primary"></i>
+                                <h4>Seleccione un grupo</h4>
+                                <p>Haga clic en un grupo de la lista izquierda para ver sus opciones</p>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- Estado vacío: Grupo sin opciones -->
+                        <h:panelGroup rendered="#{catalogController.selectedGroup != null and empty catalogController.options}">
+                            <div class="text-center p-6 text-muted">
+                                <i class="pi pi-inbox text-4xl mb-3"></i>
+                                <h4>No hay opciones en este grupo</h4>
+                                <p class="mb-3">Cree la primera opción para este catálogo</p>
+                                <p:commandButton value="Crear Opción" 
+                                                 icon="pi pi-plus" 
+                                                 actionListener="#{catalogController.prepareNewOption}"
+                                                 update=":dialogs:manage-option-content" 
+                                                 oncomplete="PF('manageOptionDialog').show()"
+                                                 styleClass="ui-button-success"/>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- Tabla de opciones -->
+                        <h:panelGroup rendered="#{not empty catalogController.options}">
+                            <p:dataTable id="dt-options" 
+                                         value="#{catalogController.options}" 
+                                         var="o"
+                                         reflow="true" 
+                                         rowKey="#{o.id}"
+                                         paginator="true" 
+                                         rows="10">
+
+                                <p:column headerText="ID" style="width: 80px;">
+                                    <span class="text-muted">##{o.id}</span>
+                                </p:column>
+
+                                <p:column headerText="Nombre" sortBy="#{o.name}">
+                                    <span class="font-medium">#{o.name}</span>
+                                </p:column>
+
+                                <p:column headerText="Acciones" style="width: 100px; text-align: center">
+                                    <div class="flex-center gap-2">
+                                        <p:commandButton icon="pi pi-pencil" 
+                                                         title="Editar"
+                                                         actionListener="#{catalogController.prepareEditOption(o)}"
+                                                         update=":dialogs:manage-option-content"
+                                                         oncomplete="PF('manageOptionDialog').show()"
+                                                         styleClass="ui-button-flat ui-button-secondary" 
+                                                         process="@this"/>
+
+                                        <p:commandButton icon="pi pi-trash" 
+                                                         title="Eliminar"
+                                                         actionListener="#{catalogController.deleteOption(o)}"
+                                                         update=":form:panel-options :form:header-options :form:messages" 
+                                                         styleClass="ui-button-flat ui-button-danger"
+                                                         process="@this">
+                                            <p:confirm header="Confirmar" 
+                                                       message="¿Eliminar '#{o.name}'?" 
+                                                       icon="pi pi-exclamation-triangle"/>
+                                        </p:commandButton>
+                                    </div>
+                                </p:column>
+                            </p:dataTable>
+                        </h:panelGroup>
+                    </p:outputPanel>
+                </div>
+            </div>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí" type="button" styleClass="ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- DIÁLOGO: Nuevo/Editar Grupo -->
+        <h:form id="dialogs">
+            <p:dialog header="#{catalogController.editGroupMode ? 'Editar' : 'Nuevo'} Grupo" 
+                      widgetVar="manageGroupDialog" 
+                      modal="true" 
+                      width="400" 
+                      resizable="false">
+
+                <p:outputPanel id="manage-group-content" class="ui-fluid">
+                    <p:outputPanel rendered="#{not empty catalogController.newGroup}">
+                        <div class="field">
+                            <p:outputLabel for="groupName">
+                                Nombre del Grupo <span style="color: var(--danger);">*</span>
+                            </p:outputLabel>
+                            <p:inputText id="groupName" 
+                                         value="#{catalogController.newGroup.name}" 
+                                         required="true"
+                                         maxlength="50"
+                                         placeholder="Ej: Tipo de Sangre, Estado Civil..." />
+                        </div>
+                    </p:outputPanel>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <p:commandButton value="Cancelar" 
+                                     onclick="PF('manageGroupDialog').hide()" 
+                                     styleClass="ui-button-secondary" 
+                                     type="button"/>
+                    <p:commandButton value="#{catalogController.editGroupMode ? 'Actualizar' : 'Guardar'}" 
+                                     icon="pi pi-save"
+                                     actionListener="#{catalogController.saveGroup}"
+                                     update="manage-group-content :form:dl-groups :form:messages"
+                                     oncomplete="if (!args.validationFailed) PF('manageGroupDialog').hide()"
+                                     styleClass="ui-button-primary"/>
+                </f:facet>
+            </p:dialog>
+
+            <!-- DIÁLOGO: Nuevo/Editar Opción -->
+            <p:dialog header="#{catalogController.editOptionMode ? 'Editar' : 'Nueva'} Opción" 
+                      widgetVar="manageOptionDialog" 
+                      modal="true" 
+                      width="400" 
+                      resizable="false">
+
+                <p:outputPanel id="manage-option-content" class="ui-fluid">
+                    <p:outputPanel rendered="#{not empty catalogController.newOption}">
+
+                        <div class="field mb-3">
+                            <p:outputLabel value="Grupo" styleClass="font-bold text-primary"/>
+                            <div class="p-2 surface-ground border-round">
+                                <i class="pi pi-folder text-primary mr-2"></i>
+                                #{catalogController.selectedGroup.name}
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <p:outputLabel for="optionName">
+                                Nombre de la Opción <span style="color: var(--danger);">*</span>
+                            </p:outputLabel>
+                            <p:inputText id="optionName" 
+                                         value="#{catalogController.newOption.name}" 
+                                         required="true"
+                                         maxlength="75"
+                                         placeholder="Ej: A+, Soltero, Masculino..." />
+                        </div>
+
+                    </p:outputPanel>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <p:commandButton value="Cancelar" 
+                                     onclick="PF('manageOptionDialog').hide()" 
+                                     styleClass="ui-button-secondary" 
+                                     type="button"/>
+                    <p:commandButton value="#{catalogController.editOptionMode ? 'Actualizar' : 'Guardar'}" 
+                                     icon="pi pi-save"
+                                     actionListener="#{catalogController.saveOption}"
+                                     update="manage-option-content :form:panel-options :form:header-options :form:messages"
+                                     oncomplete="if (!args.validationFailed) PF('manageOptionDialog').hide()"
+                                     styleClass="ui-button-primary"/>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+    </ui:define>
+</ui:composition>

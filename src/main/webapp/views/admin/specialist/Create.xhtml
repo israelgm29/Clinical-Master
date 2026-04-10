@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="SpecialistCreateDlg" widgetVar="SpecialistCreateDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.CreateSpecialistTitle}">
+            <h:form id="SpecialistCreateForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{specialistController.selected != null}">
+                        <p:outputLabel value="#{bundle.CreateSpecialistLabel_createdat}" for="createdat" />
+                        <p:calendar id="createdat" pattern="MM/dd/yyyy HH:mm:ss" value="#{specialistController.selected.createdat}" title="#{bundle.EditSpecialistTitle_createdat}" required="true" requiredMessage="#{bundle.EditSpecialistRequiredMessage_createdat}" showOn="button"/>
+                        <p:outputLabel value="#{bundle.CreateSpecialistLabel_createdby}" for="createdby" />
+                        <p:inputText id="createdby" value="#{specialistController.selected.createdby}" title="#{bundle.CreateSpecialistTitle_createdby}" required="true" requiredMessage="#{bundle.CreateSpecialistRequiredMessage_createdby}"/>
+                        <p:outputLabel value="#{bundle.CreateSpecialistLabel_editedat}" for="editedat" />
+                        <p:calendar id="editedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{specialistController.selected.editedat}" title="#{bundle.EditSpecialistTitle_editedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.CreateSpecialistLabel_editedby}" for="editedby" />
+                        <p:inputText id="editedby" value="#{specialistController.selected.editedby}" title="#{bundle.CreateSpecialistTitle_editedby}" />
+                        <p:outputLabel value="#{bundle.CreateSpecialistLabel_deleted}" for="deleted" />
+                        <p:selectBooleanCheckbox id="deleted" value="#{specialistController.selected.deleted}" />
+                        <p:outputLabel value="#{bundle.CreateSpecialistLabel_deletedat}" for="deletedat" />
+                        <p:calendar id="deletedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{specialistController.selected.deletedat}" title="#{bundle.EditSpecialistTitle_deletedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.CreateSpecialistLabel_deletedby}" for="deletedby" />
+                        <p:inputText id="deletedby" value="#{specialistController.selected.deletedby}" title="#{bundle.CreateSpecialistTitle_deletedby}" />
+                        <p:outputLabel value="#{bundle.CreateSpecialistLabel_id}" for="id" />
+                        <p:inputText id="id" value="#{specialistController.selected.id}" title="#{bundle.CreateSpecialistTitle_id}" required="true" requiredMessage="#{bundle.CreateSpecialistRequiredMessage_id}"/>
+                        <p:outputLabel value="#{bundle.CreateSpecialistLabel_medicid}" for="medicid" />
+                        <p:selectOneMenu id="medicid" value="#{specialistController.selected.medicid}" required="true" requiredMessage="#{bundle.EditSpecialistRequiredMessage_medicid}">
+                            <f:selectItems value="#{medicController.itemsAvailableSelectOne}"
+                                           var="medicidItem"
+                                           itemValue="#{medicidItem}"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="#{bundle.CreateSpecialistLabel_medicalspecialtyid}" for="medicalspecialtyid" />
+                        <p:selectOneMenu id="medicalspecialtyid" value="#{specialistController.selected.medicalspecialtyid}" required="true" requiredMessage="#{bundle.EditSpecialistRequiredMessage_medicalspecialtyid}">
+                            <f:selectItems value="#{medicalspecialtyController.itemsAvailableSelectOne}"
+                                           var="medicalspecialtyidItem"
+                                           itemValue="#{medicalspecialtyidItem}"/>
+                        </p:selectOneMenu>
+                    </p:panelGrid>
+                    <p:commandButton actionListener="#{specialistController.create}" value="#{bundle.Save}" update="display,:SpecialistListForm:datalist,:growl" oncomplete="handleSubmit(args,'SpecialistCreateDialog');"/>
+                    <p:commandButton value="#{bundle.Cancel}" onclick="SpecialistCreateDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

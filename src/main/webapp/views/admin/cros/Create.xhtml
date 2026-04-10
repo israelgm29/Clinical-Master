@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <p:dialog id="CrosCreateDlg" widgetVar="CrosCreateDialog" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.CreateCrosTitle}">
+            <h:form id="CrosCreateForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{crosController.selected != null}">
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_createdat}" for="createdat" />
+                        <p:calendar id="createdat" pattern="MM/dd/yyyy HH:mm:ss" value="#{crosController.selected.createdat}" title="#{bundle.EditCrosTitle_createdat}" required="true" requiredMessage="#{bundle.EditCrosRequiredMessage_createdat}" showOn="button"/>
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_createdby}" for="createdby" />
+                        <p:inputText id="createdby" value="#{crosController.selected.createdby}" title="#{bundle.CreateCrosTitle_createdby}" required="true" requiredMessage="#{bundle.CreateCrosRequiredMessage_createdby}"/>
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_editedat}" for="editedat" />
+                        <p:calendar id="editedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{crosController.selected.editedat}" title="#{bundle.EditCrosTitle_editedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_editedby}" for="editedby" />
+                        <p:inputText id="editedby" value="#{crosController.selected.editedby}" title="#{bundle.CreateCrosTitle_editedby}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_deleted}" for="deleted" />
+                        <p:selectBooleanCheckbox id="deleted" value="#{crosController.selected.deleted}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_deletedat}" for="deletedat" />
+                        <p:calendar id="deletedat" pattern="MM/dd/yyyy HH:mm:ss" value="#{crosController.selected.deletedat}" title="#{bundle.EditCrosTitle_deletedat}"  showOn="button"/>
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_deletedby}" for="deletedby" />
+                        <p:inputText id="deletedby" value="#{crosController.selected.deletedby}" title="#{bundle.CreateCrosTitle_deletedby}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_id}" for="id" />
+                        <p:inputText id="id" value="#{crosController.selected.id}" title="#{bundle.CreateCrosTitle_id}" required="true" requiredMessage="#{bundle.CreateCrosRequiredMessage_id}"/>
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_senseorgans}" for="senseorgans" />
+                        <p:selectBooleanCheckbox id="senseorgans" value="#{crosController.selected.senseorgans}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_respiratory}" for="respiratory" />
+                        <p:selectBooleanCheckbox id="respiratory" value="#{crosController.selected.respiratory}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_cardiovascular}" for="cardiovascular" />
+                        <p:selectBooleanCheckbox id="cardiovascular" value="#{crosController.selected.cardiovascular}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_digestive}" for="digestive" />
+                        <p:selectBooleanCheckbox id="digestive" value="#{crosController.selected.digestive}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_genital}" for="genital" />
+                        <p:selectBooleanCheckbox id="genital" value="#{crosController.selected.genital}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_urinary}" for="urinary" />
+                        <p:selectBooleanCheckbox id="urinary" value="#{crosController.selected.urinary}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_skeletalmuscle}" for="skeletalmuscle" />
+                        <p:selectBooleanCheckbox id="skeletalmuscle" value="#{crosController.selected.skeletalmuscle}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_endocrine}" for="endocrine" />
+                        <p:selectBooleanCheckbox id="endocrine" value="#{crosController.selected.endocrine}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_lymphaticheme}" for="lymphaticheme" />
+                        <p:selectBooleanCheckbox id="lymphaticheme" value="#{crosController.selected.lymphaticheme}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_nervous}" for="nervous" />
+                        <p:selectBooleanCheckbox id="nervous" value="#{crosController.selected.nervous}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_observations}" for="observations" />
+                        <p:inputText id="observations" value="#{crosController.selected.observations}" title="#{bundle.CreateCrosTitle_observations}" />
+                        <p:outputLabel value="#{bundle.CreateCrosLabel_medicalrecordid}" for="medicalrecordid" />
+                        <p:selectOneMenu id="medicalrecordid" value="#{crosController.selected.medicalrecordid}" required="true" requiredMessage="#{bundle.EditCrosRequiredMessage_medicalrecordid}">
+                            <f:selectItems value="#{medicalrecordController.itemsAvailableSelectOne}"
+                                           var="medicalrecordidItem"
+                                           itemValue="#{medicalrecordidItem}"/>
+                        </p:selectOneMenu>
+                    </p:panelGrid>
+                    <p:commandButton actionListener="#{crosController.create}" value="#{bundle.Save}" update="display,:CrosListForm:datalist,:growl" oncomplete="handleSubmit(args,'CrosCreateDialog');"/>
+                    <p:commandButton value="#{bundle.Cancel}" onclick="CrosCreateDialog.hide()"/>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

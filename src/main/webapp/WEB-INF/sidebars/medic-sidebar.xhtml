@@ -1,0 +1,35 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+
+    <!-- SIDEBAR -->
+    <aside class="medic-sidebar collapsed" id="sidebar">
+
+        <!-- HEADER -->
+        <div class="sidebar-header">
+            <span class="material-symbols-outlined">stethoscope</span>
+
+            <div class="header-text">
+                <div class="logo">Dr. #{loginBean.nombre}</div>
+                <div class="subtitle">Médico</div>
+            </div>
+        </div>
+
+        <!-- MENU -->
+        <p:panelMenu model="#{medicMenuBean.menuModel}" 
+                     styleClass="medic-panelmenu"
+                     widgetVar="menu"/>
+
+        <!-- FOOTER -->
+        <div class="sidebar-footer">
+            <p:commandButton icon="pi pi-sign-out"
+                             value="Cerrar sesión"
+                             action="#{loginBean.logout}"
+                             styleClass="ui-button-secondary ui-button-sm"
+                             style="width: 100%;"/>
+        </div>
+
+    </aside>
+
+</ui:composition>

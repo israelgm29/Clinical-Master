@@ -1,0 +1,227 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/template.xhtml">
+
+    <ui:define name="titulo">Configuración del Hospital</ui:define>
+
+    <ui:define name="contenido">
+
+        <style>
+            .color-preview {
+                width: 50px;
+                height: 50px;
+                border-radius: 8px;
+                border: 2px solid #ddd;
+                display: inline-block;
+            }
+            .logo-preview {
+                max-width: 200px;
+                max-height: 100px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 10px;
+            }
+            .config-section {
+                background: #f8fafc;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+        </style>
+
+        <h:form id="form" enctype="multipart/form-data">
+            <p:growl id="messages" showDetail="true" life="5000" sticky="false" />
+
+       
+
+            <div class="grid">
+
+                <!-- INFORMACIÓN GENERAL -->
+                <div class="col-12 md:col-6">
+                    <div class="config-section">
+                        <h3 class="text-primary font-bold mb-3">
+                            <i class="pi pi-info-circle mr-2"></i>Información General
+                        </h3>
+
+                        <div class="field mb-3">
+                            <p:outputLabel for="name" value="Nombre del Hospital" styleClass="font-bold"/>
+                            <p:inputText id="name" 
+                                         value="#{companyController.company.name}" 
+                                         required="true"
+                                         maxlength="50"
+                                         style="width: 100%;"/>
+                        </div>
+
+                        <div class="field mb-3">
+                            <p:outputLabel for="smallname" value="Nombre Corto" styleClass="font-bold"/>
+                            <p:inputText id="smallname" 
+                                         value="#{companyController.company.smallname}" 
+                                         maxlength="25"
+                                         placeholder="Ej: HospGen"
+                                         style="width: 100%;"/>
+                        </div>
+
+                        <div class="field mb-3">
+                            <p:outputLabel for="description" value="Descripción" styleClass="font-bold"/>
+                            <p:inputTextarea id="description" 
+                                             value="#{companyController.company.description}" 
+                                             rows="3"
+                                             maxlength="150"
+                                             autoResize="true"
+                                             style="width: 100%;"/>
+                        </div>
+
+                        <div class="field mb-3">
+                            <p:outputLabel for="ruc" value="RUC" styleClass="font-bold"/>
+                            <p:inputText id="ruc" 
+                                         value="#{companyController.company.ruc}" 
+                                         maxlength="10"
+                                         style="width: 100%;"/>
+                        </div>
+
+                        <div class="field mb-3">
+                            <p:outputLabel for="manager" value="Gerente/Administrador" styleClass="font-bold"/>
+                            <p:inputText id="manager" 
+                                         value="#{companyController.company.manager}" 
+                                         maxlength="50"
+                                         style="width: 100%;"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLORES Y BRANDING -->
+                <div class="col-12 md:col-6">
+                    <div class="config-section">
+                        <h3 class="text-primary font-bold mb-3">
+                            <i class="pi pi-palette mr-2"></i>Colores del Sistema
+                        </h3>
+
+                        <div class="grid mb-3">
+                            <div class="col-6">
+                                <div class="field">
+                                    <p:outputLabel for="primarycolor" value="Color Primario" styleClass="font-bold"/>
+                                    <p:colorPicker id="primarycolor" 
+                                                   value="#{companyController.company.primarycolor}"
+                                                   style="width: 100%;">
+                                        <p:ajax event="change" listener="#{companyController.previewColors}"/>
+                                    </p:colorPicker>
+                                    <small class="text-muted">Fondos, headers, botones principales</small>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="color-preview" 
+                                          style="background-color: #{companyController.company.primarycolor};">
+                                    </span>
+                                    <span class="ml-2">#{companyController.company.primarycolor}</span>
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="field">
+                                    <p:outputLabel for="secondarycolor" value="Color Secundario" styleClass="font-bold"/>
+                                    <p:colorPicker id="secondarycolor" 
+                                                   value="#{companyController.company.secondarycolor}"
+                                                   style="width: 100%;">
+                                        <p:ajax event="change" listener="#{companyController.previewColors}"/>
+                                    </p:colorPicker>
+                                    <small class="text-muted">Iconos, acentos, botones secundarios</small>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="color-preview" 
+                                          style="background-color: #{companyController.company.secondarycolor};">
+                                    </span>
+                                    <span class="ml-2">#{companyController.company.secondarycolor}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field mb-3">
+                            <p:outputLabel for="logo" value="Logo del Hospital" styleClass="font-bold"/>
+                            <p:fileUpload id="logo"
+                                          mode="simple"
+                                          skinSimple="true"
+                                          label="Seleccionar"
+                                          accept="image/*"
+                                          style="width: 100%;"/>
+                            <small class="text-muted">Formato recomendado: PNG o JPG, máx 200KB</small>
+                        </div>
+
+                        <p:outputPanel rendered="#{not empty companyController.company.logo}">
+                            <div class="field">
+                                <label class="font-bold">Logo Actual:</label>
+                                <div>
+                                    <img src="#{request.contextPath}/uploads/#{companyController.company.logo}" 
+                                         class="logo-preview" 
+                                         alt="Logo"/>
+                                </div>
+                            </div>
+                        </p:outputPanel>
+                    </div>
+                </div>
+
+                <!-- CONTACTO -->
+                <div class="col-12">
+                    <div class="config-section">
+                        <h3 class="text-primary font-bold mb-3">
+                            <i class="pi pi-phone mr-2"></i>Información de Contacto
+                        </h3>
+
+                        <div class="grid">
+                            <div class="col-12 md:col-3">
+                                <div class="field">
+                                    <p:outputLabel for="telephone" value="Teléfono" styleClass="font-bold"/>
+                                    <p:inputText id="telephone" 
+                                                 value="#{companyController.company.telephone}" 
+                                                 maxlength="13"
+                                                 style="width: 100%;"/>
+                                </div>
+                            </div>
+
+                            <div class="col-12 md:col-3">
+                                <div class="field">
+                                    <p:outputLabel for="mobile" value="Móvil" styleClass="font-bold"/>
+                                    <p:inputText id="mobile" 
+                                                 value="#{companyController.company.mobile}" 
+                                                 maxlength="13"
+                                                 style="width: 100%;"/>
+                                </div>
+                            </div>
+
+                            <div class="col-12 md:col-6">
+                                <div class="field">
+                                    <p:outputLabel for="email" value="Email" styleClass="font-bold"/>
+                                    <p:inputText id="email" 
+                                                 value="#{companyController.company.email}" 
+                                                 maxlength="50"
+                                                 style="width: 100%;"/>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="field">
+                                    <p:outputLabel for="address" value="Dirección" styleClass="font-bold"/>
+                                    <p:inputText id="address" 
+                                                 value="#{companyController.company.address}" 
+                                                 required="true"
+                                                 maxlength="100"
+                                                 style="width: 100%;"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="flex justify-content-end mt-4">
+                <p:commandButton value="Guardar Configuración" 
+                                 icon="pi pi-save" 
+                                 actionListener="#{companyController.save}"
+                                 update=":form:messages"
+                                 styleClass=" ui-button-lg"/>
+            </div>
+        </h:form>
+    </ui:define>
+</ui:composition>

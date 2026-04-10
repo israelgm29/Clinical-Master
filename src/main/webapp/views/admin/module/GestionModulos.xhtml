@@ -1,0 +1,165 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/template.xhtml">
+
+    <ui:define name="titulo">Administración de Módulos</ui:define>
+
+    <ui:define name="contenido">
+
+        <style>
+            .module-card {
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+            .stats-badge {
+                background: #0284c7;
+                color: white;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+        </style>
+
+        <h:form id="form">
+            <p:growl id="messages" showDetail="true" />
+
+            <!-- HEADER -->
+            <div class="flex-between mb-4">
+                <div>
+                    <h2 class="text-primary font-bold m-0">
+                        <i class="pi pi-th-large mr-2"></i>Módulos del Sistema
+                    </h2>
+                    <div class="text-muted" style="font-size: 14px;">
+                        Gestiona los módulos disponibles para asignación de permisos
+                    </div>
+                </div>
+                <p:commandButton value="Nuevo Módulo" 
+                                 icon="pi pi-plus" 
+                                 actionListener="#{moduleController.prepareNewModule}"
+                                 update=":dialogs:manage-module-content" 
+                                 oncomplete="PF('manageModuleDialog').show()"
+                                 styleClass="ui-button-success" />
+            </div>
+
+            <!-- ESTADÍSTICAS -->
+            <div class="module-card card mb-4">
+                <div class="flex align-items-center gap-3">
+                    <i class="pi pi-th-large text-primary" style="font-size: 2rem;"></i>
+                    <div>
+                        <div class="text-2xl font-bold">#{moduleController.modules.size()}</div>
+                        <div class="text-muted">Módulos registrados</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLA DE MÓDULOS -->
+            <div class="card shadow-sm">
+                <p:dataTable id="dt-modules" 
+                             widgetVar="dtModules" 
+                             var="m" 
+                             value="#{moduleController.modules}"
+                             reflow="true" 
+                             rowKey="#{m.id}" 
+                             paginator="true" 
+                             rows="10" 
+                             paginatorPosition="bottom"
+                             emptyMessage="No hay módulos registrados"
+                             sortMode="multiple">
+
+                    <p:column headerText="ID" sortBy="#{m.id}" style="width: 80px; text-align: center;">
+                        <span class="stats-badge">#{m.id}</span>
+                    </p:column>
+
+                    <p:column headerText="Nombre" sortBy="#{m.name}">
+                        <div class="flex align-items-center gap-2">
+                            <i class="pi pi-folder" style="color: #0284c7;"></i>
+                            <span class="font-bold">#{m.name}</span>
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Acciones" exportable="false" style="width: 120px; text-align: center">
+                        <div class="flex-center gap-2">
+                            <p:commandButton icon="pi pi-pencil" 
+                                             title="Editar"
+                                             actionListener="#{moduleController.prepareEdit(m)}"
+                                             update=":dialogs:manage-module-content"
+                                             oncomplete="PF('manageModuleDialog').show()"
+                                             styleClass="ui-button-flat ui-button-success" 
+                                             process="@this"/>
+
+                            <p:commandButton icon="pi pi-trash" 
+                                             title="Eliminar"
+                                             actionListener="#{moduleController.delete(m)}"
+                                             update=":form:dt-modules :form:messages" 
+                                             styleClass="ui-button-flat ui-button-danger"
+                                             process="@this">
+                                <p:confirm header="Confirmar" 
+                                           message="¿Eliminar el módulo '#{m.name}'?" 
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+                        </div>
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí" type="button" styleClass="ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- DIÁLOGO DE GESTIÓN -->
+        <h:form id="dialogs">
+            <p:dialog header="#{moduleController.editMode ? 'Editar' : 'Nuevo'} Módulo" 
+                      widgetVar="manageModuleDialog" 
+                      modal="true" 
+                      responsive="true" 
+                      width="400" 
+                      resizable="false" 
+                      showEffect="fade">
+
+                <p:outputPanel id="manage-module-content" class="ui-fluid">
+                    <p:outputPanel rendered="#{not empty moduleController.newModule}">
+
+                        <div class="field">
+                            <p:outputLabel for="name">
+                                Nombre <span style="color: var(--danger);">*</span>
+                            </p:outputLabel>
+                            <p:inputText id="name" 
+                                         value="#{moduleController.newModule.name}" 
+                                         required="true"
+                                         requiredMessage="El nombre es obligatorio"
+                                         maxlength="25"
+                                         placeholder="Ej: Usuarios, Reportes, Configuración" />
+                        </div>
+
+                    </p:outputPanel>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div class="flex justify-content-end gap-2">
+                        <p:commandButton value="Cancelar" 
+                                         icon="pi pi-times" 
+                                         onclick="PF('manageModuleDialog').hide()" 
+                                         styleClass="ui-button-secondary" 
+                                         type="button" />
+
+                        <p:commandButton value="#{moduleController.editMode ? 'Actualizar' : 'Guardar'}" 
+                                         icon="pi pi-save" 
+                                         actionListener="#{moduleController.save}"
+                                         update="manage-module-content :form:dt-modules :form:messages" 
+                                         process="manage-module-content @this"
+                                         oncomplete="if (!args.validationFailed) { PF('manageModuleDialog').hide(); }"
+                                         styleClass="ui-button-primary" />
+                    </div>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+    </ui:define>
+</ui:composition>

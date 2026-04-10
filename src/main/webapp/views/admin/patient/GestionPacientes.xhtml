@@ -1,0 +1,331 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/template.xhtml">
+
+    <ui:define name="titulo">Gestión de Pacientes</ui:define>
+
+    <ui:define name="contenido">
+        <h:form id="form">
+            <p:growl id="messages" showDetail="true" />
+
+            <!-- Header con contador y botón nuevo -->
+            <div class="flex-between mb-6">
+                <div class="text-muted">
+                    Total: <span class="font-bold">#{patientController.patients.size()}</span> pacientes registrados
+                </div>
+                <p:commandButton value="Nuevo Paciente" 
+                                 icon="pi pi-plus" 
+                                 actionListener="#{patientController.prepareNewPatient()}"
+                                 update=":dialogs:manage-patient-content" 
+                                 oncomplete="PF('managePatientDialog').show()"
+                                 styleClass="ui-button-success" />
+            </div>
+
+            <!-- Tabla de pacientes -->
+            <div class="card">
+                <p:dataTable id="dt-patients" widgetVar="dtPatients" var="p" 
+                             value="#{patientController.patients}"
+                             reflow="true" selectionMode="single" 
+                             rowKey="#{p.id}" paginator="true" rows="10" 
+                             paginatorPosition="bottom"
+                             sortMode="multiple">
+
+                    <p:column headerText="Cédula/DNI" sortBy="#{p.dni}" filterBy="#{p.dni}">
+                        <h:outputText value="#{p.dni}" />
+                    </p:column>
+
+                    <p:column headerText="Paciente" sortBy="#{p.lastname}">
+                        <span class="font-semibold">#{p.lastname} #{p.firstname}</span>
+                    </p:column>
+
+                    <p:column headerText="H. Clínica" sortBy="#{p.hc}">
+                        <span class="hc-badge">#{p.hc}</span>
+                    </p:column>
+
+                    <p:column headerText="Email">
+                        <h:outputText value="#{p.email}" />
+                    </p:column>
+
+                    <p:column headerText="Acciones" exportable="false" style="width: 100px; text-align: center">
+                        <div style="display: flex; gap: 6px; justify-content: center;">
+                            <p:commandButton icon="pi pi-pencil" 
+                                             update=":dialogs:manage-patient-content"
+                                             oncomplete="PF('managePatientDialog').show()"
+                                             styleClass="ui-button-flat" 
+                                             style="background: #f0f0f0; border-radius: 6px; padding: 6px 10px;"
+                                             process="@this">
+                                <f:setPropertyActionListener value="#{p}" target="#{patientController.newPatient}" />
+                            </p:commandButton>
+
+                            <p:commandButton icon="pi pi-eye" 
+                                             title="Ver Expediente"
+                                             update=":view-dialog:view-patient-content"
+                                             oncomplete="PF('viewPatientDialog').show()"
+                                             styleClass="ui-button-info ui-button-flat" 
+                                             style="background: #e3f2fd; border-radius: 6px; padding: 6px 10px;"
+                                             process="@this">
+                                <f:setPropertyActionListener value="#{p}" target="#{patientController.selectedPatient}" />
+                            </p:commandButton>
+                        </div>
+                    </p:column>
+                </p:dataTable>
+            </div>
+        </h:form>
+
+
+        <!-- Diálogo de gestión -->
+        <h:form id="dialogs">
+            <p:dialog header="Detalles del Paciente" showEffect="fade" modal="true" 
+                      widgetVar="managePatientDialog" responsive="true" width="850"
+                      resizable="false" draggable="true">
+
+                <p:outputPanel id="manage-patient-content" style="padding: 0;">
+
+                    <!-- Grid de 3 columnas para HC, DNI, Pasaporte -->
+                    <div class="form-grid form-grid-3">
+                        <div class="field">
+                            <p:outputLabel for="hc">Historia Clínica <span style="color: var(--danger);">*</span></p:outputLabel>
+                            <p:inputText id="hc" value="#{patientController.newPatient.hc}" 
+                                         required="true" 
+                                         readonly="#{patientController.newPatient.id != null}"
+                                         placeholder="Ej: HC-001"
+                                         style="width: 100%;">
+                                <p:ajax />
+                            </p:inputText>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="dni">Cédula (DNI)</p:outputLabel>
+                            <p:inputText id="dni" value="#{patientController.newPatient.dni}" maxlength="10" 
+                                         placeholder="Solo para ciudadanos"
+                                         style="width: 100%;">
+                                <p:keyFilter mask="num" />
+                            </p:inputText>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="passport">Pasaporte</p:outputLabel>
+                            <p:inputText id="passport" value="#{patientController.newPatient.passport}" maxlength="13" 
+                                         placeholder="Si no tiene DNI"
+                                         style="width: 100%; text-transform: uppercase;">
+                                <p:keyFilter regEx="/[a-z0-9]/i" />
+                            </p:inputText>
+                        </div>
+                    </div>
+
+                    <p:divider />
+
+                    <!-- Grid de 2 columnas para nombres -->
+                    <div class="form-grid form-grid-2">
+                        <div class="field">
+                            <p:outputLabel for="lastname">Apellidos <span style="color: var(--danger);">*</span></p:outputLabel>
+                            <p:inputText id="lastname" value="#{patientController.newPatient.lastname}"
+                                         required="true" 
+                                         requiredMessage="Por favor, ingrese los apellidos del paciente."
+                                         style="width: 100%;" />
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="firstname">Nombres <span style="color: var(--danger);">*</span></p:outputLabel>
+                            <p:inputText id="firstname" value="#{patientController.newPatient.firstname}" 
+                                         required="true" 
+                                         requiredMessage="El nombre del paciente es un campo requerido."
+                                         style="width: 100%;" />
+                        </div>
+                    </div>
+
+                    <!-- Grid de 3 columnas -->
+                    <div class="form-grid form-grid-3">
+                        <div class="field">
+                            <p:outputLabel for="birthday">Fecha de Nacimiento <span style="color: var(--danger);">*</span></p:outputLabel>
+                            <p:datePicker id="birthday" value="#{patientController.newPatient.birthday}" 
+                                          showIcon="true" monthNavigator="true" yearNavigator="true" 
+                                          requiredMessage="La fecha de nacimiento es un campo requerido."
+                                          pattern="yyyy-MM-dd" required="true" locale="es" 
+                                          style="width: 100%;">
+                            </p:datePicker>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="ocupation">Ocupación</p:outputLabel>
+                            <p:inputText id="ocupation" value="#{patientController.newPatient.ocupation}" 
+                                         placeholder="Ej: Empleado público"
+                                         style="width: 100%;" />
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="email">Correo Electrónico</p:outputLabel>
+                            <p:inputText id="email" value="#{patientController.newPatient.email}" 
+                                         placeholder="ejemplo@correo.com"
+                                         style="width: 100%;" />
+                        </div>
+                    </div>
+
+                    <!-- Dirección a ancho completo -->
+                    <div class="field">
+                        <p:outputLabel for="address">Dirección</p:outputLabel>
+                        <p:inputText id="address" value="#{patientController.newPatient.address}" 
+                                     placeholder="Calle principal, número y calle secundaria"
+                                     style="width: 100%;" />
+                    </div>
+
+                    <!-- Grid de 2 columnas para teléfonos -->
+                    <div class="form-grid form-grid-2">
+                        <div class="field">
+                            <p:outputLabel for="telephone">Teléfono Fijo</p:outputLabel>
+                            <p:inputMask id="telephone" value="#{patientController.newPatient.telephone}" 
+                                         mask="(99) 999-9999" placeholder="(03) 296-1234"
+                                         style="width: 100%;" />
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="mobile">Celular</p:outputLabel>
+                            <p:inputMask id="mobile" value="#{patientController.newPatient.mobile}" 
+                                         mask="0999999999" validateMask="true"
+                                         placeholder="0912345678"
+                                         style="width: 100%;" />
+                        </div>
+                    </div>
+
+                    <!-- Grid de 3 columnas para selects -->
+                    <div class="form-grid form-grid-3">
+                        <div class="field">
+                            <p:outputLabel for="blood">Tipo de Sangre <span style="color: var(--danger);">*</span></p:outputLabel>
+                            <p:selectOneMenu id="blood" value="#{patientController.newPatient.blootype}" 
+                                             required="true" 
+                                             requiredMessage="El tipo de sangre es un campo requerido."
+                                             style="width: 100%;">
+                                <f:selectItem itemLabel="🔴 Seleccione tipo de sangre" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{patientController.bloodTypes}" var="b" 
+                                               itemLabel="#{b.name}" itemValue="#{b.id}" />
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="civil">Estado Civil <span style="color: var(--danger);">*</span></p:outputLabel>
+                            <p:selectOneMenu id="civil" value="#{patientController.newPatient.civilstatus}" 
+                                             required="true" 
+                                             requiredMessage="El estado civil es un campo requerido."
+                                             style="width: 100%;">
+                                <f:selectItem itemLabel="📋 Seleccione estado civil" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{patientController.civilStatusList}" var="c" 
+                                               itemLabel="#{c.name}" itemValue="#{c.id}" />
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="sex">Sexo <span style="color: var(--danger);">*</span></p:outputLabel>
+                            <p:selectOneMenu id="sex" value="#{patientController.newPatient.sex}" 
+                                             required="true" 
+                                             requiredMessage="El género es un campo requerido."
+                                             style="width: 100%;">
+                                <f:selectItem itemLabel="⚥ Seleccione género" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{patientController.genders}" var="s" 
+                                               itemLabel="#{s.name}" itemValue="#{s.id}" />
+                            </p:selectOneMenu>
+                        </div>
+                    </div>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div style="display: flex; gap: 12px; justify-content: flex-end; padding: 8px 0;">
+                        <p:commandButton value="Cancelar" icon="pi pi-times" 
+                                         onclick="PF('managePatientDialog').hide()" 
+                                         styleClass="ui-button-secondary" 
+                                         style="background: #f0f0f0; border: none; padding: 10px 24px;"
+                                         immediate="true"/>
+
+                        <p:commandButton value="Guardar Paciente" icon="pi pi-save" 
+                                         actionListener="#{patientController.savePatient}"
+                                         rendered="#{patientController.editMode == false}"
+                                         update=":dialogs:manage-patient-content :form:dt-patients :form:messages :form:patient-count"
+                                         process="manage-patient-content @this" 
+                                         oncomplete="if (!args.validationFailed) { PF('managePatientDialog').hide(); PF('dtPatients').clearFilters(); }"
+                                         styleClass="ui-button-primary"
+                                         style="padding: 10px 28px;" />
+                    </div>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+
+        <!-- Diálogo de visualización -->
+        <h:form id="view-dialog"> 
+            <p:dialog header="Expediente del Paciente" widgetVar="viewPatientDialog" 
+                      modal="true" showEffect="fade" responsive="true" width="700">
+
+                <p:outputPanel id="view-patient-content">
+                    <h:panelGroup rendered="#{patientController.selectedPatient != null}">
+                        <!-- Header del paciente -->
+                        <div class="flex gap-3 mb-6 p-3" style="background: #f8f9fb; border-radius: 12px;">
+                            <div style="background: var(--primary); border-radius: 50%; padding: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                <i class="pi pi-user" style="color: white; font-size: 20px;"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold" style="margin: 0;">#{patientController.selectedPatient.lastname} #{patientController.selectedPatient.firstname}</h3>
+                                <span class="hc-badge">HC: #{patientController.selectedPatient.hc}</span>
+                            </div>
+                        </div>
+
+                        <!-- Grid de 2 columnas -->
+                        <div class="form-grid form-grid-2 mb-4">
+                            <div>
+                                <h4 class="font-semibold text-primary mb-3">Identificación</h4>
+                                <div class="field">
+                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">DNI / Cédula</p:outputLabel>
+                                    <h:outputText value="#{empty patientController.selectedPatient.dni ? 'No registrado' : patientController.selectedPatient.dni}" class="font-semibold"/>
+                                </div>
+                                <div class="field">
+                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Pasaporte</p:outputLabel>
+                                    <h:outputText value="#{empty patientController.selectedPatient.passport ? 'N/A' : patientController.selectedPatient.passport}" class="font-semibold"/>
+                                </div>
+                                <div class="field">
+                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Fecha de Nacimiento</p:outputLabel>
+                                    <h:outputText value="#{patientController.selectedPatient.birthday}" class="font-semibold">
+                                        <f:convertDateTime type="localDate" pattern="dd 'de' MMMM, yyyy" locale="es"/>
+                                    </h:outputText>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-primary mb-3">Contacto</h4>
+                                <div class="field">
+                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Correo Electrónico</p:outputLabel>
+                                    <h:outputText value="#{patientController.selectedPatient.email}" class="text-primary"/>
+                                </div>
+                                <div class="field">
+                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Teléfonos</p:outputLabel>
+                                    <div>Cel: <span class="font-semibold">#{patientController.selectedPatient.mobile}</span></div>
+                                    <div>Fijo: <span class="font-semibold">#{patientController.selectedPatient.telephone}</span></div>
+                                </div>
+                                <div class="field">
+                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Dirección</p:outputLabel>
+                                    <h:outputText value="#{patientController.selectedPatient.address}" class="font-semibold"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p:divider />
+
+                        <!-- Grid de 3 columnas para datos adicionales -->
+                        <div class="form-grid form-grid-3">
+                            <div class="text-center">
+                                <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Tipo de Sangre</p:outputLabel>
+                                <span class="blood-badge">#{patientController.getBloodTypeName(patientController.selectedPatient.blootype)}</span>
+                            </div>
+                            <div class="text-center">
+                                <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Estado Civil</p:outputLabel>
+                                <span class="font-semibold">#{patientController.getCivilStatusName(patientController.selectedPatient.civilstatus)}</span>
+                            </div>
+                            <div class="text-center">
+                                <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Ocupación</p:outputLabel>
+                                <span class="font-semibold">#{patientController.selectedPatient.ocupation}</span>
+                            </div>
+                        </div>
+                    </h:panelGroup>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div style="text-align: right;">
+                        <p:commandButton value="Cerrar" icon="pi pi-times" 
+                                         onclick="PF('viewPatientDialog').hide()" 
+                                         styleClass="ui-button-flat"/>
+                    </div>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+    </ui:define>
+</ui:composition>

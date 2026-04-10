@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition template="/template.xhtml">
+
+
+        <ui:define name="title">
+            <h:outputText value="#{bundle.ListAntecedentTitle}"></h:outputText>
+        </ui:define>
+
+        <ui:define name="body">
+            <h:form id="AntecedentListForm">
+                <p:panel header="#{bundle.ListAntecedentTitle}">
+                    <p:dataTable id="datalist" value="#{antecedentController.items}" var="item"
+                                 selectionMode="single" selection="#{antecedentController.selected}"
+                                 paginator="true"
+                                 rowKey="#{item.id}"
+                                 rows="10"
+                                 rowsPerPageTemplate="10,20,30,40,50"
+                                 >
+
+                        <p:ajax event="rowSelect"   update="createButton viewButton editButton deleteButton"/>
+                        <p:ajax event="rowUnselect" update="createButton viewButton editButton deleteButton"/>
+
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_createdat}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.createdat}">
+                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_createdby}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.createdby}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_editedat}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.editedat}">
+                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_editedby}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.editedby}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_deleted}"/>
+                            </f:facet>
+                            <p:selectBooleanCheckbox value="#{item.deleted}" disabled="true"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_deletedat}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.deletedat}">
+                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_deletedby}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.deletedby}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_id}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.id}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_personal}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.personal}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_surgical}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.surgical}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_family}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.family}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_professional}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.professional}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_habits}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.habits}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_clinician}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.clinician}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_trauma}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.trauma}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_allergy}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.allergy}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_ago}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.ago}"/>
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.ListAntecedentTitle_patientid}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.patientid}"/>
+                        </p:column>
+                        <f:facet name="footer">
+                            <p:commandButton id="createButton" icon="ui-icon-plus"   value="#{bundle.Create}" actionListener="#{antecedentController.prepareCreate}" update=":AntecedentCreateForm" oncomplete="PF('AntecedentCreateDialog').show()"/>
+                            <p:commandButton id="viewButton"   icon="ui-icon-search" value="#{bundle.View}" update=":AntecedentViewForm" oncomplete="PF('AntecedentViewDialog').show()" disabled="#{empty antecedentController.selected}"/>
+                            <p:commandButton id="editButton"   icon="ui-icon-pencil" value="#{bundle.Edit}" update=":AntecedentEditForm" oncomplete="PF('AntecedentEditDialog').show()" disabled="#{empty antecedentController.selected}"/>
+                            <p:commandButton id="deleteButton" icon="ui-icon-trash"  value="#{bundle.Delete}" actionListener="#{antecedentController.destroy}" update=":growl,datalist" disabled="#{empty antecedentController.selected}"/>
+                        </f:facet>
+                    </p:dataTable>
+                </p:panel>
+            </h:form>
+
+            <ui:include src="Create.xhtml"/>
+            <ui:include src="Edit.xhtml"/>
+            <ui:include src="View.xhtml"/>
+        </ui:define>
+    </ui:composition>
+
+</html>

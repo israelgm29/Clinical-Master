@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="jakarta.faces.core">
+
+    <ui:composition template="/WEB-INF/templates/medic-template.xhtml">
+
+        <ui:define name="title">Mi Agenda - Dashboard Médico</ui:define>
+
+        <ui:define name="page-title">Mi Agenda del Día</ui:define>
+
+        <ui:define name="content">
+            <h:form id="dashboardForm">
+
+                <!-- === TARJETAS DE ESTADÍSTICAS === -->
+                <div class="stats-container">
+                    <!-- Pacientes en Espera -->
+                    <div class="stat-card waiting">
+                        <div class="stat-icon">
+                            <span class="material-symbols-outlined">hourglass_empty</span>
+                        </div>
+                        <div class="stat-info">
+                            <h3>#{medicDashboardController.waitingCount}</h3>
+                            <p>Pacientes en Espera</p>
+                        </div>
+                    </div>
+
+                    <!-- Consultas Pendientes -->
+                    <div class="stat-card pending">
+                        <div class="stat-icon">
+                            <span class="material-symbols-outlined">pending_actions</span>
+                        </div>
+                        <div class="stat-info">
+                            <h3>#{medicDashboardController.pendingCount}</h3>
+                            <p>Consultas Pendientes</p>
+                        </div>
+                    </div>
+
+                    <!-- Consultas del Día -->
+                    <div class="stat-card today">
+                        <div class="stat-icon">
+                            <span class="material-symbols-outlined">today</span>
+                        </div>
+                        <div class="stat-info">
+                            <h3>#{medicDashboardController.todayCount}</h3>
+                            <p>Consultas Hoy</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- === PACIENTES EN ESPERA (PRIORITARIO) === -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <span class="material-symbols-outlined">access_time</span>
+                            Pacientes en Espera
+                        </h3>
+                        <span class="section-badge waiting">#{medicDashboardController.waitingCount} pacientes</span>
+                    </div>
+
+                    <div class="section-content">
+                        <p:outputPanel id="waitingPanel">
+                            <h:panelGroup rendered="#{empty medicDashboardController.waitingPatients}">
+                                <div class="empty-state">
+                                    <span class="material-symbols-outlined">check_circle</span>
+                                    <h4>No hay pacientes en espera</h4>
+                                    <p>Todos los pacientes han sido atendidos</p>
+                                </div>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{not empty medicDashboardController.waitingPatients}">
+                                <div class="patient-grid">
+                                    <ui:repeat value="#{medicDashboardController.waitingPatients}" var="record">
+                                        <div class="patient-card waiting">
+                                            <div class="patient-header">
+                                                <div class="patient-avatar waiting">
+                                                    #{medicDashboardController.getPatientInitials(record.patientid)}
+                                                </div>
+                                                <div class="patient-info">
+                                                    <h4>#{medicDashboardController.getPatientFullName(record.patientid)}</h4>
+                                                    <div class="hc-number">
+                                                        HC: #{record.patientid.hc}
+                                                    </div>
+                                                </div>
+                                                <div class="patient-status">
+                                                    <span class="status-badge waiting">En Espera</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Signos Vitales -->
+                                            <div class="vitals-preview">
+                                                <div class="vital-item">
+                                                    <div class="label">Presión</div>
+                                                    <div class="value">
+                                                        #{medicDashboardController.getLastVitalSign(record).systolicpressure}/#{medicDashboardController.getLastVitalSign(record).diastolicpressure}
+                                                    </div>
+                                                </div>
+                                                <div class="vital-item">
+                                                    <div class="label">Pulso</div>
+                                                    <div class="value">
+                                                        #{medicDashboardController.getLastVitalSign(record).pulse} <small>bpm</small>
+                                                    </div>
+                                                </div>
+                                                <div class="vital-item">
+                                                    <div class="label">Temp</div>
+                                                    <div class="value">
+                                                        #{medicDashboardController.getLastVitalSign(record).temperature}°C
+                                                    </div>
+                                                </div>
+                                                <div class="vital-item">
+                                                    <div class="label">SpO2</div>
+                                                    <div class="value">
+                                                        #{medicDashboardController.getLastVitalSign(record).oxygensaturation}%
+                                                    </div>
+                                                </div>
+                                                <div class="vital-item">
+                                                    <div class="label">Peso</div>
+                                                    <div class="value">
+                                                        #{medicDashboardController.getLastVitalSign(record).weight} <small>kg</small>
+                                                    </div>
+                                                </div>
+                                                <div class="vital-item">
+                                                    <div class="label">IMC</div>
+                                                    <div class="value">
+                                                        #{medicDashboardController.getLastVitalSign(record).mass}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="patient-actions">
+                                                <p:commandButton value="Atender"
+                                                                 icon="pi pi-play"
+                                                                 action="#{medicDashboardController.startConsultation(record)}"
+                                                                 styleClass="ui-button-success"
+                                                                 ajax="false"/>
+                                                <p:commandButton value="Historia"
+                                                                 icon="pi pi-file"
+                                                                 action="#{medicDashboardController.viewHistory(record)}"
+                                                                 styleClass="ui-button-secondary"
+                                                                 ajax="false"/>
+                                            </div>
+                                        </div>
+                                    </ui:repeat>
+                                </div>
+                            </h:panelGroup>
+                        </p:outputPanel>
+                    </div>
+                </div>
+
+                <!-- === CONSULTAS PENDIENTES === -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <span class="material-symbols-outlined">schedule</span>
+                            Consultas Pendientes
+                        </h3>
+                        <span class="section-badge">#{medicDashboardController.pendingCount} pendientes</span>
+                    </div>
+
+                    <div class="section-content" style="padding: 0;">
+                        <p:outputPanel id="pendingPanel">
+                            <h:panelGroup rendered="#{empty medicDashboardController.pendingConsultations}">
+                                <div class="empty-state">
+                                    <span class="material-symbols-outlined">task_alt</span>
+                                    <h4>No hay consultas pendientes</h4>
+                                    <p>Todas las consultas han sido completadas</p>
+                                </div>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{not empty medicDashboardController.pendingConsultations}">
+                                <p:dataTable value="#{medicDashboardController.pendingConsultations}" 
+                                             var="record"
+                                             styleClass="consultation-table"
+                                             paginator="true"
+                                             rows="5"
+                                             paginatorPosition="bottom"
+                                             emptyMessage="No hay consultas pendientes">
+
+                                    <p:column headerText="Paciente" style="width: 25%">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="patient-avatar" style="width: 40px; height: 40px; font-size: 0.85rem;">
+                                                #{medicDashboardController.getPatientInitials(record.patientid)}
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 600; color: var(--text);">
+                                                    #{medicDashboardController.getPatientFullName(record.patientid)}
+                                                </div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                                    HC: #{record.patientid.hc}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </p:column>
+
+                                    <p:column headerText="Motivo de Consulta" style="width: 30%">
+                                        <div style="color: var(--text);">
+                                            #{record.reason != null ? record.reason : 'No especificado'}
+                                        </div>
+                                    </p:column>
+
+                                    <p:column headerText="Fecha de Creación" style="width: 15%">
+                                        <div style="color: var(--text-muted); font-size: 0.875rem;">
+                                            <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle; margin-right: 4px;">
+                                                calendar_today
+                                            </span>
+                                            #{medicDashboardController.formatDateTime(record.createdat)}
+                                        </div>
+                                    </p:column>
+
+                                    <p:column headerText="Signos Vitales" style="width: 15%; text-align: center;">
+                                        <h:panelGroup rendered="#{not empty record.vitalsignCollection}">
+                                            <span class="status-badge pending">
+                                                <span class="material-symbols-outlined" style="font-size: 12px; vertical-align: middle;">
+                                                    check_circle
+                                                </span>
+                                                Listos
+                                            </span>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{empty record.vitalsignCollection}">
+                                            <span class="status-badge waiting">
+                                                <span class="material-symbols-outlined" style="font-size: 12px; vertical-align: middle;">
+                                                    pending
+                                                </span>
+                                                Pendientes
+                                            </span>
+                                        </h:panelGroup>
+                                    </p:column>
+
+                                    <p:column headerText="Acciones" style="width: 15%; text-align: center;">
+                                        <p:commandButton icon="pi pi-play"
+                                                         action="#{medicDashboardController.startConsultation(record)}"
+                                                         styleClass="ui-button-success ui-button-rounded"
+                                                         title="Iniciar Consulta"
+                                                         ajax="false"/>
+                                        <p:commandButton icon="pi pi-file"
+                                                         action="#{medicDashboardController.viewHistory(record)}"
+                                                         styleClass="ui-button-secondary ui-button-rounded"
+                                                         style="margin-left: 8px;"
+                                                         title="Ver Historia"
+                                                         ajax="false"/>
+                                    </p:column>
+                                </p:dataTable>
+                            </h:panelGroup>
+                        </p:outputPanel>
+                    </div>
+                </div>
+
+                <!-- === CONSULTAS DEL DÍA === -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <span class="material-symbols-outlined">event_available</span>
+                            Consultas del Día
+                        </h3>
+                        <span class="section-badge today">#{medicDashboardController.todayCount} hoy</span>
+                    </div>
+
+                    <div class="section-content" style="padding: 0;">
+                        <p:outputPanel id="todayPanel">
+                            <h:panelGroup rendered="#{empty medicDashboardController.todayConsultations}">
+                                <div class="empty-state">
+                                    <span class="material-symbols-outlined">event_busy</span>
+                                    <h4>No hay consultas programadas para hoy</h4>
+                                    <p>El día de hoy no tiene consultas registradas</p>
+                                </div>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{not empty medicDashboardController.todayConsultations}">
+                                <p:dataTable value="#{medicDashboardController.todayConsultations}" 
+                                             var="record"
+                                             styleClass="consultation-table"
+                                             paginator="true"
+                                             rows="5"
+                                             paginatorPosition="bottom"
+                                             emptyMessage="No hay consultas para hoy">
+
+                                    <p:column headerText="Paciente" style="width: 25%">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="patient-avatar" style="width: 40px; height: 40px; font-size: 0.85rem;">
+                                                #{medicDashboardController.getPatientInitials(record.patientid)}
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 600; color: var(--text);">
+                                                    #{medicDashboardController.getPatientFullName(record.patientid)}
+                                                </div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                                    HC: #{record.patientid.hc}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </p:column>
+
+                                    <p:column headerText="Motivo de Consulta" style="width: 30%">
+                                        <div style="color: var(--text);">
+                                            #{record.reason != null ? record.reason : 'No especificado'}
+                                        </div>
+                                    </p:column>
+
+                                    <p:column headerText="Hora" style="width: 10%">
+                                        <div style="color: var(--text-muted); font-weight: 600;">
+                                            #{medicDashboardController.formatTime(record.createdat)}
+                                        </div>
+                                    </p:column>
+
+                                    <p:column headerText="Estado" style="width: 15%; text-align: center;">
+                                        <h:panelGroup rendered="#{record.done}">
+                                            <span class="status-badge completed">Completada</span>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{!record.done and !record.canceled}">
+                                            <span class="status-badge pending">Pendiente</span>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{record.canceled}">
+                                            <span class="status-badge canceled">Cancelada</span>
+                                        </h:panelGroup>
+                                    </p:column>
+
+                                    <p:column headerText="Acciones" style="width: 20%; text-align: center;">
+                                        <p:commandButton icon="pi pi-eye"
+                                                         action="#{medicDashboardController.viewHistory(record)}"
+                                                         styleClass="ui-button-secondary ui-button-rounded"
+                                                         title="Ver Detalles"
+                                                         ajax="false"/>
+                                    </p:column>
+                                </p:dataTable>
+                            </h:panelGroup>
+                        </p:outputPanel>
+                    </div>
+                </div>
+
+            </h:form>
+        </ui:define>
+
+        <ui:define name="scripts">
+            <!-- Auto-refresh cada 30 segundos -->
+            <p:poll interval="30" update="dashboardForm" listener="#{medicDashboardController.loadDashboardData}"/>
+        </ui:define>
+
+    </ui:composition>
+</html>
