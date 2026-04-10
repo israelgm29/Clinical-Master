@@ -1,11 +1,84 @@
-<?xml version='1.0' encoding='UTF-8' ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="jakarta.faces.html">
+      xmlns:h="jakarta.faces.html"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="jakarta.faces.core">
+
     <h:head>
-        <title>Facelet Title</title>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>
+            <ui:insert name="title">Enfermería - Hospital General</ui:insert>
+        </title>
+
+        <!-- ICONOS -->
+        <link rel="stylesheet"
+              href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"/>
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css"/>
+
+        <!-- CSS Global -->
+        <h:outputStylesheet library="css" name="jsfcrud.css"/>
+        <ui:insert name="head"/>
     </h:head>
+
     <h:body>
-        Hello from Facelets
+        <div class="medic-layout">
+
+            <!-- SIDEBAR -->
+            <ui:include src="/WEB-INF/sidebars/nurse-sidebar.xhtml"/>
+
+            <!-- BOTÓN FLOAT -->
+            <button class="sidebar-toggle-btn" onclick="toggleSidebar()">
+                <i class="pi pi-bars"></i>
+            </button>
+
+            <!-- CONTENIDO -->
+            <main class="medic-main-content" id="mainContent">
+
+                <!-- HEADER -->
+                <header class="content-header">
+                    <h1 class="page-title">
+                        <ui:insert name="page-title">Dashboard Enfermería</ui:insert>
+                    </h1>
+
+                    <div class="header-actions">
+                        <ui:insert name="header-actions"/>
+                    </div>
+                </header>
+
+                <!-- MENSAJES -->
+                <p:growl id="messages" showDetail="true" life="4000"/>
+
+                <!-- CONTENIDO -->
+                <div class="content-body fade-in">
+                    <ui:insert name="content"/>
+                </div>
+            </main>
+        </div>
+
+        <!-- SCRIPTS -->
+        <ui:insert name="scripts"/>
+
+        <script>
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const main = document.getElementById('mainContent');
+                const btn = document.querySelector('.sidebar-toggle-btn i');
+
+                sidebar.classList.toggle('collapsed');
+
+                if (sidebar.classList.contains('collapsed')) {
+                    main.style.marginLeft = '72px';
+                    btn.classList.remove('pi-bars');
+                    btn.classList.add('pi-chevron-right');
+                } else {
+                    main.style.marginLeft = '240px';
+                    btn.classList.remove('pi-chevron-right');
+                    btn.classList.add('pi-bars');
+                }
+            }
+        </script>
     </h:body>
 </html>
