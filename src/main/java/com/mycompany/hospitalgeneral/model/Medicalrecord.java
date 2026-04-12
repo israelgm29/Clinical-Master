@@ -73,7 +73,7 @@ public class Medicalrecord implements Serializable {
     private Integer deletedby;
 
     // Relaciones
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "medicalrecordid")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "medicalrecordid", fetch = FetchType.EAGER)
     private Collection<Rpe> rpeCollection;
 
     @JoinColumn(name = "medicid", referencedColumnName = "id")
@@ -84,17 +84,20 @@ public class Medicalrecord implements Serializable {
     @ManyToOne(optional = false)
     private Patient patientid;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "medicalrecordid")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "medicalrecordid", fetch = FetchType.EAGER)
     private Collection<Vitalsign> vitalsignCollection;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "medicalrecordid")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "medicalrecordid", fetch = FetchType.EAGER)
     private Collection<Medicalexam> medicalexamCollection;
 
-    @OneToMany(mappedBy = "medicalrecordid")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "medicalrecordid", fetch = FetchType.EAGER)
     private Collection<Diagnostic> diagnosticCollection;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "medicalrecordid")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "medicalrecordid", fetch = FetchType.EAGER)
     private Collection<Cros> crosCollection;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "medicalrecordid")
+    private Collection<Prescription> prescriptionCollection;
 
     // Lógica de Auditoría
     @PrePersist
@@ -272,6 +275,14 @@ public class Medicalrecord implements Serializable {
 
     public void setCrosCollection(Collection<Cros> crosCollection) {
         this.crosCollection = crosCollection;
+    }
+
+    public Collection<Prescription> getPrescriptionCollection() {
+        return prescriptionCollection;
+    }
+
+    public void setPrescriptionCollection(Collection<Prescription> prescriptionCollection) {
+        this.prescriptionCollection = prescriptionCollection;
     }
 
     @Override

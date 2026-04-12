@@ -32,7 +32,6 @@ public class PatientController implements Serializable {
     private List<Option> civilStatusList;
     private List<Option> genders;
     private boolean editMode = false;
-    
 
     @PostConstruct
     public void init() {
@@ -48,7 +47,7 @@ public class PatientController implements Serializable {
         patients = patientService.findAll();
     }
 
-     public void prepareNewPatient() {
+    public void prepareNewPatient() {
         this.newPatient = new Patient();
         this.editMode = false;  // <-- MODO CREACIÓN
     }
@@ -116,7 +115,7 @@ public class PatientController implements Serializable {
         return selectedPatient;
     }
 
-  public void setSelectedPatient(Patient selectedPatient) {
+    public void setSelectedPatient(Patient selectedPatient) {
         this.selectedPatient = selectedPatient;
         if (selectedPatient != null) {
             this.newPatient = selectedPatient;
@@ -136,41 +135,8 @@ public class PatientController implements Serializable {
         return genders;
     }
 
-    
-    public String getBloodTypeName(Integer id) {
-        if (id == null) {
-            return "No definido";
-        }
-        return bloodTypes.stream()
-                .filter(o -> o.getId().equals(id))
-                .map(Option::getName)
-                .findFirst()
-                .orElse("No definido");
-    }
-
-    public String getCivilStatusName(Integer id) {
-        if (id == null) {
-            return "No definido";
-        }
-        return civilStatusList.stream()
-                .filter(o -> o.getId().equals(id))
-                .map(Option::getName)
-                .findFirst()
-                .orElse("No definido");
-    }
-
-    public String getGenderName(Integer id) {
-        if (id == null) {
-            return "No definido";
-        }
-        return genders.stream()
-                .filter(o -> o.getId().equals(id))
-                .map(Option::getName)
-                .findFirst()
-                .orElse("No definido");
-    }
-    
-     public boolean isEditMode() {
+    // Métodos helper eliminados - usar option.name directamente en el XHTML
+    public boolean isEditMode() {
         return editMode;
     }
 }
