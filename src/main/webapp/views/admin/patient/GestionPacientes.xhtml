@@ -189,34 +189,37 @@
                         <div class="field">
                             <p:outputLabel for="blood">Tipo de Sangre <span style="color: var(--danger);">*</span></p:outputLabel>
                             <p:selectOneMenu id="blood" value="#{patientController.newPatient.blootype}" 
+                                             converter="optionConverter"
                                              required="true" 
                                              requiredMessage="El tipo de sangre es un campo requerido."
                                              style="width: 100%;">
                                 <f:selectItem itemLabel="🔴 Seleccione tipo de sangre" itemValue="#{null}" noSelectionOption="true" />
                                 <f:selectItems value="#{patientController.bloodTypes}" var="b" 
-                                               itemLabel="#{b.name}" itemValue="#{b.id}" />
+                                               itemLabel="#{b.name}" itemValue="#{b}" />
                             </p:selectOneMenu>
                         </div>
                         <div class="field">
                             <p:outputLabel for="civil">Estado Civil <span style="color: var(--danger);">*</span></p:outputLabel>
                             <p:selectOneMenu id="civil" value="#{patientController.newPatient.civilstatus}" 
+                                             converter="optionConverter"
                                              required="true" 
                                              requiredMessage="El estado civil es un campo requerido."
                                              style="width: 100%;">
                                 <f:selectItem itemLabel="📋 Seleccione estado civil" itemValue="#{null}" noSelectionOption="true" />
                                 <f:selectItems value="#{patientController.civilStatusList}" var="c" 
-                                               itemLabel="#{c.name}" itemValue="#{c.id}" />
+                                               itemLabel="#{c.name}" itemValue="#{c}" />
                             </p:selectOneMenu>
                         </div>
                         <div class="field">
                             <p:outputLabel for="sex">Sexo <span style="color: var(--danger);">*</span></p:outputLabel>
                             <p:selectOneMenu id="sex" value="#{patientController.newPatient.sex}" 
+                                             converter="optionConverter" 
                                              required="true" 
                                              requiredMessage="El género es un campo requerido."
                                              style="width: 100%;">
                                 <f:selectItem itemLabel="⚥ Seleccione género" itemValue="#{null}" noSelectionOption="true" />
                                 <f:selectItems value="#{patientController.genders}" var="s" 
-                                               itemLabel="#{s.name}" itemValue="#{s.id}" />
+                                               itemLabel="#{s.name}" itemValue="#{s}" />
                             </p:selectOneMenu>
                         </div>
                     </div>
@@ -304,11 +307,11 @@
                         <div class="form-grid form-grid-3">
                             <div class="text-center">
                                 <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Tipo de Sangre</p:outputLabel>
-                                <span class="blood-badge">#{patientController.getBloodTypeName(patientController.selectedPatient.blootype)}</span>
+                                <span class="blood-badge">#{patientController.selectedPatient.blootype != null ? patientController.selectedPatient.blootype.name : 'N/A'}</span>
                             </div>
                             <div class="text-center">
                                 <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Estado Civil</p:outputLabel>
-                                <span class="font-semibold">#{patientController.getCivilStatusName(patientController.selectedPatient.civilstatus)}</span>
+                                <span class="font-semibold">#{patientController.selectedPatient.civilstatus != null ? patientController.selectedPatient.civilstatus.name : 'N/A'}</span>
                             </div>
                             <div class="text-center">
                                 <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Ocupación</p:outputLabel>

@@ -167,6 +167,60 @@ public class MedicalRecordService {
         }
     }
 
+    /**
+     * NUEVO: Encuentra MedicalRecords que: - No están done (done = false o
+     * null) - No están canceled - Tienen signos vitales (para médico) - medicid
+     * puede ser null o asignado
+     */
+    public List<Medicalrecord> findWaitingForMedic() {
+        return em.createQuery(
+                "SELECT DISTINCT m FROM Medicalrecord m "
+                + "JOIN m.vitalsignCollection v "
+                + "WHERE (m.done = false OR m.done IS NULL) "
+                + "AND (m.canceled = false OR m.canceled IS NULL) "
+                + "AND (m.deleted = false OR m.deleted IS NULL) "
+                + "AND (v.deleted = false OR v.deleted IS NULL) "
+                + "ORDER BY m.createdat ASC",
+                Medicalrecord.class)
+                .getResultList();
+    }
+
+    /**
+     * NUEVO: Encuentra MedicalRecords pendientes de signos vitales (no tienen
+     * signos vitales aún, o todos están eliminados)
+     */
+    public List<Medicalrecord> findPendingForVitalsigns() {
+        return em.createQuery(
+                "SELECT m FROM Medicalrecord m "
+                + "WHERE (m.done = false OR m.done IS NULL) "
+                + "AND (m.canceled = false OR m.canceled IS NULL) "
+                + "AND (m.deleted = false OR m.deleted IS NULL) "
+                + "AND (m.vitalsignCollection IS EMPTY OR "
+                + "     NOT EXISTS (SELECT v FROM m.vitalsignCollection v WHERE v.deleted = false OR v.deleted IS NULL)) "
+                + "ORDER BY m.createdat ASC",
+                Medicalrecord.class)
+                .getResultList();
+    }
+
+    /**
+     * NUEVO: Guarda un MedicalRecord (para enfermería)
+     */
+    @Transactional
+    public void saveForNurse(Medicalrecord record, Integer nurseId) {
+        record.setCreatedby(nurseId);
+        record.setCreatedat(LocalDateTime.now());
+        record.setDone(false);
+        record.setCanceled(false);
+        record.setDeleted(false);
+
+        // medicid puede ser null - se asignará cuando el médico tome la consulta
+        if (record.getId() == null) {
+            em.persist(record);
+        } else {
+            em.merge(record);
+        }
+    }
+
     // ==================== OPERACIONES CRUD ====================
     /**
      * Guarda o actualiza un MedicalRecord

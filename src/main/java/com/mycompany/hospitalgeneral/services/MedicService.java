@@ -6,6 +6,7 @@ import com.mycompany.hospitalgeneral.model.Tuser;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import java.security.SecureRandom;
@@ -17,7 +18,7 @@ public class MedicService {
 
     @PersistenceContext
     private EntityManager em;
-    
+
     @Inject
     private RoleService roleService;
 
@@ -56,7 +57,7 @@ public class MedicService {
     public Medic findByDni(String dni) {
         try {
             return em.createQuery(
-                    "SELECT m FROM Medic m WHERE m.dni = :dni AND m.deleted = false", 
+                    "SELECT m FROM Medic m WHERE m.dni = :dni AND m.deleted = false",
                     Medic.class)
                     .setParameter("dni", dni)
                     .getSingleResult();
@@ -66,14 +67,27 @@ public class MedicService {
     }
 
     /**
-     * Guarda o actualiza un médico.
-     * Si es nuevo, crea automáticamente el usuario del sistema (Tuser)
+     * Buscar por userId
+     */
+    public Medic findByUserId(Integer userId) {
+        try {
+            return em.createNamedQuery("Medic.findByUserId", Medic.class)
+                    .setParameter("userId", userId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Guarda o actualiza un médico. Si es nuevo, crea automáticamente el
+     * usuario del sistema (Tuser)
      */
     @Transactional
     public void save(Medic medic, Integer currentUserId) {
         // Validar que tenga al menos un documento
-        if ((medic.getDni() == null || medic.getDni().trim().isEmpty()) 
-            && (medic.getPassport() == null || medic.getPassport().trim().isEmpty())) {
+        if ((medic.getDni() == null || medic.getDni().trim().isEmpty())
+                && (medic.getPassport() == null || medic.getPassport().trim().isEmpty())) {
             throw new IllegalArgumentException("Debe ingresar al menos un documento (Cédula o Pasaporte)");
         }
 
@@ -89,40 +103,40 @@ public class MedicService {
 
         if (isNew) {
             // ===== CREAR NUEVO MÉDICO =====
-            
+
             // 1. Crear usuario del sistema automáticamente
             Tuser user = createSystemUser(medic, currentUserId);
-            
+
             // 2. Asociar usuario al médico
             medic.setUserid(user);
-            
+
             // 3. Setear auditoría
             medic.setCreatedby(currentUserId);
             // createdat se setea automáticamente en @PrePersist
-            
+
             // 4. Guardar médico
             em.persist(medic);
-            
+
         } else {
             // ===== ACTUALIZAR MÉDICO EXISTENTE =====
-            
+
             // Actualizar datos de auditoría
             medic.setEditedby(currentUserId);
             // editedat se setea automáticamente en @PreUpdate
-            
+
             // Si tiene usuario asociado, actualizar email del usuario si cambió
             if (medic.getUserid() != null && medic.getEmail() != null) {
                 Tuser user = medic.getUserid();
                 user.setEditedby(currentUserId);
                 // editedat se actualiza en @PreUpdate
-                
+
                 // Solo actualizar email si cambió
                 if (!medic.getEmail().equals(user.getEmail())) {
                     user.setEmail(medic.getEmail());
                     em.merge(user);
                 }
             }
-            
+
             em.merge(medic);
         }
     }
@@ -132,7 +146,7 @@ public class MedicService {
      */
     private Tuser createSystemUser(Medic medic, Integer createdBy) {
         Tuser user = new Tuser();
-        
+
         // Datos básicos
         user.setEmail(medic.getEmail());
         user.setIsactive(true);
@@ -140,29 +154,27 @@ public class MedicService {
         user.setCreatedby(createdBy);
         user.setDeleted(false);
         // createdat se setea automáticamente en @PrePersist
-        
+
         // Generar contraseña temporal segura
         String tempPassword = generateSecurePassword();
         // Encriptar con BCrypt (placeholder - implementa con tu librería)
         user.setPassword(encryptPassword(tempPassword));
-        
+
         // Asignar rol de MÉDICO
         Role medicRole = roleService.findMedicRole();
         if (medicRole == null) {
             throw new IllegalStateException("No existe el rol MÉDICO en el sistema");
         }
         user.setRoleid(medicRole);
-        
+
         // TODO: Asignar un perfil por defecto si es necesario
         // user.setProfileid(profileService.findDefaultProfile());
-        
         // Guardar usuario
         em.persist(user);
         em.flush(); // Forzar generación del ID
-        
+
         // TODO: Enviar email con credenciales temporales
         // sendCredentialsEmail(medic.getEmail(), tempPassword);
-        
         return user;
     }
 
@@ -182,7 +194,7 @@ public class MedicService {
     private String encryptPassword(String plainPassword) {
         // TODO: Implementar con BCrypt o tu método de encriptación
         // Ejemplo con BCrypt: return BCrypt.hashpw(plainPassword, BCrypt.gensalt(10));
-        
+
         // Placeholder temporal - ¡CAMBIAR ESTO!
         return "$2a$10$" + plainPassword;
     }
@@ -197,7 +209,7 @@ public class MedicService {
             medic.setDeleted(true);
             medic.setDeletedby(deletedBy);
             // deletedat se setea automáticamente en @PreUpdate
-            
+
             // Desactivar usuario asociado
             if (medic.getUserid() != null) {
                 Tuser user = medic.getUserid();
@@ -207,30 +219,30 @@ public class MedicService {
                 // deletedat se actualiza en @PreUpdate
                 em.merge(user);
             }
-            
+
             em.merge(medic);
         }
     }
-    
+
     /**
      * Verifica si existe un médico con el mismo DNI o registro profesional
      */
     public boolean existsByDniOrRegProfessional(String dni, String regProfessional, Integer excludeId) {
         String jpql = "SELECT COUNT(m) FROM Medic m WHERE (m.dni = :dni OR m.regprofessional = :regProfessional) "
-                    + "AND m.deleted = false";
-        
+                + "AND m.deleted = false";
+
         if (excludeId != null) {
             jpql += " AND m.id != :excludeId";
         }
-        
+
         var query = em.createQuery(jpql, Long.class)
                 .setParameter("dni", dni)
                 .setParameter("regProfessional", regProfessional);
-        
+
         if (excludeId != null) {
             query.setParameter("excludeId", excludeId);
         }
-        
+
         return query.getSingleResult() > 0;
     }
 }

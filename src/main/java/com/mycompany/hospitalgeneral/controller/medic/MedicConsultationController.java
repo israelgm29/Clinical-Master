@@ -1,25 +1,19 @@
 package com.mycompany.hospitalgeneral.controller.medic;
 
-import com.mycompany.hospitalgeneral.model.Antecedent;
-import com.mycompany.hospitalgeneral.model.Cros;
-import com.mycompany.hospitalgeneral.model.Diagnostic;
-import com.mycompany.hospitalgeneral.model.Disease;
-import com.mycompany.hospitalgeneral.model.Exam;
-import com.mycompany.hospitalgeneral.model.Medic;
-import com.mycompany.hospitalgeneral.model.Medicalexam;
-import com.mycompany.hospitalgeneral.model.Medicalrecord;
-import com.mycompany.hospitalgeneral.model.Patient;
-import com.mycompany.hospitalgeneral.model.Rpe;
-import com.mycompany.hospitalgeneral.model.Vitalsign;
-import com.mycompany.hospitalgeneral.services.ConsultationService;
-import com.mycompany.hospitalgeneral.services.MedicalRecordService;
+import com.mycompany.hospitalgeneral.dto.ReportResult;
+import com.mycompany.hospitalgeneral.model.*;
+import com.mycompany.hospitalgeneral.services.*;
+import com.mycompany.hospitalgeneral.session.ConsultationContext;
+import com.mycompany.hospitalgeneral.session.ReportContext;
+import com.mycompany.hospitalgeneral.session.UserSession;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.servlet.http.HttpSession;
+
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,7 +32,7 @@ public class MedicConsultationController implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    // === SERVICIOS ===
+    // === SERVICES ===
     @Inject
     private ConsultationService consultationService;
 
@@ -46,9 +40,19 @@ public class MedicConsultationController implements Serializable {
     private MedicalRecordService medicalRecordService;
 
     @Inject
-    private HttpSession session;
+    private ReportService reportService;
 
-    // === DATOS DE LA CONSULTA ===
+    // === SESSION CONTEXT ===
+    @Inject
+    private UserSession userSession;
+
+    @Inject
+    private ConsultationContext consultationContext;
+
+    @Inject
+    private ReportContext reportContext;
+
+    // === DATA ===
     private Medicalrecord medicalRecord;
     private Patient patient;
     private Medic currentMedic;
@@ -76,13 +80,22 @@ public class MedicConsultationController implements Serializable {
 
     // === DIAGNÓSTICOS ===
     private List<Diagnostic> diagnostics;
-    private Integer selectedDiseaseId;
+    private Disease selectedDisease;
     private List<Disease> availableDiseases;
 
     // === EXÁMENES ===
     private List<Medicalexam> requestedExams;
-    private Integer selectedExamId;
+    private Exam selectedExam;
     private List<Exam> availableExams;
+
+    // === PRESCRIPCIONES ===
+    private List<Prescription> prescriptions;
+    private String newMedication;
+    private String newDose;
+    private String newFrequency;
+    private String newDuration;
+    private String newRoute;
+    private String newInstructions;
 
     // === HISTORIAL ===
     private List<Medicalrecord> patientHistory;
@@ -97,12 +110,14 @@ public class MedicConsultationController implements Serializable {
      * Carga el médico desde la sesión
      */
     private void loadCurrentMedic() {
-        currentMedic = (Medic) session.getAttribute("currentMedic");
+        currentMedic = userSession.getMedic();
+
         if (currentMedic != null) {
             medicId = currentMedic.getId();
         } else {
-            // Para pruebas
-            medicId = 1;
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", "No hay médico en sesión"));
         }
     }
 
@@ -111,34 +126,34 @@ public class MedicConsultationController implements Serializable {
      */
     public void loadConsultationData() {
         try {
-            // Obtener MedicalRecord de la sesión (viene del dashboard)
-            medicalRecord = (Medicalrecord) session.getAttribute("currentMedicalRecord");
-            System.out.println(medicalRecord);
-            patient = (Patient) session.getAttribute("currentPatient");
-            System.out.println(patient);
+            medicalRecord = consultationContext.getCurrentMedicalRecord();
+            patient = consultationContext.getCurrentPatient();
 
-            if (medicalRecord != null) {
-                recordId = medicalRecord.getId();
-
-                // Recargar desde BD para tener datos frescos
-                medicalRecord = consultationService.loadMedicalRecord(recordId);
-                patient = medicalRecord.getPatientid();
-
-                // Cargar datos
-                loadAntecedents();
-                loadVitalSigns();
-                loadFormData();
-                loadCros();
-                loadRpe();
-                loadDiagnostics();
-                loadExams();
-                loadPatientHistory();
-                loadAvailableOptions();
-            } else {
+            if (medicalRecord == null) {
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                                "Error", "No se encontró la consulta en sesión"));
+                                "Error", "No hay consulta activa"));
+                return;
             }
+
+            recordId = medicalRecord.getId();
+
+            // Recargar desde BD para tener datos frescos
+            medicalRecord = consultationService.loadMedicalRecord(recordId);
+            patient = medicalRecord.getPatientid();
+
+            // Cargar datos
+            loadAntecedents();
+            loadVitalSigns();
+            loadFormData();
+            loadCros();
+            loadRpe();
+            loadDiagnostics();
+            loadExams();
+            loadPrescriptions();
+            loadPatientHistory();
+            loadAvailableOptions();
+
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -186,23 +201,73 @@ public class MedicConsultationController implements Serializable {
     }
 
     private void loadDiagnostics() {
-        if (medicalRecord.getDiagnosticCollection() != null) {
-            diagnostics = medicalRecord.getDiagnosticCollection().stream()
-                    .filter(d -> d.getDeleted() == null || !d.getDeleted())
-                    .toList();
-        } else {
-            diagnostics = new ArrayList<>();
-        }
+        // Query directa a BD - evita caché del EntityManager
+        diagnostics = consultationService.findDiagnosticsByRecord(recordId);
     }
 
     private void loadExams() {
-        if (medicalRecord.getMedicalexamCollection() != null) {
-            requestedExams = medicalRecord.getMedicalexamCollection().stream()
-                    .filter(e -> e.getDeleted() == null || !e.getDeleted())
-                    .toList();
-        } else {
+        // Query directa a BD - evita caché del EntityManager
+        requestedExams = consultationService.findExamsByRecord(recordId);
+        if (requestedExams == null) {
             requestedExams = new ArrayList<>();
         }
+    }
+
+    private void loadPrescriptions() {
+        prescriptions = consultationService.findPrescriptionsByRecord(recordId);
+    }
+
+    // ==================== ACCIONES - PRESCRIPCIONES ====================
+    public void addPrescription() {
+        if (newMedication == null || newMedication.trim().isEmpty()) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN,
+                            "Atención", "El medicamento es obligatorio"));
+            return;
+        }
+        try {
+            Prescription p = consultationService.addPrescription(
+                    recordId, newMedication.trim(), newDose, newFrequency,
+                    newDuration, newRoute, newInstructions, medicId);
+            if (p != null) {
+                loadPrescriptions();
+                clearPrescriptionForm();
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_INFO,
+                                "Éxito", "Medicamento agregado"));
+            }
+        } catch (Exception e) {
+            Throwable cause = e;
+            while (cause.getCause() != null) {
+                cause = cause.getCause();
+            }
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", "No se pudo agregar: " + cause.getMessage()));
+        }
+    }
+
+    public void removePrescription(Prescription prescription) {
+        try {
+            consultationService.removePrescription(prescription.getId(), medicId);
+            loadPrescriptions();
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "Éxito", "Medicamento eliminado"));
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", "No se pudo eliminar: " + e.getMessage()));
+        }
+    }
+
+    private void clearPrescriptionForm() {
+        newMedication = null;
+        newDose = null;
+        newFrequency = null;
+        newDuration = null;
+        newRoute = null;
+        newInstructions = null;
     }
 
     private void loadPatientHistory() {
@@ -272,133 +337,66 @@ public class MedicConsultationController implements Serializable {
      * Agrega un diagnóstico
      */
     public void addDiagnostic() {
-        if (selectedDiseaseId == null) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN,
-                            "Atención", "Seleccione una enfermedad"));
+        if (selectedDisease == null) {
             return;
         }
 
-        try {
-            Diagnostic newDiagnostic = consultationService.addDiagnostic(recordId, selectedDiseaseId, medicId);
-            if (newDiagnostic != null) {
-                loadDiagnostics();
-                selectedDiseaseId = null;
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_INFO,
-                                "Éxito", "Diagnóstico agregado"));
-            }
-        } catch (Exception e) {
-            Throwable cause = e;
-            while (cause.getCause() != null) {
-                cause = cause.getCause();
-            }
-            System.out.println(">>> [ERROR addDiagnostic] " + cause.getClass().getName() + ": " + cause.getMessage());
-
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", "No se pudo agregar: " + cause.getMessage()));
-
-        }
+        consultationService.addDiagnostic(recordId, selectedDisease.getId(), medicId);
+        loadDiagnostics();
+        selectedDisease = null;
     }
 
-    /**
-     * Elimina un diagnóstico
-     */
     public void removeDiagnostic(Diagnostic diagnostic) {
-        try {
-            consultationService.removeDiagnostic(diagnostic.getId(), medicId);
-            loadDiagnostics();
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO,
-                            "Éxito", "Diagnóstico eliminado"));
-        } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", "No se pudo eliminar: " + e.getMessage()));
-        }
+        consultationService.removeDiagnostic(diagnostic.getId(), medicId);
+        loadDiagnostics();
     }
 
-    // ==================== ACCIONES - EXÁMENES ====================
-    /**
-     * Solicita un examen
-     */
     public void requestExam() {
-        if (selectedExamId == null) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN,
-                            "Atención", "Seleccione un examen"));
+        if (selectedExam == null) {
             return;
         }
 
-        try {
-            Medicalexam newExam = consultationService.requestExam(recordId, selectedExamId, medicId);
-            if (newExam != null) {
-                loadExams();
-                selectedExamId = null;
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_INFO,
-                                "Éxito", "Examen solicitado"));
-            }
-        } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", "No se pudo solicitar: " + e.getMessage()));
-        }
+        consultationService.requestExam(recordId, selectedExam.getId(), medicId);
+        loadExams();
+        selectedExam = null;
     }
 
-    /**
-     * Cancela solicitud de examen
-     */
     public void cancelExam(Medicalexam exam) {
-        try {
-            consultationService.cancelExamRequest(exam.getId(), medicId);
-            loadExams();
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO,
-                            "Éxito", "Solicitud cancelada"));
-        } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", "No se pudo cancelar: " + e.getMessage()));
-        }
+        consultationService.cancelExamRequest(exam.getId(), medicId);
+        loadExams();
     }
 
-    // ==================== ACCIONES - COMPLETAR ====================
-    /**
-     * Completa la consulta
-     */
     public String completeConsultation() {
         try {
             consultationService.completeConsultation(recordId, medicId);
 
-            // Limpiar sesión
-            session.removeAttribute("currentMedicalRecord");
-            session.removeAttribute("currentPatient");
+            Medicalrecord completed = consultationService.loadMedicalRecord(recordId);
+            ReportResult report = reportService.generateConsultationReport(completed);
 
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO,
-                            "Éxito", "Consulta completada correctamente"));
+            consultationContext.clear();
 
-            return "/views/medic/dashboard.xhtml?faces-redirect=true";
+            reportContext.setCurrentReport(report);
+
+            return "/views/medic/view-report.xhtml?faces-redirect=true";
+
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", "No se pudo completar: " + e.getMessage()));
             return null;
         }
     }
 
-    /**
-     * Cancela y vuelve al dashboard
-     */
     public String cancelConsultation() {
-        session.removeAttribute("currentMedicalRecord");
-        session.removeAttribute("currentPatient");
+        consultationContext.clear();
         return "/views/medic/dashboard.xhtml?faces-redirect=true";
     }
 
     // ==================== HELPERS ====================
+    public int getPatientAge() {
+        if (patient == null || patient.getBirthday() == null) {
+            return 0;
+        }
+        return Period.between(patient.getBirthday(), LocalDate.now()).getYears();
+    }
+
     public String getPatientFullName() {
         if (patient == null) {
             return "N/A";
@@ -415,24 +413,6 @@ public class MedicConsultationController implements Serializable {
         return first + last;
     }
 
-    public int getPatientAge() {
-        if (patient == null || patient.getBirthday() == null) {
-            return 0;
-        }
-        return Period.between(patient.getBirthday(), LocalDate.now()).getYears();
-    }
-
-    public String formatDate(java.util.Date date) {
-        if (date == null) {
-            return "N/A";
-        }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        if (date instanceof java.sql.Date) {
-            return ((java.sql.Date) date).toLocalDate().format(formatter);
-        }
-        return new java.sql.Date(date.getTime()).toLocalDate().format(formatter);
-    }
-
     public String formatDateTime(LocalDateTime dateTime) {
         if (dateTime == null) {
             return "N/A";
@@ -441,44 +421,97 @@ public class MedicConsultationController implements Serializable {
         return dateTime.format(formatter);
     }
 
-    public String getSexText(Integer sex) {
-        if (sex == null) {
-            return "N/A";
-        }
-        return sex == 1 ? "Masculino" : "Femenino";
-    }
-
-    public String getBloodTypeText(Integer bloodType) {
-        if (bloodType == null) {
-            return "N/A";
-        }
-        String[] types = {"", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"};
-        return bloodType >= 1 && bloodType <= 8 ? types[bloodType] : "N/A";
-    }
-
-    // ==================== GETTERS Y SETTERS ====================
+    // ==================== GETTERS ====================
     public Medicalrecord getMedicalRecord() {
         return medicalRecord;
-    }
-
-    public void setMedicalRecord(Medicalrecord medicalRecord) {
-        this.medicalRecord = medicalRecord;
     }
 
     public Patient getPatient() {
         return patient;
     }
 
-    public void setPatient(Patient patient) {
-        this.patient = patient;
+    public List<Diagnostic> getDiagnostics() {
+        return diagnostics;
     }
 
-    public Antecedent getAntecedent() {
-        return antecedent;
+    public List<Medicalexam> getRequestedExams() {
+        return requestedExams;
     }
 
-    public void setAntecedent(Antecedent antecedent) {
-        this.antecedent = antecedent;
+    public List<Prescription> getPrescriptions() {
+        return prescriptions;
+    }
+
+    public Disease getSelectedDisease() {
+        return selectedDisease;
+    }
+
+    public void setSelectedDisease(Disease d) {
+        this.selectedDisease = d;
+    }
+
+    public Exam getSelectedExam() {
+        return selectedExam;
+    }
+
+    public void setSelectedExam(Exam e) {
+        this.selectedExam = e;
+    }
+
+    public List<Disease> getAvailableDiseases() {
+        return availableDiseases;
+    }
+
+    public List<Exam> getAvailableExams() {
+        return availableExams;
+    }
+
+    public String getNewMedication() {
+        return newMedication;
+    }
+
+    public void setNewMedication(String v) {
+        this.newMedication = v;
+    }
+
+    public String getNewDose() {
+        return newDose;
+    }
+
+    public void setNewDose(String v) {
+        this.newDose = v;
+    }
+
+    public String getNewFrequency() {
+        return newFrequency;
+    }
+
+    public void setNewFrequency(String v) {
+        this.newFrequency = v;
+    }
+
+    public String getNewDuration() {
+        return newDuration;
+    }
+
+    public void setNewDuration(String v) {
+        this.newDuration = v;
+    }
+
+    public String getNewRoute() {
+        return newRoute;
+    }
+
+    public void setNewRoute(String v) {
+        this.newRoute = v;
+    }
+
+    public String getNewInstructions() {
+        return newInstructions;
+    }
+
+    public void setNewInstructions(String v) {
+        this.newInstructions = v;
     }
 
     public List<Vitalsign> getVitalSigns() {
@@ -487,6 +520,46 @@ public class MedicConsultationController implements Serializable {
 
     public void setVitalSigns(List<Vitalsign> vitalSigns) {
         this.vitalSigns = vitalSigns;
+    }
+
+    public MedicalRecordService getMedicalRecordService() {
+        return medicalRecordService;
+    }
+
+    public void setMedicalRecordService(MedicalRecordService medicalRecordService) {
+        this.medicalRecordService = medicalRecordService;
+    }
+
+    public Medic getCurrentMedic() {
+        return currentMedic;
+    }
+
+    public void setCurrentMedic(Medic currentMedic) {
+        this.currentMedic = currentMedic;
+    }
+
+    public Integer getMedicId() {
+        return medicId;
+    }
+
+    public void setMedicId(Integer medicId) {
+        this.medicId = medicId;
+    }
+
+    public Integer getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(Integer recordId) {
+        this.recordId = recordId;
+    }
+
+    public Antecedent getAntecedent() {
+        return antecedent;
+    }
+
+    public void setAntecedent(Antecedent antecedent) {
+        this.antecedent = antecedent;
     }
 
     public Vitalsign getLastVitalSign() {
@@ -545,54 +618,6 @@ public class MedicConsultationController implements Serializable {
         this.rpeExists = rpeExists;
     }
 
-    public List<Diagnostic> getDiagnostics() {
-        return diagnostics;
-    }
-
-    public void setDiagnostics(List<Diagnostic> diagnostics) {
-        this.diagnostics = diagnostics;
-    }
-
-    public Integer getSelectedDiseaseId() {
-        return selectedDiseaseId;
-    }
-
-    public void setSelectedDiseaseId(Integer selectedDiseaseId) {
-        this.selectedDiseaseId = selectedDiseaseId;
-    }
-
-    public List<Disease> getAvailableDiseases() {
-        return availableDiseases;
-    }
-
-    public void setAvailableDiseases(List<Disease> availableDiseases) {
-        this.availableDiseases = availableDiseases;
-    }
-
-    public List<Medicalexam> getRequestedExams() {
-        return requestedExams;
-    }
-
-    public void setRequestedExams(List<Medicalexam> requestedExams) {
-        this.requestedExams = requestedExams;
-    }
-
-    public Integer getSelectedExamId() {
-        return selectedExamId;
-    }
-
-    public void setSelectedExamId(Integer selectedExamId) {
-        this.selectedExamId = selectedExamId;
-    }
-
-    public List<Exam> getAvailableExams() {
-        return availableExams;
-    }
-
-    public void setAvailableExams(List<Exam> availableExams) {
-        this.availableExams = availableExams;
-    }
-
     public List<Medicalrecord> getPatientHistory() {
         return patientHistory;
     }
@@ -600,4 +625,5 @@ public class MedicConsultationController implements Serializable {
     public void setPatientHistory(List<Medicalrecord> patientHistory) {
         this.patientHistory = patientHistory;
     }
+
 }

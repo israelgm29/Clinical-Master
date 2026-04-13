@@ -5,846 +5,1271 @@
       xmlns:p="http://primefaces.org/ui"
       xmlns:f="jakarta.faces.core">
 
-<ui:composition template="/WEB-INF/templates/medic-template.xhtml">
+    <ui:composition template="/WEB-INF/templates/medic-template.xhtml">
 
-    <ui:define name="title">Atención Médica - #{medicConsultationController.patientFullName}</ui:define>
-    
-    <ui:define name="page-title">Atención Médica</ui:define>
-    
-    <ui:define name="head">
-        <style>
-            /* ============================================
-               ATENCIÓN MÉDICA - ESTILOS ESPECÍFICOS
-               ============================================ */
-            
-            /* === HEADER DEL PACIENTE === */
-            .patient-header-card {
-                background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-                border-radius: 12px;
-                padding: 20px;
-                color: white;
-                margin-bottom: 20px;
-                display: flex;
-                align-items: center;
-                gap: 20px;
-            }
-            
-            .patient-header-avatar {
-                width: 72px;
-                height: 72px;
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.75rem;
-                font-weight: 700;
-                border: 3px solid rgba(255, 255, 255, 0.3);
-            }
-            
-            .patient-header-info {
-                flex: 1;
-            }
-            
-            .patient-header-info h2 {
-                margin: 0 0 4px 0;
-                font-size: 1.5rem;
-                font-weight: 600;
-            }
-            
-            .patient-header-meta {
-                display: flex;
-                gap: 16px;
-                font-size: 0.875rem;
-                opacity: 0.9;
-            }
-            
-            .patient-header-meta span {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-            }
-            
-            .patient-header-badges {
-                display: flex;
-                gap: 8px;
-            }
-            
-            .patient-badge {
-                background: rgba(255, 255, 255, 0.2);
-                padding: 6px 12px;
-                border-radius: 20px;
-                font-size: 0.8rem;
-                font-weight: 600;
-            }
-            
-            /* === SECCIONES === */
-            .consultation-section {
-                background: var(--bg-card);
-                border-radius: 12px;
-                border: 1px solid var(--border);
-                margin-bottom: 20px;
-                overflow: hidden;
-            }
-            
-            .section-header-bar {
-                background: linear-gradient(135deg, #f8f9fb 0%, #f0f2f5 100%);
-                padding: 14px 20px;
-                border-bottom: 1px solid var(--border-light);
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-            
-            .section-header-bar .material-symbols-outlined {
-                color: var(--primary);
-                font-size: 22px;
-            }
-            
-            .section-header-bar h3 {
-                margin: 0;
-                font-size: 1rem;
-                font-weight: 600;
-                color: var(--text);
-                flex: 1;
-            }
-            
-            .section-content {
-                padding: 20px;
-            }
-            
-            /* === SIGNOS VITALES === */
-            .vitals-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-                gap: 16px;
-            }
-            
-            .vital-card {
-                background: var(--bg);
-                border-radius: 10px;
-                padding: 16px;
-                text-align: center;
-                border: 1px solid var(--border-light);
-            }
-            
-            .vital-card .icon {
-                width: 40px;
-                height: 40px;
-                background: rgba(11, 60, 93, 0.1);
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0 auto 10px;
-            }
-            
-            .vital-card .icon .material-symbols-outlined {
-                color: var(--primary);
-                font-size: 20px;
-            }
-            
-            .vital-card .value {
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: var(--text);
-                margin-bottom: 4px;
-            }
-            
-            .vital-card .label {
-                font-size: 0.75rem;
-                color: var(--text-muted);
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            
-            /* === ANTECEDENTES === */
-            .antecedents-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 16px;
-            }
-            
-            .antecedent-item {
-                background: var(--bg);
-                border-radius: 8px;
-                padding: 14px;
-                border-left: 3px solid var(--accent);
-            }
-            
-            .antecedent-item.empty {
-                border-left-color: var(--border);
-                opacity: 0.7;
-            }
-            
-            .antecedent-item h4 {
-                margin: 0 0 6px 0;
-                font-size: 0.8rem;
-                color: var(--text-muted);
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            
-            .antecedent-item p {
-                margin: 0;
-                font-size: 0.9rem;
-                color: var(--text);
-            }
-            
-            .antecedent-item.empty p {
-                color: var(--text-muted);
-                font-style: italic;
-            }
-            
-            /* === FORMULARIOS === */
-            .form-grid-2 {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
-            }
-            
-            .form-field {
-                margin-bottom: 0;
-            }
-            
-            .form-field label {
-                display: block;
-                margin-bottom: 6px;
-                font-size: 0.8rem;
-                font-weight: 600;
-                color: var(--text);
-                text-transform: uppercase;
-                letter-spacing: 0.3px;
-            }
-            
-            .form-field textarea {
-                width: 100%;
-                min-height: 100px;
-                resize: vertical;
-            }
-            
-            /* === CHECKBOX GRID (CROS Y RPE) === */
-            .checkbox-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 12px;
-            }
-            
-            .checkbox-item {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 10px 14px;
-                background: var(--bg);
-                border-radius: 8px;
-                border: 1px solid var(--border-light);
-            }
-            
-            .checkbox-item .ui-chkbox {
-                margin: 0;
-            }
-            
-            .checkbox-item label {
-                margin: 0;
-                font-size: 0.9rem;
-                color: var(--text);
-                cursor: pointer;
-            }
-            
-            /* === TABLAS === */
-            .data-table-container {
-                margin: -20px;
-            }
-            
-            .data-table-container .ui-datatable {
-                border: none;
-            }
-            
-            /* === AGREGAR ITEMS === */
-            .add-item-row {
-                display: flex;
-                gap: 12px;
-                align-items: flex-end;
-                margin-bottom: 16px;
-            }
-            
-            .add-item-row .ui-selectonemenu {
-                flex: 1;
-            }
-            
-            /* === OBSERVACIONES === */
-            .observations-field {
-                margin-top: 16px;
-            }
-            
-            .observations-field label {
-                display: block;
-                margin-bottom: 6px;
-                font-size: 0.8rem;
-                font-weight: 600;
-                color: var(--text);
-            }
-            
-            /* === BOTONES DE ACCIÓN === */
-            .action-bar {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 20px;
-                background: var(--bg-card);
-                border-radius: 12px;
-                border: 1px solid var(--border);
-                margin-top: 20px;
-            }
-            
-            .action-bar .left-actions {
-                display: flex;
-                gap: 10px;
-            }
-            
-            .action-bar .right-actions {
-                display: flex;
-                gap: 10px;
-            }
-            
-            /* === HISTORIAL === */
-            .history-list {
-                max-height: 300px;
-                overflow-y: auto;
-            }
-            
-            .history-item {
-                padding: 12px;
-                border-bottom: 1px solid var(--border-light);
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            .history-item:last-child {
-                border-bottom: none;
-            }
-            
-            .history-item:hover {
-                background: var(--bg);
-            }
-            
-            /* === RESPONSIVE === */
-            @media (max-width: 768px) {
+        <ui:define name="title">Atención Médica - #{medicConsultationController.patientFullName}</ui:define>
+
+        <ui:define name="page-title">Atención Médica</ui:define>
+
+        <ui:define name="head">
+            <style>
+                /* ============================================
+                   ATENCIÓN MÉDICA - ESTILOS ESPECÍFICOS
+                   ============================================ */
+
+                /* === HEADER DEL PACIENTE === */
                 .patient-header-card {
-                    flex-direction: column;
-                    text-align: center;
+                    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+                    border-radius: 12px;
+                    padding: 20px;
+                    color: white;
+                    margin-bottom: 20px;
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
                 }
-                
+
+                .patient-header-avatar {
+                    width: 72px;
+                    height: 72px;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.75rem;
+                    font-weight: 700;
+                    border: 3px solid rgba(255, 255, 255, 0.3);
+                }
+
+                .patient-header-info {
+                    flex: 1;
+                }
+
+                .patient-header-info h2 {
+                    margin: 0 0 4px 0;
+                    font-size: 1.5rem;
+                    font-weight: 600;
+                }
+
                 .patient-header-meta {
-                    flex-direction: column;
+                    display: flex;
+                    gap: 16px;
+                    font-size: 0.875rem;
+                    opacity: 0.9;
+                }
+
+                .patient-header-meta span {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+
+                .patient-header-badges {
+                    display: flex;
                     gap: 8px;
                 }
-                
-                .form-grid-2 {
-                    grid-template-columns: 1fr;
+
+                .patient-badge {
+                    background: rgba(255, 255, 255, 0.2);
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
                 }
-                
+
+                /* === SECCIONES === */
+                .consultation-section {
+                    background: var(--bg-card);
+                    border-radius: 12px;
+                    border: 1px solid var(--border);
+                    margin-bottom: 20px;
+                    overflow: hidden;
+                }
+
+                .section-header-bar {
+                    background: linear-gradient(135deg, #f8f9fb 0%, #f0f2f5 100%);
+                    padding: 14px 20px;
+                    border-bottom: 1px solid var(--border-light);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .section-header-bar .material-symbols-outlined {
+                    color: var(--primary);
+                    font-size: 22px;
+                }
+
+                .section-header-bar h3 {
+                    margin: 0;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: var(--text);
+                    flex: 1;
+                }
+
+                .section-content {
+                    padding: 20px;
+                }
+
+                /* === SIGNOS VITALES === */
                 .vitals-grid {
-                    grid-template-columns: repeat(2, 1fr);
-                }
-                
-                .action-bar {
-                    flex-direction: column;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
                     gap: 16px;
                 }
-                
-                .action-bar .left-actions,
-                .action-bar .right-actions {
+
+                .vital-card {
+                    background: var(--bg);
+                    border-radius: 10px;
+                    padding: 16px;
+                    text-align: center;
+                    border: 1px solid var(--border-light);
+                }
+
+                .vital-card .icon {
+                    width: 40px;
+                    height: 40px;
+                    background: rgba(11, 60, 93, 0.1);
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 10px;
+                }
+
+                .vital-card .icon .material-symbols-outlined {
+                    color: var(--primary);
+                    font-size: 20px;
+                }
+
+                .vital-card .value {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: var(--text);
+                    margin-bottom: 4px;
+                }
+
+                .vital-card .label {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                /* === ANTECEDENTES === */
+                .antecedents-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                    gap: 16px;
+                }
+
+                .antecedent-item {
+                    background: var(--bg);
+                    border-radius: 8px;
+                    padding: 14px;
+                    border-left: 3px solid var(--accent);
+                }
+
+                .antecedent-item.empty {
+                    border-left-color: var(--border);
+                    opacity: 0.7;
+                }
+
+                .antecedent-item h4 {
+                    margin: 0 0 6px 0;
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .antecedent-item p {
+                    margin: 0;
+                    font-size: 0.9rem;
+                    color: var(--text);
+                }
+
+                .antecedent-item.empty p {
+                    color: var(--text-muted);
+                    font-style: italic;
+                }
+
+                /* === FORMULARIOS === */
+                .form-grid-2 {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 20px;
+                }
+
+                .form-field {
+                    margin-bottom: 0;
+                }
+
+                .form-field label {
+                    display: block;
+                    margin-bottom: 6px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    color: var(--text);
+                    text-transform: uppercase;
+                    letter-spacing: 0.3px;
+                }
+
+                .form-field textarea {
                     width: 100%;
+                    min-height: 100px;
+                    resize: vertical;
+                }
+
+                /* === CHECKBOX GRID (CROS Y RPE) === */
+                .checkbox-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 12px;
+                }
+
+                .checkbox-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 10px 14px;
+                    background: var(--bg);
+                    border-radius: 8px;
+                    border: 1px solid var(--border-light);
+                }
+
+                .checkbox-item .ui-chkbox {
+                    margin: 0;
+                }
+
+                .checkbox-item label {
+                    margin: 0;
+                    font-size: 0.9rem;
+                    color: var(--text);
+                    cursor: pointer;
+                }
+
+                /* === TABLAS === */
+                .data-table-container {
+                    margin: -20px;
+                }
+
+                .data-table-container .ui-datatable {
+                    border: none;
+                }
+
+                /* === AGREGAR ITEMS === */
+                .add-item-row {
+                    display: flex;
+                    gap: 12px;
+                    align-items: flex-end;
+                    margin-bottom: 16px;
+                }
+
+                .add-item-row .ui-selectonemenu {
+                    flex: 1;
+                }
+
+                /* === OBSERVACIONES === */
+                .observations-field {
+                    margin-top: 16px;
+                }
+
+                .observations-field label {
+                    display: block;
+                    margin-bottom: 6px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    color: var(--text);
+                }
+
+                /* === BOTONES DE ACCIÓN === */
+                .action-bar {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px;
+                    background: var(--bg-card);
+                    border-radius: 12px;
+                    border: 1px solid var(--border);
+                    margin-top: 20px;
+                }
+
+                .action-bar .left-actions {
+                    display: flex;
+                    gap: 10px;
+                }
+
+                .action-bar .right-actions {
+                    display: flex;
+                    gap: 10px;
+                }
+
+                /* === HISTORIAL === */
+                .history-list {
+                    max-height: 300px;
+                    overflow-y: auto;
+                }
+
+                .history-item {
+                    padding: 12px;
+                    border-bottom: 1px solid var(--border-light);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .history-item:last-child {
+                    border-bottom: none;
+                }
+
+                .history-item:hover {
+                    background: var(--bg);
+                }
+
+                /* === LAYOUT DOS COLUMNAS === */
+                .consultation-layout {
+                    display: grid;
+                    grid-template-columns: 1fr 320px;
+                    gap: 20px;
+                    align-items: start;
+                }
+
+                .consultation-main {
+                    min-width: 0;
+                }
+
+                .consultation-sidebar {
+                    position: sticky;
+                    top: 20px;
+                }
+
+                .sidebar-panel {
+                    background: var(--bg-card);
+                    border-radius: 12px;
+                    border: 1px solid var(--border);
+                    overflow: hidden;
+                }
+
+                /* Tabs del panel lateral */
+                .sidebar-panel .ui-tabview {
+                    border: none !important;
+                }
+
+                .sidebar-panel .ui-tabview-nav {
+                    background: #f8f9fb !important;
+                    border-bottom: 1px solid var(--border-light) !important;
+                    padding: 0 !important;
+                }
+
+                .sidebar-panel .ui-tabview-nav li {
+                    flex: 1;
+                    text-align: center;
+                }
+
+                .sidebar-panel .ui-tabview-nav li a {
+                    font-size: 0.75rem !important;
+                    font-weight: 600 !important;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    padding: 12px 8px !important;
                     justify-content: center;
                 }
-            }
-        </style>
-    </ui:define>
 
-    <ui:define name="content">
-        <h:form id="consultationForm">
-            
-            <!-- === HEADER DEL PACIENTE === -->
-            <div class="patient-header-card">
-                <div class="patient-header-avatar">
-                    #{medicConsultationController.patientInitials}
-                </div>
-                <div class="patient-header-info">
-                    <h2>#{medicConsultationController.patientFullName}</h2>
-                    <div class="patient-header-meta">
-                        <span>
-                            <span class="material-symbols-outlined" style="font-size: 16px;">badge</span>
-                            HC: #{medicConsultationController.patient.hc}
+                .sidebar-panel .ui-tabview-panels {
+                    padding: 0 !important;
+                    border: none !important;
+                }
+
+                /* Info del paciente en sidebar */
+                .patient-info-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 16px;
+                    border-bottom: 1px solid var(--border-light);
+                }
+
+                .patient-info-item:last-child {
+                    border-bottom: none;
+                }
+
+                .patient-info-item .pi-icon {
+                    width: 36px;
+                    height: 36px;
+                    background: rgba(11, 60, 93, 0.08);
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+
+                .patient-info-item .pi-icon .material-symbols-outlined {
+                    font-size: 18px;
+                    color: var(--primary);
+                }
+
+                .patient-info-item .pi-data strong {
+                    display: block;
+                    font-size: 0.9rem;
+                    color: var(--text);
+                    font-weight: 600;
+                }
+
+                .patient-info-item .pi-data span {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                }
+
+                /* Avatar en sidebar */
+                .sidebar-avatar {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 20px 16px;
+                    border-bottom: 1px solid var(--border-light);
+                    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+                    color: white;
+                }
+
+                .sidebar-avatar-circle {
+                    width: 64px;
+                    height: 64px;
+                    background: rgba(255,255,255,0.2);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    border: 3px solid rgba(255,255,255,0.3);
+                    margin-bottom: 10px;
+                }
+
+                .sidebar-avatar h3 {
+                    margin: 0 0 4px 0;
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    text-align: center;
+                }
+
+                .sidebar-avatar p {
+                    margin: 0;
+                    font-size: 0.8rem;
+                    opacity: 0.85;
+                }
+
+                /* Historial en sidebar */
+                .sidebar-history-item {
+                    padding: 12px 16px;
+                    border-bottom: 1px solid var(--border-light);
+                    cursor: pointer;
+                    transition: background 0.15s;
+                }
+
+                .sidebar-history-item:hover {
+                    background: var(--bg);
+                }
+
+                .sidebar-history-item:last-child {
+                    border-bottom: none;
+                }
+
+                .sidebar-history-item .date {
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: var(--primary);
+                    margin-bottom: 4px;
+                }
+
+                .sidebar-history-item .reason {
+                    font-size: 0.85rem;
+                    color: var(--text);
+                    margin-bottom: 4px;
+                }
+
+                .sidebar-history-item .diagnoses {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 4px;
+                    margin-top: 4px;
+                }
+
+                .diag-tag {
+                    background: rgba(11, 60, 93, 0.08);
+                    color: var(--primary);
+                    border-radius: 4px;
+                    padding: 2px 6px;
+                    font-size: 0.7rem;
+                    font-weight: 500;
+                }
+
+                /* Antecedentes en sidebar */
+                .sidebar-antecedent {
+                    padding: 10px 16px;
+                    border-bottom: 1px solid var(--border-light);
+                }
+
+                .sidebar-antecedent:last-child {
+                    border-bottom: none;
+                }
+
+                .sidebar-antecedent h5 {
+                    margin: 0 0 4px 0;
+                    font-size: 0.7rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    color: var(--text-muted);
+                }
+
+                .sidebar-antecedent p {
+                    margin: 0;
+                    font-size: 0.85rem;
+                    color: var(--text);
+                }
+
+                /* === RESPONSIVE === */
+                @media (max-width: 768px) {
+                    .patient-header-card {
+                        flex-direction: column;
+                        text-align: center;
+                    }
+
+                    .patient-header-meta {
+                        flex-direction: column;
+                        gap: 8px;
+                    }
+
+                    .form-grid-2 {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .vitals-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+
+                    .action-bar {
+                        flex-direction: column;
+                        gap: 16px;
+                    }
+
+                    .action-bar .left-actions,
+                    .action-bar .right-actions {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                }
+            </style>
+        </ui:define>
+
+        <ui:define name="content">
+            <!-- Mensajes - fuera del form para evitar problemas con AJAX -->
+
+
+            <h:form id="consultationForm">
+
+                <!-- === HEADER DEL PACIENTE === -->
+                <div class="patient-header-card">
+                    <div class="patient-header-avatar">
+                        #{medicConsultationController.patientInitials}
+                    </div>
+                    <div class="patient-header-info">
+                        <h2>#{medicConsultationController.patientFullName}</h2>
+                        <div class="patient-header-meta">
+                            <span>
+                                <span class="material-symbols-outlined" style="font-size: 16px;">badge</span>
+                                Historia Clinica: #{medicConsultationController.patient.hc}
+                            </span>
+                            <span>
+                                <span class="material-symbols-outlined" style="font-size: 16px;">cake</span>
+                                #{medicConsultationController.patientAge} años
+                            </span>
+                            <span>
+                                <span class="material-symbols-outlined" style="font-size: 16px;">person</span>
+                                #{medicConsultationController.patient.sex != null ? medicConsultationController.patient.sex.name : "N/A"}
+                            </span>
+                            <span>
+                                <span class="material-symbols-outlined" style="font-size: 16px;">water_drop</span>
+                                #{medicConsultationController.patient.blootype != null ? medicConsultationController.patient.blootype.name : "N/A"}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="patient-header-badges">
+                        <span class="patient-badge">
+                            <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">calendar_today</span>
+                            <h:outputText value="#{medicConsultationController.medicalRecord.createdat}">
+                                <f:convertDateTime type="localDateTime" pattern="yyyy-MM-dd" />
+                            </h:outputText>
                         </span>
-                        <span>
-                            <span class="material-symbols-outlined" style="font-size: 16px;">cake</span>
-                            #{medicConsultationController.patientAge} años
-                        </span>
-                        <span>
-                            <span class="material-symbols-outlined" style="font-size: 16px;">person</span>
-                            #{medicConsultationController.getSexText(medicConsultationController.patient.sex)}
-                        </span>
-                        <span>
-                            <span class="material-symbols-outlined" style="font-size: 16px;">water_drop</span>
-                            #{medicConsultationController.getBloodTypeText(medicConsultationController.patient.blootype)}
-                        </span>
                     </div>
                 </div>
-                <div class="patient-header-badges">
-                    <span class="patient-badge">
-                        <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">calendar_today</span>
-                        #{medicConsultationController.formatDateTime(medicConsultationController.medicalRecord.createdat)}
-                    </span>
-                </div>
-            </div>
-            
-            <!-- === SIGNOS VITALES === -->
-            <div class="consultation-section">
-                <div class="section-header-bar">
-                    <span class="material-symbols-outlined">monitor_heart</span>
-                    <h3>Signos Vitales</h3>
-                    <span style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);">
-                        Registrados por enfermería
-                    </span>
-                </div>
-                <div class="section-content">
-                    <h:panelGroup rendered="#{empty medicConsultationController.vitalSigns}">
-                        <div style="text-align: center; padding: 24px; color: var(--text-muted);">
-                            <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 8px;">info</span>
-                            <p>No se han registrado signos vitales</p>
-                        </div>
-                    </h:panelGroup>
-                    
-                    <h:panelGroup rendered="#{not empty medicConsultationController.vitalSigns}">
-                        <div class="vitals-grid">
-                            <div class="vital-card">
-                                <div class="icon">
-                                    <span class="material-symbols-outlined">thermostat</span>
-                                </div>
-                                <div class="value">#{medicConsultationController.lastVitalSign.temperature}°C</div>
-                                <div class="label">Temperatura</div>
+
+                <!-- === LAYOUT DOS COLUMNAS === -->
+                <div class="consultation-layout">
+
+                    <!-- COLUMNA PRINCIPAL -->
+                    <div class="consultation-main">
+
+                        <!-- === SIGNOS VITALES === -->
+                        <div class="consultation-section">
+                            <div class="section-header-bar">
+                                <span class="material-symbols-outlined">monitor_heart</span>
+                                <h3>Signos Vitales</h3>
+                                <span style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);">
+                                    Registrados por enfermería
+                                </span>
                             </div>
-                            <div class="vital-card">
-                                <div class="icon">
-                                    <span class="material-symbols-outlined">favorite</span>
-                                </div>
-                                <div class="value">#{medicConsultationController.lastVitalSign.systolicpressure}/#{medicConsultationController.lastVitalSign.diastolicpressure}</div>
-                                <div class="label">Presión Arterial</div>
-                            </div>
-                            <div class="vital-card">
-                                <div class="icon">
-                                    <span class="material-symbols-outlined">pulse_alert</span>
-                                </div>
-                                <div class="value">#{medicConsultationController.lastVitalSign.pulse}</div>
-                                <div class="label">Pulso (bpm)</div>
-                            </div>
-                            <div class="vital-card">
-                                <div class="icon">
-                                    <span class="material-symbols-outlined">air</span>
-                                </div>
-                                <div class="value">#{medicConsultationController.lastVitalSign.breathingfrequency}</div>
-                                <div class="label">Frec. Respiratoria</div>
-                            </div>
-                            <div class="vital-card">
-                                <div class="icon">
-                                    <span class="material-symbols-outlined">oxygen_saturation</span>
-                                </div>
-                                <div class="value">#{medicConsultationController.lastVitalSign.oxygensaturation}%</div>
-                                <div class="label">SpO2</div>
-                            </div>
-                            <div class="vital-card">
-                                <div class="icon">
-                                    <span class="material-symbols-outlined">height</span>
-                                </div>
-                                <div class="value">#{medicConsultationController.lastVitalSign.tall} cm</div>
-                                <div class="label">Talla</div>
-                            </div>
-                            <div class="vital-card">
-                                <div class="icon">
-                                    <span class="material-symbols-outlined">scale</span>
-                                </div>
-                                <div class="value">#{medicConsultationController.lastVitalSign.weight} kg</div>
-                                <div class="label">Peso</div>
-                            </div>
-                            <div class="vital-card">
-                                <div class="icon">
-                                    <span class="material-symbols-outlined">calculate</span>
-                                </div>
-                                <div class="value">#{medicConsultationController.lastVitalSign.mass}</div>
-                                <div class="label">IMC</div>
-                            </div>
-                        </div>
-                    </h:panelGroup>
-                </div>
-            </div>
-            
-            <!-- === ANTECEDENTES === -->
-            <div class="consultation-section">
-                <div class="section-header-bar">
-                    <span class="material-symbols-outlined">history</span>
-                    <h3>Antecedentes Médicos</h3>
-                </div>
-                <div class="section-content">
-                    <h:panelGroup rendered="#{medicConsultationController.antecedent == null}">
-                        <div style="text-align: center; padding: 24px; color: var(--text-muted);">
-                            <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 8px;">folder_off</span>
-                            <p>No se han registrado antecedentes para este paciente</p>
-                        </div>
-                    </h:panelGroup>
-                    
-                    <h:panelGroup rendered="#{medicConsultationController.antecedent != null}">
-                        <div class="antecedents-grid">
-                            <div class="antecedent-item #{empty medicConsultationController.antecedent.personal ? 'empty' : ''}">
-                                <h4>Personales</h4>
-                                <p>#{empty medicConsultationController.antecedent.personal ? 'Sin registros' : medicConsultationController.antecedent.personal}</p>
-                            </div>
-                            <div class="antecedent-item #{empty medicConsultationController.antecedent.surgical ? 'empty' : ''}">
-                                <h4>Quirúrgicos</h4>
-                                <p>#{empty medicConsultationController.antecedent.surgical ? 'Sin registros' : medicConsultationController.antecedent.surgical}</p>
-                            </div>
-                            <div class="antecedent-item #{empty medicConsultationController.antecedent.family ? 'empty' : ''}">
-                                <h4>Familiares</h4>
-                                <p>#{empty medicConsultationController.antecedent.family ? 'Sin registros' : medicConsultationController.antecedent.family}</p>
-                            </div>
-                            <div class="antecedent-item #{empty medicConsultationController.antecedent.allergy ? 'empty' : ''}">
-                                <h4>Alérgicos</h4>
-                                <p>#{empty medicConsultationController.antecedent.allergy ? 'Sin registros' : medicConsultationController.antecedent.allergy}</p>
-                            </div>
-                            <div class="antecedent-item #{empty medicConsultationController.antecedent.trauma ? 'empty' : ''}">
-                                <h4>Traumáticos</h4>
-                                <p>#{empty medicConsultationController.antecedent.trauma ? 'Sin registros' : medicConsultationController.antecedent.trauma}</p>
-                            </div>
-                            <div class="antecedent-item #{empty medicConsultationController.antecedent.habits ? 'empty' : ''}">
-                                <h4>Hábitos</h4>
-                                <p>#{empty medicConsultationController.antecedent.habits ? 'Sin registros' : medicConsultationController.antecedent.habits}</p>
-                            </div>
-                            <div class="antecedent-item #{empty medicConsultationController.antecedent.clinician ? 'empty' : ''}">
-                                <h4>Clínicos</h4>
-                                <p>#{empty medicConsultationController.antecedent.clinician ? 'Sin registros' : medicConsultationController.antecedent.clinician}</p>
-                            </div>
-                            <div class="antecedent-item #{empty medicConsultationController.antecedent.professional ? 'empty' : ''}">
-                                <h4>Profesionales</h4>
-                                <p>#{empty medicConsultationController.antecedent.professional ? 'Sin registros' : medicConsultationController.antecedent.professional}</p>
-                            </div>
-                            <div class="antecedent-item #{empty medicConsultationController.antecedent.ago ? 'empty' : ''}">
-                                <h4>AGO</h4>
-                                <p>#{empty medicConsultationController.antecedent.ago ? 'Sin registros' : medicConsultationController.antecedent.ago}</p>
-                            </div>
-                        </div>
-                    </h:panelGroup>
-                </div>
-            </div>
-            
-            <!-- === MOTIVO Y ENFERMEDAD ACTUAL === -->
-            <div class="consultation-section">
-                <div class="section-header-bar">
-                    <span class="material-symbols-outlined">clinical_notes</span>
-                    <h3>Motivo de Consulta y Enfermedad Actual</h3>
-                    <p:commandButton value="Guardar" 
-                                     icon="pi pi-save"
-                                     action="#{medicConsultationController.saveMedicalRecordInfo}"
-                                     update="consultationForm:messages"
-                                     styleClass="ui-button-success"
-                                     style="margin-left: auto; font-size: 0.8rem;"
-                                     process="@form"/>
-                </div>
-                <div class="section-content">
-                    <div class="form-grid-2">
-                        <div class="form-field">
-                            <label>Motivo de Consulta</label>
-                            <p:inputTextarea value="#{medicConsultationController.reason}" 
-                                             placeholder="Ingrese el motivo de consulta..."
-                                             autoResize="true"/>
-                        </div>
-                        <div class="form-field">
-                            <label>Enfermedad Actual</label>
-                            <p:inputTextarea value="#{medicConsultationController.currentIllness}" 
-                                             placeholder="Describa la enfermedad actual..."
-                                             autoResize="true"/>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- === REVISIÓN POR SISTEMAS (CROS) === -->
-            <div class="consultation-section">
-                <div class="section-header-bar">
-                    <span class="material-symbols-outlined">health_metrics</span>
-                    <h3>Revisión por Sistemas</h3>
-                    <p:commandButton value="#{medicConsultationController.crosExists ? 'Actualizar' : 'Guardar'}" 
-                                     icon="pi pi-save"
-                                     action="#{medicConsultationController.saveCros}"
-                                     update="consultationForm:messages"
-                                     styleClass="ui-button-success"
-                                     style="margin-left: auto; font-size: 0.8rem;"
-                                     process="@form"/>
-                </div>
-                <div class="section-content">
-                    <div class="checkbox-grid">
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.cros.senseorgans}" id="sense"/>
-                            <p:outputLabel for="sense" value="Órganos de los Sentidos"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.cros.respiratory}" id="resp"/>
-                            <p:outputLabel for="resp" value="Respiratorio"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.cros.cardiovascular}" id="cardio"/>
-                            <p:outputLabel for="cardio" value="Cardiovascular"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.cros.digestive}" id="digest"/>
-                            <p:outputLabel for="digest" value="Digestivo"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.cros.genital}" id="genital"/>
-                            <p:outputLabel for="genital" value="Genital"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.cros.urinary}" id="urinary"/>
-                            <p:outputLabel for="urinary" value="Urinario"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.cros.skeletalmuscle}" id="skeletal"/>
-                            <p:outputLabel for="skeletal" value="Musculoesquelético"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.cros.endocrine}" id="endo"/>
-                            <p:outputLabel for="endo" value="Endocrino"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.cros.lymphaticheme}" id="lymph"/>
-                            <p:outputLabel for="lymph" value="Linfático/Hematológico"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.cros.nervous}" id="nervous"/>
-                            <p:outputLabel for="nervous" value="Nervioso"/>
-                        </div>
-                    </div>
-                    <div class="observations-field">
-                        <label>Observaciones</label>
-                        <p:inputTextarea value="#{medicConsultationController.cros.observations}" 
-                                         placeholder="Observaciones de la revisión por sistemas..."
-                                         autoResize="true"/>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- === REVISIÓN FÍSICA POR REGIONES (RPE) === -->
-            <div class="consultation-section">
-                <div class="section-header-bar">
-                    <span class="material-symbols-outlined">accessibility_new</span>
-                    <h3>Revisión Física por Regiones</h3>
-                    <p:commandButton value="#{medicConsultationController.rpeExists ? 'Actualizar' : 'Guardar'}" 
-                                     icon="pi pi-save"
-                                     action="#{medicConsultationController.saveRpe}"
-                                     update="consultationForm:messages"
-                                     styleClass="ui-button-success"
-                                     style="margin-left: auto; font-size: 0.8rem;"
-                                     process="@form"/>
-                </div>
-                <div class="section-content">
-                    <div class="checkbox-grid">
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.head}" id="head"/>
-                            <p:outputLabel for="head" value="Cabeza"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.neck}" id="neck"/>
-                            <p:outputLabel for="neck" value="Cuello"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.chest}" id="chest"/>
-                            <p:outputLabel for="chest" value="Tórax"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.abdomen}" id="abdomen"/>
-                            <p:outputLabel for="abdomen" value="Abdomen"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.pelvis}" id="pelvis"/>
-                            <p:outputLabel for="pelvis" value="Pelvis"/>
-                        </div>
-                        <div class="checkbox-item">
-                            <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.extremities}" id="extrem"/>
-                            <p:outputLabel for="extrem" value="Extremidades"/>
-                        </div>
-                    </div>
-                    <div class="observations-field">
-                        <label>Observaciones</label>
-                        <p:inputTextarea value="#{medicConsultationController.rpe.observations}" 
-                                         placeholder="Observaciones de la revisión física..."
-                                         autoResize="true"/>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- === DIAGNÓSTICOS === -->
-            <div class="consultation-section">
-                <div class="section-header-bar">
-                    <span class="material-symbols-outlined">diagnosis</span>
-                    <h3>Diagnósticos</h3>
-                </div>
-                <div class="section-content">
-                    <div class="add-item-row">
-                        <p:selectOneMenu value="#{medicConsultationController.selectedDiseaseId}" 
-                                         placeholder="Seleccione una enfermedad"
-                                         style="flex: 1;">
-                            <f:selectItem itemLabel="Seleccione una enfermedad" itemValue="" noSelectionOption="true"/>
-                            <f:selectItems value="#{medicConsultationController.availableDiseases}" 
-                                           var="disease" 
-                                           itemLabel="#{disease.name}" 
-                                           itemValue="#{disease.id}"/>
-                        </p:selectOneMenu>
-                        <p:commandButton value="Agregar" 
-                                         icon="pi pi-plus"
-                                         action="#{medicConsultationController.addDiagnostic}"
-                                         update="consultationForm:messages, diagnosticsTable, @form"
-                                         styleClass="ui-button-success"/>
-                    </div>
-                    
-                    <p:dataTable id="diagnosticsTable" 
-                                 value="#{medicConsultationController.diagnostics}" 
-                                 var="diag"
-                                 emptyMessage="No hay diagnósticos registrados"
-                                 styleClass="consultation-table">
-                        <p:column headerText="Código" style="width: 15%">
-                            #{diag.diseaseid.code}
-                        </p:column>
-                        <p:column headerText="Enfermedad" style="width: 60%">
-                            #{diag.diseaseid.name}
-                        </p:column>
-                        <p:column headerText="Acciones" style="width: 25%; text-align: center;">
-                            <p:commandButton icon="pi pi-trash"
-                                             action="#{medicConsultationController.removeDiagnostic(diag)}"
-                                             update="consultationForm:messages, diagnosticsTable"
-                                             styleClass="ui-button-danger ui-button-rounded"
-                                             title="Eliminar"/>
-                        </p:column>
-                    </p:dataTable>
-                </div>
-            </div>
-            
-            <!-- === EXÁMENES SOLICITADOS === -->
-            <div class="consultation-section">
-                <div class="section-header-bar">
-                    <span class="material-symbols-outlined">biotech</span>
-                    <h3>Exámenes Solicitados</h3>
-                </div>
-                <div class="section-content">
-                    <div class="add-item-row">
-                        <p:selectOneMenu value="#{medicConsultationController.selectedExamId}" 
-                                         placeholder="Seleccione un examen"
-                                         style="flex: 1;">
-                            <f:selectItem itemLabel="Seleccione un examen" itemValue="" noSelectionOption="true"/>
-                            <f:selectItems value="#{medicConsultationController.availableExams}" 
-                                           var="exam" 
-                                           itemLabel="#{exam.name}" 
-                                           itemValue="#{exam.id}"/>
-                        </p:selectOneMenu>
-                        <p:commandButton value="Solicitar" 
-                                         icon="pi pi-plus"
-                                         action="#{medicConsultationController.requestExam}"
-                                         update="consultationForm:messages, examsTable, @form"
-                                         styleClass="ui-button-success"/>
-                    </div>
-                    
-                    <p:dataTable id="examsTable" 
-                                 value="#{medicConsultationController.requestedExams}" 
-                                 var="exam"
-                                 emptyMessage="No hay exámenes solicitados"
-                                 styleClass="consultation-table">
-                        <p:column headerText="Examen" style="width: 70%">
-                            #{exam.examid.name}
-                        </p:column>
-                        <p:column headerText="Acciones" style="width: 30%; text-align: center;">
-                            <p:commandButton icon="pi pi-trash"
-                                             action="#{medicConsultationController.cancelExam(exam)}"
-                                             update="consultationForm:messages, examsTable"
-                                             styleClass="ui-button-danger ui-button-rounded"
-                                             title="Cancelar"/>
-                        </p:column>
-                    </p:dataTable>
-                </div>
-            </div>
-            
-            <!-- === HISTORIAL DEL PACIENTE === -->
-            <div class="consultation-section">
-                <div class="section-header-bar">
-                    <span class="material-symbols-outlined">timeline</span>
-                    <h3>Historial de Consultas</h3>
-                </div>
-                <div class="section-content">
-                    <h:panelGroup rendered="#{empty medicConsultationController.patientHistory}">
-                        <div style="text-align: center; padding: 24px; color: var(--text-muted);">
-                            <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 8px;">history_toggle_off</span>
-                            <p>No hay consultas anteriores registradas</p>
-                        </div>
-                    </h:panelGroup>
-                    
-                    <h:panelGroup rendered="#{not empty medicConsultationController.patientHistory}">
-                        <div class="history-list">
-                            <ui:repeat value="#{medicConsultationController.patientHistory}" var="history">
-                                <div class="history-item">
-                                    <div>
-                                        <strong>#{medicConsultationController.formatDateTime(history.createdat)}</strong>
-                                        <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.875rem;">
-                                            #{empty history.reason ? 'Sin motivo registrado' : history.reason}
-                                        </p>
+                            <div class="section-content">
+                                <h:panelGroup rendered="#{empty medicConsultationController.vitalSigns}">
+                                    <div style="text-align: center; padding: 24px; color: var(--text-muted);">
+                                        <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 8px;">info</span>
+                                        <p>No se han registrado signos vitales</p>
                                     </div>
-                                    <p:commandButton icon="pi pi-eye"
-                                                     styleClass="ui-button-secondary ui-button-rounded"
-                                                     title="Ver detalles"
-                                                     onclick="PF('historyDialog').show();"/>
-                                </div>
-                            </ui:repeat>
+                                </h:panelGroup>
+
+                                <h:panelGroup rendered="#{not empty medicConsultationController.vitalSigns}">
+                                    <div class="vitals-grid">
+                                        <div class="vital-card">
+                                            <div class="icon">
+                                                <span class="material-symbols-outlined">thermostat</span>
+                                            </div>
+                                            <div class="value">#{medicConsultationController.lastVitalSign.temperature}°C</div>
+                                            <div class="label">Temperatura</div>
+                                        </div>
+                                        <div class="vital-card">
+                                            <div class="icon">
+                                                <span class="material-symbols-outlined">favorite</span>
+                                            </div>
+                                            <div class="value">#{medicConsultationController.lastVitalSign.systolicpressure}/#{medicConsultationController.lastVitalSign.diastolicpressure}</div>
+                                            <div class="label">Presión Arterial</div>
+                                        </div>
+                                        <div class="vital-card">
+                                            <div class="icon">
+                                                <span class="material-symbols-outlined">pulse_alert</span>
+                                            </div>
+                                            <div class="value">#{medicConsultationController.lastVitalSign.pulse}</div>
+                                            <div class="label">Pulso (bpm)</div>
+                                        </div>
+                                        <div class="vital-card">
+                                            <div class="icon">
+                                                <span class="material-symbols-outlined">air</span>
+                                            </div>
+                                            <div class="value">#{medicConsultationController.lastVitalSign.breathingfrequency}</div>
+                                            <div class="label">Frec. Respiratoria</div>
+                                        </div>
+                                        <div class="vital-card">
+                                            <div class="icon">
+                                                <span class="material-symbols-outlined">oxygen_saturation</span>
+                                            </div>
+                                            <div class="value">#{medicConsultationController.lastVitalSign.oxygensaturation}%</div>
+                                            <div class="label">SpO2</div>
+                                        </div>
+                                        <div class="vital-card">
+                                            <div class="icon">
+                                                <span class="material-symbols-outlined">height</span>
+                                            </div>
+                                            <div class="value">#{medicConsultationController.lastVitalSign.tall} cm</div>
+                                            <div class="label">Talla</div>
+                                        </div>
+                                        <div class="vital-card">
+                                            <div class="icon">
+                                                <span class="material-symbols-outlined">scale</span>
+                                            </div>
+                                            <div class="value">#{medicConsultationController.lastVitalSign.weight} kg</div>
+                                            <div class="label">Peso</div>
+                                        </div>
+                                        <div class="vital-card">
+                                            <div class="icon">
+                                                <span class="material-symbols-outlined">calculate</span>
+                                            </div>
+                                            <div class="value">#{medicConsultationController.lastVitalSign.mass}</div>
+                                            <div class="label">IMC</div>
+                                        </div>
+                                    </div>
+                                </h:panelGroup>
+                            </div>
                         </div>
-                    </h:panelGroup>
+
+                        <!-- === MOTIVO Y ENFERMEDAD ACTUAL === -->
+                        <div class="consultation-section">
+                            <div class="section-header-bar">
+                                <span class="material-symbols-outlined">clinical_notes</span>
+                                <h3>Motivo de Consulta y Enfermedad Actual</h3>
+                                <p:commandButton value="Guardar" 
+                                                 icon="pi pi-save"
+                                                 action="#{medicConsultationController.saveMedicalRecordInfo}"
+                                                 update=":messages"
+                                                 styleClass="ui-button-success"
+                                                 style="margin-left: auto; font-size: 0.8rem;"
+                                                 process="@form"/>
+                            </div>
+                            <div class="section-content">
+                                <div class="form-grid-2">
+                                    <div class="form-field">
+                                        <label>Motivo de Consulta</label>
+                                        <p:inputTextarea value="#{medicConsultationController.reason}" 
+                                                         placeholder="Ingrese el motivo de consulta..."
+                                                         autoResize="true"/>
+                                    </div>
+                                    <div class="form-field">
+                                        <label>Enfermedad Actual</label>
+                                        <p:inputTextarea value="#{medicConsultationController.currentIllness}" 
+                                                         placeholder="Describa la enfermedad actual..."
+                                                         autoResize="true"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- === REVISIÓN POR SISTEMAS (CROS) === -->
+                        <div class="consultation-section">
+                            <div class="section-header-bar">
+                                <span class="material-symbols-outlined">health_metrics</span>
+                                <h3>Revisión por Sistemas</h3>
+                                <p:commandButton value="#{medicConsultationController.crosExists ? 'Actualizar' : 'Guardar'}" 
+                                                 icon="pi pi-save"
+                                                 action="#{medicConsultationController.saveCros}"
+                                                 update=":messages"
+                                                 styleClass="ui-button-success"
+                                                 style="margin-left: auto; font-size: 0.8rem;"
+                                                 process="@form"/>
+                            </div>
+                            <div class="section-content">
+                                <div class="checkbox-grid">
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.cros.senseorgans}" id="sense"/>
+                                        <p:outputLabel for="sense" value="Órganos de los Sentidos"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.cros.respiratory}" id="resp"/>
+                                        <p:outputLabel for="resp" value="Respiratorio"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.cros.cardiovascular}" id="cardio"/>
+                                        <p:outputLabel for="cardio" value="Cardiovascular"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.cros.digestive}" id="digest"/>
+                                        <p:outputLabel for="digest" value="Digestivo"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.cros.genital}" id="genital"/>
+                                        <p:outputLabel for="genital" value="Genital"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.cros.urinary}" id="urinary"/>
+                                        <p:outputLabel for="urinary" value="Urinario"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.cros.skeletalmuscle}" id="skeletal"/>
+                                        <p:outputLabel for="skeletal" value="Musculoesquelético"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.cros.endocrine}" id="endo"/>
+                                        <p:outputLabel for="endo" value="Endocrino"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.cros.lymphaticheme}" id="lymph"/>
+                                        <p:outputLabel for="lymph" value="Linfático/Hematológico"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.cros.nervous}" id="nervous"/>
+                                        <p:outputLabel for="nervous" value="Nervioso"/>
+                                    </div>
+                                </div>
+                                <div class="observations-field">
+                                    <label>Observaciones</label>
+                                    <p:inputTextarea value="#{medicConsultationController.cros.observations}" 
+                                                     placeholder="Observaciones de la revisión por sistemas..."
+                                                     autoResize="true"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- === REVISIÓN FÍSICA POR REGIONES (RPE) === -->
+                        <div class="consultation-section">
+                            <div class="section-header-bar">
+                                <span class="material-symbols-outlined">accessibility_new</span>
+                                <h3>Revisión Física por Regiones</h3>
+                                <p:commandButton value="#{medicConsultationController.rpeExists ? 'Actualizar' : 'Guardar'}" 
+                                                 icon="pi pi-save"
+                                                 action="#{medicConsultationController.saveRpe}"
+                                                 update=":messages"
+                                                 styleClass="ui-button-success"
+                                                 style="margin-left: auto; font-size: 0.8rem;"
+                                                 process="@form"/>
+                            </div>
+                            <div class="section-content">
+                                <div class="checkbox-grid">
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.head}" id="head"/>
+                                        <p:outputLabel for="head" value="Cabeza"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.neck}" id="neck"/>
+                                        <p:outputLabel for="neck" value="Cuello"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.chest}" id="chest"/>
+                                        <p:outputLabel for="chest" value="Tórax"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.abdomen}" id="abdomen"/>
+                                        <p:outputLabel for="abdomen" value="Abdomen"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.pelvis}" id="pelvis"/>
+                                        <p:outputLabel for="pelvis" value="Pelvis"/>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <p:selectBooleanCheckbox value="#{medicConsultationController.rpe.extremities}" id="extrem"/>
+                                        <p:outputLabel for="extrem" value="Extremidades"/>
+                                    </div>
+                                </div>
+                                <div class="observations-field">
+                                    <label>Observaciones</label>
+                                    <p:inputTextarea value="#{medicConsultationController.rpe.observations}" 
+                                                     placeholder="Observaciones de la revisión física..."
+                                                     autoResize="true"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- === DIAGNÓSTICOS === -->
+                        <div class="consultation-section">
+                            <div class="section-header-bar">
+                                <span class="material-symbols-outlined">diagnosis</span>
+                                <h3>Diagnósticos</h3>
+                            </div>
+                            <div class="section-content">
+                                <div class="add-item-row">
+                                    <p:selectOneMenu id="diseaseSelect"
+                                                     value="#{medicConsultationController.selectedDisease}" 
+                                                     placeholder="Seleccione una enfermedad"
+                                                     converter="diseaseConverter"
+                                                     style="flex: 1;">
+                                        <f:selectItem itemLabel="Seleccione una enfermedad" itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{medicConsultationController.availableDiseases}" 
+                                                       var="disease" 
+                                                       itemLabel="#{disease.code} - #{disease.name}" 
+                                                       itemValue="#{disease}"/>
+                                    </p:selectOneMenu>
+
+                                    <p:commandButton id="btnAddDiagnostic"
+                                                     value="Agregar" 
+                                                     icon="pi pi-plus"
+                                                     action="#{medicConsultationController.addDiagnostic}"
+                                                     update=":messages :consultationForm:diagnosticsPanel :consultationForm:diseaseSelect"
+                                                     process="@form"
+                                                     styleClass="ui-button-success"
+                                                     ajax="true"/>
+                                </div>
+
+
+                                <p:outputPanel id="diagnosticsPanel">
+                                    <p:dataTable id="diagnosticsTable" 
+                                                 value="#{medicConsultationController.diagnostics}" 
+                                                 var="diag"
+                                                 rowKey="#{diag.id}"
+                                                 emptyMessage="No hay diagnósticos registrados"
+                                                 styleClass="consultation-table">
+                                        <p:column headerText="Código" style="width: 15%">
+                                            #{diag.diseaseid.code}
+                                        </p:column>
+                                        <p:column headerText="Enfermedad" style="width: 60%">
+                                            #{diag.diseaseid.name}
+                                        </p:column>
+                                        <p:column headerText="Acciones" style="width: 25%; text-align: center;">
+                                            <p:commandButton icon="pi pi-trash"
+                                                             action="#{medicConsultationController.removeDiagnostic(diag)}"
+                                                             update=":messages :consultationForm:diagnosticsPanel"
+                                                             process="@this"
+                                                             styleClass="ui-button-danger ui-button-rounded"
+                                                             title="Eliminar"/>
+                                        </p:column>
+                                    </p:dataTable>
+                                </p:outputPanel>
+                            </div>
+                        </div>
+
+                        <!-- === EXÁMENES SOLICITADOS === -->
+                        <div class="consultation-section">
+                            <div class="section-header-bar">
+                                <span class="material-symbols-outlined">biotech</span>
+                                <h3>Exámenes Solicitados</h3>
+                            </div>
+                            <div class="section-content">
+                                <div class="add-item-row">
+                                    <p:selectOneMenu id="examSelect" 
+                                                     value="#{medicConsultationController.selectedExam}" 
+                                                     placeholder="Seleccione un examen"
+                                                     converter="examConverter"
+                                                     style="flex: 1;">
+                                        <f:selectItem itemLabel="Seleccione un examen" itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{medicConsultationController.availableExams}" 
+                                                       var="exam" 
+                                                       itemLabel="#{exam.name}" 
+                                                       itemValue="#{exam}"/>
+                                    </p:selectOneMenu>
+                                    <p:commandButton id="btnAddExam" value="Solicitar" 
+                                                     icon="pi pi-plus"
+                                                     action="#{medicConsultationController.requestExam}"
+                                                     update=":messages :consultationForm:examsPanel :consultationForm:examSelect"
+                                                     process="consultationForm:examSelect consultationForm:btnAddExam"
+                                                     styleClass="ui-button-success"
+                                                     partialSubmit="true"
+                                                     ajax="true"/>
+                                </div>
+
+                                <p:outputPanel id="examsPanel">
+                                    <p:dataTable id="examsTable" 
+                                                 value="#{medicConsultationController.requestedExams}" 
+                                                 var="exam"
+                                                 rowKey="#{exam.id}"
+                                                 emptyMessage="No hay exámenes solicitados"
+                                                 styleClass="consultation-table">
+                                        <p:column headerText="Examen" style="width: 70%">
+                                            #{exam.examid.name}
+                                        </p:column>
+                                        <p:column headerText="Acciones" style="width: 30%; text-align: center;">
+                                            <p:commandButton id="btnRemoveExam" icon="pi pi-trash"
+                                                             action="#{medicConsultationController.cancelExam(exam)}"
+                                                             update=":messages :consultationForm:examsPanel"
+                                                             styleClass="ui-button-danger ui-button-rounded"
+                                                             process="@this"
+                                                             title="Cancelar"/>
+                                        </p:column>
+                                    </p:dataTable>
+                                </p:outputPanel>
+                            </div>
+                        </div>
+
+                        <!-- === PRESCRIPCIONES / RECETA === -->
+                        <div class="consultation-section">
+                            <div class="section-header-bar">
+                                <span class="material-symbols-outlined">medication</span>
+                                <h3>Receta Médica</h3>
+                            </div>
+                            <div class="section-content">
+
+                                <!-- Formulario para agregar medicamento -->
+                                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; align-items: end;">
+                                    <div>
+                                        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Medicamento *</label>
+                                        <p:inputText value="#{medicConsultationController.newMedication}"
+                                                     placeholder="Ej: Amoxicilina"
+                                                     style="width:100%"/>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Dosis</label>
+                                        <p:inputText value="#{medicConsultationController.newDose}"
+                                                     placeholder="Ej: 500mg"
+                                                     style="width:100%"/>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Frecuencia</label>
+                                        <p:inputText value="#{medicConsultationController.newFrequency}"
+                                                     placeholder="Ej: cada 8h"
+                                                     style="width:100%"/>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Duración</label>
+                                        <p:inputText value="#{medicConsultationController.newDuration}"
+                                                     placeholder="Ej: 7 días"
+                                                     style="width:100%"/>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Vía</label>
+                                        <p:selectOneMenu value="#{medicConsultationController.newRoute}" style="width:100%">
+                                            <f:selectItem itemLabel="Seleccione" itemValue="" noSelectionOption="true"/>
+                                            <f:selectItem itemLabel="Oral" itemValue="Oral"/>
+                                            <f:selectItem itemLabel="Tópico" itemValue="Tópico"/>
+                                            <f:selectItem itemLabel="Inyectable" itemValue="Inyectable"/>
+                                            <f:selectItem itemLabel="Sublingual" itemValue="Sublingual"/>
+                                            <f:selectItem itemLabel="Inhalado" itemValue="Inhalado"/>
+                                            <f:selectItem itemLabel="Oftálmico" itemValue="Oftálmico"/>
+                                            <f:selectItem itemLabel="Ótico" itemValue="Ótico"/>
+                                        </p:selectOneMenu>
+                                    </div>
+                                </div>
+
+                                <!-- Indicaciones adicionales -->
+                                <div style="margin-bottom: 12px;">
+                                    <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Indicaciones adicionales</label>
+                                    <p:inputTextarea value="#{medicConsultationController.newInstructions}"
+                                                     placeholder="Ej: Tomar después de las comidas..."
+                                                     rows="2"
+                                                     style="width:100%"
+                                                     autoResize="true"/>
+                                </div>
+
+                                <!-- Boton agregar -->
+                                <div style="text-align: right; margin-bottom: 16px;">
+                                    <p:commandButton value="Agregar Medicamento"
+                                                     icon="pi pi-plus"
+                                                     action="#{medicConsultationController.addPrescription}"
+                                                     update=":messages :consultationForm:prescriptionsPanel"
+                                                     process="@form"
+                                                     styleClass="ui-button-success"/>
+                                </div>
+
+                                <!-- Tabla de medicamentos agregados -->
+                                <p:outputPanel id="prescriptionsPanel">
+                                    <p:dataTable value="#{medicConsultationController.prescriptions}"
+                                                 var="presc"
+                                                 emptyMessage="No hay medicamentos en la receta"
+                                                 styleClass="consultation-table">
+                                        <p:column headerText="Medicamento" style="width:25%">
+                                            <strong>#{presc.medication}</strong>
+                                        </p:column>
+                                        <p:column headerText="Dosis" style="width:10%">
+                                            #{presc.dose != null ? presc.dose : '-'}
+                                        </p:column>
+                                        <p:column headerText="Frecuencia" style="width:15%">
+                                            #{presc.frequency != null ? presc.frequency : '-'}
+                                        </p:column>
+                                        <p:column headerText="Duración" style="width:12%">
+                                            #{presc.duration != null ? presc.duration : '-'}
+                                        </p:column>
+                                        <p:column headerText="Vía" style="width:10%">
+                                            #{presc.route != null ? presc.route : '-'}
+                                        </p:column>
+                                        <p:column headerText="Indicaciones" style="width:20%">
+                                            #{presc.instructions != null ? presc.instructions : '-'}
+                                        </p:column>
+                                        <p:column headerText="Acciones" style="width:8%; text-align:center">
+                                            <p:commandButton icon="pi pi-trash"
+                                                             action="#{medicConsultationController.removePrescription(presc)}"
+                                                             update=":messages :consultationForm:prescriptionsPanel"
+                                                             styleClass="ui-button-danger ui-button-rounded"
+                                                             process="@this"
+                                                             title="Eliminar"/>
+                                        </p:column>
+                                    </p:dataTable>
+                                </p:outputPanel>
+
+                            </div>
+                        </div>
+                    </div>
+                    <!-- FIN COLUMNA PRINCIPAL -->
+
+                    <!-- COLUMNA LATERAL - PANEL DE INFORMACIÓN -->
+                    <div class="consultation-sidebar">
+                        <div class="sidebar-panel">
+                            <p:tabView>
+
+                                <!-- TAB PACIENTE -->
+                                <p:tab title="Paciente">
+                                    <div class="sidebar-avatar">
+                                        <div class="sidebar-avatar-circle">
+                                            #{medicConsultationController.patientInitials}
+                                        </div>
+                                        <h3>#{medicConsultationController.patientFullName}</h3>
+                                        <p>HC: #{medicConsultationController.patient.hc}</p>
+                                    </div>
+                                    <div class="patient-info-item">
+                                        <div class="pi-icon">
+                                            <span class="material-symbols-outlined">badge</span>
+                                        </div>
+                                        <div class="pi-data">
+                                            <strong>#{medicConsultationController.patient.dni != null ? medicConsultationController.patient.dni : medicConsultationController.patient.passport}</strong>
+                                            <span>Cédula / Pasaporte</span>
+                                        </div>
+                                    </div>
+                                    <div class="patient-info-item">
+                                        <div class="pi-icon">
+                                            <span class="material-symbols-outlined">cake</span>
+                                        </div>
+                                        <div class="pi-data">
+                                            <strong>#{medicConsultationController.patientAge} años</strong>
+                                            <span>#{medicConsultationController.patient.birthday}</span>
+                                        </div>
+                                    </div>
+                                    <div class="patient-info-item">
+                                        <div class="pi-icon">
+                                            <span class="material-symbols-outlined">person</span>
+                                        </div>
+                                        <div class="pi-data">
+                                            <strong>#{medicConsultationController.patient.sex != null ? medicConsultationController.patient.sex.name : "N/A"}</strong>
+                                            <span>Sexo</span>
+                                        </div>
+                                    </div>
+                                    <div class="patient-info-item">
+                                        <div class="pi-icon">
+                                            <span class="material-symbols-outlined">water_drop</span>
+                                        </div>
+                                        <div class="pi-data">
+                                            <strong>#{medicConsultationController.patient.blootype != null ? medicConsultationController.patient.blootype.name : "N/A"}</strong>
+                                            <span>Tipo de sangre</span>
+                                        </div>
+                                    </div>
+                                    <div class="patient-info-item">
+                                        <div class="pi-icon">
+                                            <span class="material-symbols-outlined">smartphone</span>
+                                        </div>
+                                        <div class="pi-data">
+                                            <strong>#{medicConsultationController.patient.mobile != null ? medicConsultationController.patient.mobile : 'N/A'}</strong>
+                                            <span>Móvil</span>
+                                        </div>
+                                    </div>
+                                    <div class="patient-info-item">
+                                        <div class="pi-icon">
+                                            <span class="material-symbols-outlined">call</span>
+                                        </div>
+                                        <div class="pi-data">
+                                            <strong>#{medicConsultationController.patient.telephone != null ? medicConsultationController.patient.telephone : 'N/A'}</strong>
+                                            <span>Teléfono fijo</span>
+                                        </div>
+                                    </div>
+                                    <div class="patient-info-item">
+                                        <div class="pi-icon">
+                                            <span class="material-symbols-outlined">alternate_email</span>
+                                        </div>
+                                        <div class="pi-data">
+                                            <strong>#{medicConsultationController.patient.email != null ? medicConsultationController.patient.email : 'N/A'}</strong>
+                                            <span>Correo Electronico</span>
+                                        </div>
+                                    </div>
+                                    <div class="patient-info-item">
+                                        <div class="pi-icon">
+                                            <span class="material-symbols-outlined">location_away</span>
+                                        </div>
+                                        <div class="pi-data">
+                                            <strong>#{medicConsultationController.patient.address != null ? medicConsultationController.patient.address : 'N/A'}</strong>
+                                            <span>Dirección óDomiciliaria</span>
+                                        </div>
+                                    </div>
+                                </p:tab>
+
+                                <!-- TAB ANTECEDENTES -->
+                                <p:tab title="Antecedentes">
+                                    <h:panelGroup rendered="#{medicConsultationController.antecedent == null}">
+                                        <div style="text-align:center; padding:24px; color:var(--text-muted);">
+                                            <span class="material-symbols-outlined" style="font-size:36px;">folder_off</span>
+                                            <p style="margin-top:8px; font-size:0.85rem;">Sin antecedentes registrados</p>
+                                        </div>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{medicConsultationController.antecedent != null}">
+                                        <div class="sidebar-antecedent">
+                                            <h5>Personales</h5>
+                                            <p>#{empty medicConsultationController.antecedent.personal ? 'Sin registros' : medicConsultationController.antecedent.personal}</p>
+                                        </div>
+                                        <div class="sidebar-antecedent">
+                                            <h5>Quirúrgicos</h5>
+                                            <p>#{empty medicConsultationController.antecedent.surgical ? 'Sin registros' : medicConsultationController.antecedent.surgical}</p>
+                                        </div>
+                                        <div class="sidebar-antecedent">
+                                            <h5>Familiares</h5>
+                                            <p>#{empty medicConsultationController.antecedent.family ? 'Sin registros' : medicConsultationController.antecedent.family}</p>
+                                        </div>
+                                        <div class="sidebar-antecedent">
+                                            <h5>Alérgicos</h5>
+                                            <p>#{empty medicConsultationController.antecedent.allergy ? 'Sin registros' : medicConsultationController.antecedent.allergy}</p>
+                                        </div>
+                                        <div class="sidebar-antecedent">
+                                            <h5>Traumáticos</h5>
+                                            <p>#{empty medicConsultationController.antecedent.trauma ? 'Sin registros' : medicConsultationController.antecedent.trauma}</p>
+                                        </div>
+                                        <div class="sidebar-antecedent">
+                                            <h5>Hábitos</h5>
+                                            <p>#{empty medicConsultationController.antecedent.habits ? 'Sin registros' : medicConsultationController.antecedent.habits}</p>
+                                        </div>
+                                        <div class="sidebar-antecedent">
+                                            <h5>Clínicos</h5>
+                                            <p>#{empty medicConsultationController.antecedent.clinician ? 'Sin registros' : medicConsultationController.antecedent.clinician}</p>
+                                        </div>
+                                        <div class="sidebar-antecedent">
+                                            <h5>Profesionales</h5>
+                                            <p>#{empty medicConsultationController.antecedent.professional ? 'Sin registros' : medicConsultationController.antecedent.professional}</p>
+                                        </div>
+                                        <div class="sidebar-antecedent">
+                                            <h5>AGO</h5>
+                                            <p>#{empty medicConsultationController.antecedent.ago ? 'Sin registros' : medicConsultationController.antecedent.ago}</p>
+                                        </div>
+                                    </h:panelGroup>
+                                </p:tab>
+
+                                <!-- TAB HISTORIAL -->
+                                <p:tab title="Historial">
+                                    <h:panelGroup rendered="#{empty medicConsultationController.patientHistory}">
+                                        <div style="text-align:center; padding:24px; color:var(--text-muted);">
+                                            <span class="material-symbols-outlined" style="font-size:36px;">history_toggle_off</span>
+                                            <p style="margin-top:8px; font-size:0.85rem;">Sin consultas anteriores</p>
+                                        </div>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{not empty medicConsultationController.patientHistory}">
+                                        <ui:repeat value="#{medicConsultationController.patientHistory}" var="history">
+                                            <div class="sidebar-history-item">
+                                                <div class="date">
+                                                    <span class="material-symbols-outlined" style="font-size:12px; vertical-align:middle;">calendar_today</span>
+                                                    <h:outputText value="#{history.createdat}">
+                                                        <f:convertDateTime type="localDateTime" pattern="yyyy-MM-dd'T'HH:mm:ss.SSS" />
+                                                    </h:outputText>                                                   
+                                                </div>
+                                                <div class="reason">
+                                                    #{empty history.reason ? 'Sin motivo registrado' : history.reason}
+                                                </div>
+                                                <div class="diagnoses">
+                                                    <ui:repeat value="#{history.diagnosticCollection}" var="diag">
+                                                        <h:panelGroup rendered="#{diag.deleted == null or !diag.deleted}">
+                                                            <span class="diag-tag">#{diag.diseaseid.code}</span>
+                                                        </h:panelGroup>
+                                                    </ui:repeat>
+                                                </div>
+                                            </div>
+                                        </ui:repeat>
+                                    </h:panelGroup>
+                                </p:tab>
+
+                            </p:tabView>
+                        </div>
+                    </div>
+                    <!-- FIN COLUMNA LATERAL -->
+
                 </div>
-            </div>
-            
-            <!-- === BOTONES DE ACCIÓN === -->
-            <div class="action-bar">
-                <div class="left-actions">
-                    <p:commandButton value="Volver al Dashboard" 
-                                     icon="pi pi-arrow-left"
-                                     action="#{medicConsultationController.cancelConsultation}"
-                                     styleClass="ui-button-secondary"
-                                     immediate="true"/>
+                <!-- FIN LAYOUT DOS COLUMNAS -->
+
+                <!-- === BOTONES DE ACCIÓN === -->
+                <div class="action-bar">
+                    <div class="left-actions">
+                        <p:commandButton value="Volver al Dashboard" 
+                                         icon="pi pi-arrow-left"
+                                         action="#{medicConsultationController.cancelConsultation}"
+                                         styleClass="ui-button-secondary"
+                                         immediate="true"/>
+                    </div>
+                    <div class="right-actions">
+                        <p:commandButton value="Guardar Todo" 
+                                         icon="pi pi-save"
+                                         action="#{medicConsultationController.saveMedicalRecordInfo}"
+                                         update=":messages"
+                                         styleClass="ui-button-secondary"/>
+                        <p:commandButton value="Completar Consulta" 
+                                         icon="pi pi-check"
+                                         action="#{medicConsultationController.completeConsultation}"
+                                         update=":messages"
+                                         styleClass="ui-button-success">
+                            <p:confirm header="Confirmación" 
+                                       message="¿Está seguro de completar esta consulta?" 
+                                       icon="pi pi-exclamation-triangle"/>
+                        </p:commandButton>
+                    </div>
                 </div>
-                <div class="right-actions">
-                    <p:commandButton value="Guardar Todo" 
-                                     icon="pi pi-save"
-                                     action="#{medicConsultationController.saveMedicalRecordInfo}"
-                                     update="consultationForm:messages"
-                                     styleClass="ui-button-secondary"/>
-                    <p:commandButton value="Completar Consulta" 
-                                     icon="pi pi-check"
-                                     action="#{medicConsultationController.completeConsultation}"
-                                     update="consultationForm:messages"
-                                     styleClass="ui-button-success">
-                        <p:confirm header="Confirmación" 
-                                   message="¿Está seguro de completar esta consulta?" 
-                                   icon="pi pi-exclamation-triangle"/>
-                    </p:commandButton>
-                </div>
-            </div>
-            
-            <!-- Mensajes -->
-            <p:growl id="messages" showDetail="true" life="5000"/>
-            
-            <!-- Confirm Dialog -->
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
-                <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes ui-button-success" icon="pi pi-check"/>
-                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
-            </p:confirmDialog>
-            
-        </h:form>
-    </ui:define>
-    
-</ui:composition>
+
+
+
+                <!-- Confirm Dialog -->
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes ui-button-success" icon="pi pi-check"/>
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+                </p:confirmDialog>
+
+            </h:form>
+        </ui:define>
+
+    </ui:composition>
 
 </html>

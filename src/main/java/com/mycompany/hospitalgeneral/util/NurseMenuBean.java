@@ -23,7 +23,7 @@ public class NurseMenuBean implements Serializable {
         DefaultMenuItem dashboard = DefaultMenuItem.builder()
                 .value("Dashboard Enfermería")
                 .icon("pi pi-home")
-                .url("/views/nurse/dashboard.xhtml")
+                .url("/views/nurse/Dashboard.xhtml")
                 .build();
         menuModel.getElements().add(dashboard);
 
@@ -36,13 +36,13 @@ public class NurseMenuBean implements Serializable {
         DefaultMenuItem recepcion = DefaultMenuItem.builder()
                 .value("Recepción")
                 .icon("pi pi-user-plus")
-                .url("/views/nurse/pacientes/recepcion.xhtml")
+                .url("/views/nurse/Dashboard.xhtml")
                 .build();
 
         DefaultMenuItem signosVitales = DefaultMenuItem.builder()
                 .value("Signos Vitales")
                 .icon("pi pi-heart")
-                .url("/views/nurse/SignosVitales.xhtml")
+                .url("/views/nurse/Dashboard.xhtml")
                 .build();
 
         pacientesSub.getElements().add(recepcion);

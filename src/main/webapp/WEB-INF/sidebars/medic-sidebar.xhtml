@@ -22,14 +22,15 @@
                      widgetVar="menu"/>
 
         <!-- FOOTER -->
-        <div class="sidebar-footer">
-            <p:commandButton icon="pi pi-sign-out"
-                             value="Cerrar sesión"
-                             action="#{loginBean.logout}"
-                             styleClass="ui-button-secondary ui-button-sm"
-                             style="width: 100%;"/>
-        </div>
-
+            <div class="sidebar-footer">
+                <h:form id="sidebarForm">
+                    <p:commandButton icon="pi pi-sign-out"
+                                     value="Cerrar sesión"
+                                     action="#{loginController.logout}"
+                                     styleClass="ui-button-secondary ui-button-sm"
+                                     style="width: 100%;"/>
+                </h:form>
+            </div>
     </aside>
 
 </ui:composition>

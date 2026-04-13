@@ -95,17 +95,20 @@ public class Patient implements Serializable {
     @Column(name = "address", nullable = false)
     private String address;
 
-    @Column(name = "blootype")
     @NotNull(message = "Debe seleccionar el tipo de sangre")
-    private Integer blootype;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "blootype", referencedColumnName = "id")
+    private Option blootype;
 
     @NotNull
-    @Column(name = "sex", nullable = false)
-    private Integer sex;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "sex", referencedColumnName = "id")
+    private Option sex;
 
     @NotNull
-    @Column(name = "civilstatus", nullable = false)
-    private Integer civilstatus;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "civilstatus", referencedColumnName = "id")
+    private Option civilstatus;
 
     // --- Constructor ---
     public Patient() {
@@ -284,27 +287,27 @@ public class Patient implements Serializable {
         this.address = address;
     }
 
-    public Integer getBlootype() {
+    public Option getBlootype() {
         return blootype;
     }
 
-    public void setBlootype(Integer blootype) {
+    public void setBlootype(Option blootype) {
         this.blootype = blootype;
     }
 
-    public Integer getSex() {
+    public Option getSex() {
         return sex;
     }
 
-    public void setSex(Integer sex) {
+    public void setSex(Option sex) {
         this.sex = sex;
     }
 
-    public Integer getCivilstatus() {
+    public Option getCivilstatus() {
         return civilstatus;
     }
 
-    public void setCivilstatus(Integer civilstatus) {
+    public void setCivilstatus(Option civilstatus) {
         this.civilstatus = civilstatus;
     }
 

@@ -71,16 +71,13 @@ public class Disease implements Serializable {
     @Column(name = "code")
     private String code; // Código CIE-10
 
-    @Size(max = 2147483647)
-    @Column(name = "name")
+    @Column(name = "name", columnDefinition = "TEXT")
     private String name;
 
-    @Size(max = 2147483647)
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Size(max = 2147483647)
-    @Column(name = "actions")
+    @Column(name = "actions", columnDefinition = "TEXT")
     private String actions; // Acciones terapéuticas
 
     // --- RELACIONES ---

@@ -1,6 +1,7 @@
 package com.mycompany.hospitalgeneral.controller.nurse;
 
 import com.mycompany.hospitalgeneral.model.Medicalrecord;
+import com.mycompany.hospitalgeneral.model.Patient;
 import com.mycompany.hospitalgeneral.model.Vitalsign;
 import com.mycompany.hospitalgeneral.model.Tuser;
 import com.mycompany.hospitalgeneral.services.VitalsignService;
@@ -10,7 +11,10 @@ import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.servlet.http.HttpSession;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import org.primefaces.PrimeFaces;
 
@@ -23,6 +27,10 @@ public class VitalsignController implements Serializable {
     @Inject
     private VitalsignService vitalsignService;
 
+    @Inject
+    private HttpSession session;
+
+    private Patient currentPatient;
     private Vitalsign newVitalsign;
     private Vitalsign selectedVitalsign;
     private Medicalrecord selectedRecord;
@@ -31,7 +39,16 @@ public class VitalsignController implements Serializable {
 
     @PostConstruct
     public void init() {
+        // Cargar record y paciente desde sesión
+        selectedRecord = (Medicalrecord) session.getAttribute("currentNurseRecord");
+        currentPatient = (Patient) session.getAttribute("currentNursePatient");
+
         prepareNewVitalsign();
+
+        // Cargar signos vitales existentes si hay un record
+        if (selectedRecord != null) {
+            vitalsigns = vitalsignService.findByMedicalRecord(selectedRecord.getId());
+        }
     }
 
     /**
@@ -59,6 +76,34 @@ public class VitalsignController implements Serializable {
     public void loadVitalsigns(Medicalrecord record) {
         this.selectedRecord = record;
         this.vitalsigns = vitalsignService.findByMedicalRecord(record.getId());
+    }
+
+    /**
+     * Recarga los signos vitales del record actual
+     */
+    public void reloadVitalsigns() {
+        if (selectedRecord != null) {
+            vitalsigns = vitalsignService.findByMedicalRecord(selectedRecord.getId());
+        }
+    }
+
+    /**
+     * Calcula el IMC automáticamente cuando se ingresan peso y talla
+     */
+    public void calculateIMC() {
+        try {
+            if (newVitalsign.getWeight() != null && newVitalsign.getTall() != null) {
+                double peso = Double.parseDouble(newVitalsign.getWeight().toString());
+                double talla = Double.parseDouble(newVitalsign.getTall().toString()) / 100.0; // cm a m
+                if (talla > 0) {
+                    double imc = peso / (talla * talla);
+                    BigDecimal imcRounded = new BigDecimal(imc).setScale(2, RoundingMode.HALF_UP);
+                    newVitalsign.setMass(imcRounded.toString());
+                }
+            }
+        } catch (Exception e) {
+            // Si los valores no son numéricos, no calcular
+        }
     }
 
     /**
@@ -171,5 +216,13 @@ public class VitalsignController implements Serializable {
 
     public boolean isEditMode() {
         return editMode;
+    }
+
+    public Patient getCurrentPatient() {
+        return currentPatient;
+    }
+
+    public void setCurrentPatient(Patient currentPatient) {
+        this.currentPatient = currentPatient;
     }
 }

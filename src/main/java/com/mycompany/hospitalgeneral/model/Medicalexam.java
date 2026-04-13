@@ -55,11 +55,11 @@ public class Medicalexam implements Serializable {
 
     // --- Relaciones ---
     @JoinColumn(name = "examid", referencedColumnName = "id")
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)  // 👈 EAGER
     private Exam examid;
 
     @JoinColumn(name = "medicalrecordid", referencedColumnName = "id")
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)  // 👈 EAGER
     private Medicalrecord medicalrecordid;
 
     // --- Lifecycle Callbacks ---

@@ -1,24 +1,34 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSF/JSFManagedBean.java to edit this template
- */
 package com.mycompany.hospitalgeneral.services;
 
-import jakarta.inject.Named;
-import jakarta.enterprise.context.ApplicationScoped;
+import com.mycompany.hospitalgeneral.model.Tuser;
+import jakarta.ejb.Stateless;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 
-/**
- *
- * @author jhonatan
- */
-@Named(value = "tuserService")
-@ApplicationScoped
+@Stateless
 public class TuserService {
 
+    @PersistenceContext
+    private EntityManager em;
+
     /**
-     * Creates a new instance of TuserService
+     * Busca usuario por email (para login)
      */
-    public TuserService() {
+    public Tuser findByEmail(String email) {
+        try {
+            TypedQuery<Tuser> query = em.createNamedQuery("Tuser.findByEmail", Tuser.class);
+            query.setParameter("email", email);
+            return query.getSingleResult();
+        } catch (Exception e) {
+            return null; // No encontrado
+        }
     }
-    
+
+    /**
+     * Busca por ID
+     */
+    public Tuser findById(Integer id) {
+        return em.find(Tuser.class, id);
+    }
 }

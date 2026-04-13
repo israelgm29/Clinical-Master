@@ -6,13 +6,14 @@ import com.mycompany.hospitalgeneral.model.Patient;
 import com.mycompany.hospitalgeneral.model.Vitalsign;
 import com.mycompany.hospitalgeneral.services.MedicService;
 import com.mycompany.hospitalgeneral.services.MedicalRecordService;
+import com.mycompany.hospitalgeneral.session.ConsultationContext;
+import com.mycompany.hospitalgeneral.session.UserSession;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.servlet.http.HttpSession;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,7 +33,10 @@ public class MedicDashboardController implements Serializable {
     private MedicService medicService;
 
     @Inject
-    private HttpSession session;
+    private UserSession session;
+
+    @Inject
+    private ConsultationContext consultationContext;
 
     // === DATOS DEL DASHBOARD ===
     private List<Medicalrecord> pendingConsultations;
@@ -64,17 +68,16 @@ public class MedicDashboardController implements Serializable {
      */
     private void loadCurrentMedic() {
         try {
-            // Obtener el médico de la sesión (ajusta según tu implementación de login)
-            currentMedic = (Medic) session.getAttribute("currentMedic");
+            currentMedic = session.getMedic();
+
             if (currentMedic != null) {
-                medicId = 1;
+                medicId = currentMedic.getId();
             } else {
-                // Para pruebas: asignar un ID temporal
-                medicId = 1;
                 FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_WARN,
-                                "Sesión", "No se encontró médico en sesión"));
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Error", "No hay médico en sesión"));
             }
+
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -154,14 +157,18 @@ public class MedicDashboardController implements Serializable {
     // ==================== ACCIONES DE NAVEGACIÓN ====================
     /**
      * Navegar a la consulta del paciente
+     *
      * @param record
-     * @return 
+     * @return
      */
     public String startConsultation(Medicalrecord record) {
-        session.setAttribute("currentMedicalRecord", record);
-        System.out.println(record);
-        session.setAttribute("currentPatient", record.getPatientid());
-        System.out.println(record.getPatientid());
+        if (record == null) {
+            return null;
+        }
+
+        consultationContext.setCurrentMedicalRecord(record);
+        consultationContext.setCurrentPatient(record.getPatientid());
+
         return "/views/medic/consulta.xhtml?faces-redirect=true";
     }
 
@@ -169,7 +176,12 @@ public class MedicDashboardController implements Serializable {
      * Ver historia clínica del paciente
      */
     public String viewHistory(Medicalrecord record) {
-        session.setAttribute("currentPatient", record.getPatientid());
+        if (record == null) {
+            return null;
+        }
+
+        consultationContext.setCurrentPatient(record.getPatientid());
+
         return "/views/medic/historia-clinica.xhtml?faces-redirect=true";
     }
 

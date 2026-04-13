@@ -6,17 +6,56 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Email;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.List;
 import jakarta.persistence.Transient;
 
 /**
- * Entidad Médicos - Versión Completa y Profesional Incluye auditoría
- * automática, relaciones y tipos de tiempo modernos.
+ * @author Jhonatan Montenegro
  */
 @Entity
 @Table(name = "medic")
+@NamedQueries({
+    // 🔹 Buscar por ID
+    @NamedQuery(
+            name = "Medic.findById",
+            query = "SELECT m FROM Medic m WHERE m.id = :id AND (m.deleted = false OR m.deleted IS NULL)"
+    ),
+
+    // 🔹 Buscar por usuario (🔥 ESTA ES LA CLAVE PARA TU BUG)
+    @NamedQuery(
+            name = "Medic.findByUserId",
+            query = "SELECT m FROM Medic m WHERE m.userid.id = :userId AND (m.deleted = false OR m.deleted IS NULL)"
+    ),
+
+    // 🔹 Listar todos activos
+    @NamedQuery(
+            name = "Medic.findAllActive",
+            query = "SELECT m FROM Medic m WHERE (m.deleted = false OR m.deleted IS NULL)"
+    ),
+
+    // 🔹 Buscar por DNI
+    @NamedQuery(
+            name = "Medic.findByDni",
+            query = "SELECT m FROM Medic m WHERE m.dni = :dni AND (m.deleted = false OR m.deleted IS NULL)"
+    ),
+
+    // 🔹 Buscar por email
+    @NamedQuery(
+            name = "Medic.findByEmail",
+            query = "SELECT m FROM Medic m WHERE m.email = :email AND (m.deleted = false OR m.deleted IS NULL)"
+    ),
+
+    // 🔹 Búsqueda por nombre (para filtros en UI)
+    @NamedQuery(
+            name = "Medic.searchByName",
+            query = "SELECT m FROM Medic m WHERE "
+            + "(LOWER(m.firstname) LIKE LOWER(CONCAT('%', :text, '%')) "
+            + "OR LOWER(m.lastname) LIKE LOWER(CONCAT('%', :text, '%'))) "
+            + "AND (m.deleted = false OR m.deleted IS NULL)"
+    )
+
+})
 public class Medic implements Serializable {
 
     private static final long serialVersionUID = 1L;
