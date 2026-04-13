@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:p="primefaces">
+    <h:head>
+        <title>Login - Hospital General</title>
+        
+        <style>
+            :root {
+                --primary: #0b3c5d;
+                --primary-light: #1d5f8b;
+                --accent: #2a9d8f;
+                --bg: #f8f9fb;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: 'Segoe UI', sans-serif;
+            }
+
+            .login-container {
+                background: white;
+                padding: 40px;
+                border-radius: 16px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .login-header {
+                text-align: center;
+                margin-bottom: 32px;
+            }
+
+            .login-header h1 {
+                color: var(--primary);
+                margin: 0 0 8px 0;
+                font-size: 1.8rem;
+            }
+
+            .login-header p {
+                color: #6c757d;
+                margin: 0;
+                font-size: 0.9rem;
+            }
+
+            .field {
+                margin-bottom: 20px;
+            }
+
+            .field label {
+                display: block;
+                margin-bottom: 6px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: var(--primary);
+            }
+
+            .login-button {
+                width: 100%;
+                margin-top: 10px;
+            }
+        </style>
+    </h:head>
+    <h:body>
+        <div class="login-container">
+            <div class="login-header">
+                <h1>Hospital General</h1>
+                <p>Sistema de Gestión Médica</p>
+            </div>
+
+            <h:form id="loginForm">
+                <p:growl id="messages" showDetail="true" life="5000"/>
+
+                <div class="field">
+                    <label for="email">Correo Electrónico</label>
+                    <p:inputText id="email" 
+                                 value="#{loginController.email}"
+                                 required="true"
+                                 requiredMessage="Ingrese su email"
+                                 placeholder="usuario@hospital.com"
+                                 style="width: 100%"/>
+                </div>
+
+                <div class="field">
+                    <label for="password">Contraseña</label>
+                    <p:password id="password" 
+                                value="#{loginController.password}"
+                                required="true"
+                                requiredMessage="Ingrese su contraseña"
+                                placeholder="••••••••"
+                                toggleMask="true"
+                                style="width: 100%"/>
+                </div>
+
+                <p:commandButton value="Ingresar" 
+                                 action="#{loginController.login}"
+                                 update="messages"
+                                 styleClass="ui-button-success login-button"
+                                 icon="pi pi-sign-in"/>
+            </h:form>
+        </div>
+
+    </h:body>
+</html>
