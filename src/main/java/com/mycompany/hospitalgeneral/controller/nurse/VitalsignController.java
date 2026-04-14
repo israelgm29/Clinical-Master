@@ -5,17 +5,20 @@ import com.mycompany.hospitalgeneral.model.Patient;
 import com.mycompany.hospitalgeneral.model.Vitalsign;
 import com.mycompany.hospitalgeneral.model.Tuser;
 import com.mycompany.hospitalgeneral.services.VitalsignService;
+import com.mycompany.hospitalgeneral.session.ConsultationContext;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.servlet.http.HttpSession;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+
 import org.primefaces.PrimeFaces;
 
 @Named
@@ -24,96 +27,83 @@ public class VitalsignController implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    // === SERVICES ===
     @Inject
     private VitalsignService vitalsignService;
 
+    // === SESSION CONTEXT (REUTILIZADO) ===
     @Inject
-    private HttpSession session;
+    private ConsultationContext consultationContext;
 
+    // === DATOS ===
     private Patient currentPatient;
+    private Medicalrecord selectedRecord;
+
     private Vitalsign newVitalsign;
     private Vitalsign selectedVitalsign;
-    private Medicalrecord selectedRecord;
     private List<Vitalsign> vitalsigns;
+
     private boolean editMode = false;
 
+    // ==================== INIT ====================
     @PostConstruct
     public void init() {
-        // Cargar record y paciente desde sesión
-        selectedRecord = (Medicalrecord) session.getAttribute("currentNurseRecord");
-        currentPatient = (Patient) session.getAttribute("currentNursePatient");
-
+        loadContextData();
         prepareNewVitalsign();
 
-        // Cargar signos vitales existentes si hay un record
         if (selectedRecord != null) {
-            vitalsigns = vitalsignService.findByMedicalRecord(selectedRecord.getId());
+            loadVitalsigns();
         }
     }
 
     /**
-     * Inicializa un nuevo registro de signos vitales
+     * Cargar datos desde sesión (ConsultationContext)
      */
+    private void loadContextData() {
+        selectedRecord = consultationContext.getCurrentMedicalRecord();
+        currentPatient = consultationContext.getCurrentPatient();
+
+        if (selectedRecord == null || currentPatient == null) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN,
+                            "Advertencia", "No hay paciente en contexto"));
+        }
+    }
+
+    // ==================== CRUD ====================
     public void prepareNewVitalsign() {
         this.newVitalsign = new Vitalsign();
         this.editMode = false;
     }
 
-    /**
-     * Prepara la edición de un registro existente
-     */
     public void setSelectedVitalsign(Vitalsign vitalsign) {
         this.selectedVitalsign = vitalsign;
+
         if (vitalsign != null) {
             this.newVitalsign = vitalsign;
             this.editMode = true;
         }
     }
 
-    /**
-     * Carga los signos vitales de una historia clínica
-     */
-    public void loadVitalsigns(Medicalrecord record) {
-        this.selectedRecord = record;
-        this.vitalsigns = vitalsignService.findByMedicalRecord(record.getId());
-    }
-
-    /**
-     * Recarga los signos vitales del record actual
-     */
-    public void reloadVitalsigns() {
+    public void loadVitalsigns() {
         if (selectedRecord != null) {
             vitalsigns = vitalsignService.findByMedicalRecord(selectedRecord.getId());
         }
     }
 
-    /**
-     * Calcula el IMC automáticamente cuando se ingresan peso y talla
-     */
-    public void calculateIMC() {
-        try {
-            if (newVitalsign.getWeight() != null && newVitalsign.getTall() != null) {
-                double peso = Double.parseDouble(newVitalsign.getWeight().toString());
-                double talla = Double.parseDouble(newVitalsign.getTall().toString()) / 100.0; // cm a m
-                if (talla > 0) {
-                    double imc = peso / (talla * talla);
-                    BigDecimal imcRounded = new BigDecimal(imc).setScale(2, RoundingMode.HALF_UP);
-                    newVitalsign.setMass(imcRounded.toString());
-                }
-            }
-        } catch (Exception e) {
-            // Si los valores no son numéricos, no calcular
-        }
+    public void reloadVitalsigns() {
+        loadVitalsigns();
     }
 
     /**
-     * Guarda o actualiza un registro de signos vitales
+     * Guardar o actualizar signos vitales
      */
     public void saveVitalsign() {
         try {
             if (selectedRecord == null) {
                 FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Debe seleccionar una historia clínica"));
+                        new FacesMessage(FacesMessage.SEVERITY_WARN,
+                                "Advertencia", "Debe seleccionar una historia clínica"));
                 return;
             }
 
@@ -126,30 +116,34 @@ public class VitalsignController implements Serializable {
             }
 
             // Recargar lista
-            loadVitalsigns(selectedRecord);
+            loadVitalsigns();
 
-            // Limpiar formulario
+            // Limpiar
             prepareNewVitalsign();
 
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito",
-                            editMode ? "Signos vitales actualizados correctamente" : "Signos vitales registrados correctamente"));
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "Éxito",
+                            editMode ? "Signos vitales actualizados correctamente"
+                                    : "Signos vitales registrados correctamente"));
 
-            PrimeFaces.current().ajax().update("form:vitalsignsTable", "form:messages");
+            PrimeFaces.current().ajax().update("vitalForm:vitalsignsTable", "vitalForm");
 
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo guardar: " + e.getMessage()));
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", "No se pudo guardar: " + e.getMessage()));
         }
     }
 
     /**
-     * Eliminación lógica de un registro de signos vitales
+     * Eliminación lógica
      */
     public void deleteVitalsign() {
         if (selectedVitalsign == null || selectedVitalsign.getId() == null) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "No hay registro seleccionado"));
+                    new FacesMessage(FacesMessage.SEVERITY_WARN,
+                            "Advertencia", "No hay registro seleccionado"));
             return;
         }
 
@@ -161,31 +155,61 @@ public class VitalsignController implements Serializable {
             selectedVitalsign = null;
 
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Eliminado", "Registro de signos vitales eliminado correctamente"));
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "Eliminado", "Registro eliminado correctamente"));
 
-            PrimeFaces.current().ajax().update("form:vitalsignsTable", "form:messages");
+            PrimeFaces.current().ajax().update("vitalForm:vitalsignsTable", "vitalForm");
 
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo eliminar: " + e.getMessage()));
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", "No se pudo eliminar: " + e.getMessage()));
         }
     }
 
+    // ==================== LÓGICA ====================
     /**
-     * Obtiene el ID del usuario actual (igual que en MedicController)
+     * Cálculo de IMC automático
      */
+    public void calculateIMC() {
+        try {
+            if (newVitalsign.getWeight() != null && newVitalsign.getTall() != null) {
+
+                double peso = Double.parseDouble(newVitalsign.getWeight().toString());
+                double talla = Double.parseDouble(newVitalsign.getTall().toString()) / 100.0;
+
+                if (talla > 0) {
+                    double imc = peso / (talla * talla);
+
+                    BigDecimal imcRounded = new BigDecimal(imc)
+                            .setScale(2, RoundingMode.HALF_UP);
+
+                    newVitalsign.setMass(imcRounded.toString());
+                }
+            }
+        } catch (Exception e) {
+            // ignorar errores de conversión
+        }
+    }
+
+    // ==================== HELPERS ====================
     private Integer getCurrentUserId() {
         FacesContext context = FacesContext.getCurrentInstance();
+
         if (context != null) {
-            Tuser currentUser = (Tuser) context.getExternalContext().getSessionMap().get("currentUser");
+            Tuser currentUser = (Tuser) context.getExternalContext()
+                    .getSessionMap()
+                    .get("currentUser");
+
             if (currentUser != null) {
                 return currentUser.getId();
             }
         }
-        return 1; // Default: usuario enfermera/admin
+
+        return 1; // fallback
     }
 
-    // Getters y Setters
+    // ==================== GETTERS ====================
     public Vitalsign getNewVitalsign() {
         return newVitalsign;
     }
@@ -202,16 +226,8 @@ public class VitalsignController implements Serializable {
         return vitalsigns;
     }
 
-    public void setVitalsigns(List<Vitalsign> vitalsigns) {
-        this.vitalsigns = vitalsigns;
-    }
-
     public Medicalrecord getSelectedRecord() {
         return selectedRecord;
-    }
-
-    public void setSelectedRecord(Medicalrecord selectedRecord) {
-        this.selectedRecord = selectedRecord;
     }
 
     public boolean isEditMode() {
@@ -220,9 +236,5 @@ public class VitalsignController implements Serializable {
 
     public Patient getCurrentPatient() {
         return currentPatient;
-    }
-
-    public void setCurrentPatient(Patient currentPatient) {
-        this.currentPatient = currentPatient;
     }
 }

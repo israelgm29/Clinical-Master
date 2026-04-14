@@ -7,13 +7,16 @@ import com.mycompany.hospitalgeneral.model.Option;
 import com.mycompany.hospitalgeneral.services.MedicalRecordService;
 import com.mycompany.hospitalgeneral.services.OptionService;
 import com.mycompany.hospitalgeneral.services.PatientService;
+import com.mycompany.hospitalgeneral.session.UserSession;
+import com.mycompany.hospitalgeneral.session.ConsultationContext;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.servlet.http.HttpSession;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +27,7 @@ public class NurseDashboardController implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    // === SERVICES ===
     @Inject
     private PatientService patientService;
 
@@ -31,60 +35,71 @@ public class NurseDashboardController implements Serializable {
     private MedicalRecordService medicalRecordService;
 
     @Inject
-    private HttpSession session;
+    private OptionService optionService;
+
+    // === SESSION ===
+    @Inject
+    private UserSession userSession;
 
     @Inject
-    private OptionService optionService;
+    private ConsultationContext consultationContext;
 
     private Tuser currentUser;
 
-    // Listas para combos del formulario paciente nuevo
+    // === CATÁLOGOS ===
     private List<Option> genders;
     private List<Option> bloodTypes;
     private List<Option> civilStatusList;
 
-    // Listas para la vista
-    private List<Medicalrecord> waitingForVitalsigns;  // Sin signos vitales aún
-    private List<Medicalrecord> waitingForMedic;       // Con signos vitales, esperando médico
+    // === LISTAS DASHBOARD ===
+    private List<Medicalrecord> waitingForVitalsigns;
+    private List<Medicalrecord> waitingForMedic;
 
-    // Búsqueda
+    // === BÚSQUEDA ===
     private String searchQuery;
     private List<Patient> searchResults;
     private boolean showSearchResults = false;
 
-    // Formulario paciente nuevo
+    // === NUEVO PACIENTE ===
     private Patient newPatient;
-    private String newPatientReason;  // Motivo de consulta (va a Medicalrecord, no a Patient)
+    private String newPatientReason;
     private boolean showNewPatientForm = false;
 
     @PostConstruct
     public void init() {
         loadCurrentUser();
-       
-        // Cargar catálogos para el formulario de paciente nuevo
+
+        // Catálogos
         this.genders = optionService.findByGroup(3);
         this.bloodTypes = optionService.findByGroup(1);
         this.civilStatusList = optionService.findByGroup(2);
-        
+
         loadAllLists();
         initNewPatient();
     }
 
+    // ==================== SESSION ====================
     private void loadCurrentUser() {
-        currentUser = (Tuser) session.getAttribute("currentUser");
+        currentUser = userSession.getUser();
+
+        if (currentUser == null) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", "No hay usuario en sesión"));
+        }
     }
 
+    private Integer getCurrentUserId() {
+        return currentUser != null ? currentUser.getId() : null;
+    }
+
+    // ==================== LISTAS ====================
     public void loadWaitingPatients() {
         waitingForMedic = medicalRecordService.findWaitingForMedic();
     }
 
     public void loadPendingForVitalsigns() {
         waitingForVitalsigns = medicalRecordService.findPendingForVitalsigns();
-    }
-
-    private void initNewPatient() {
-        newPatient = new Patient();
-        newPatientReason = "";
     }
 
     public void loadAllLists() {
@@ -96,7 +111,8 @@ public class NurseDashboardController implements Serializable {
     public void searchPatient() {
         if (searchQuery == null || searchQuery.trim().isEmpty()) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Atención", "Ingrese DNI, HC o nombre"));
+                    new FacesMessage(FacesMessage.SEVERITY_WARN,
+                            "Atención", "Ingrese DNI, HC o nombre"));
             return;
         }
 
@@ -106,39 +122,42 @@ public class NurseDashboardController implements Serializable {
 
         if (searchResults.isEmpty()) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "No encontrado",
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "No encontrado",
                             "No existe paciente. Puede registrar uno nuevo."));
             showNewPatientForm = true;
         }
     }
 
-    /**
-     * Selecciona paciente existente y crea MedicalRecord para esta visita
-     */
+    // ==================== SELECCIÓN PACIENTE ====================
     public String selectPatientAndCreateRecord(Patient patient) {
         try {
-            // Crear MedicalRecord para esta visita
             Medicalrecord record = new Medicalrecord();
             record.setPatientid(patient);
-            record.setReason(""); // Se puede pedir después o dejar vacío
-            // medicid = null (se asignará cuando el médico atienda)
+            record.setReason("");
 
             medicalRecordService.saveForNurse(record, getCurrentUserId());
 
-            // Guardar en sesión y redirigir
-            session.setAttribute("currentNurseRecord", record);
-            session.setAttribute("currentNursePatient", patient);
+            // ✅ Guardar en contexto (NO HttpSession)
+            consultationContext.setCurrentMedicalRecord(record);
+            consultationContext.setCurrentPatient(patient);
 
             return "/views/nurse/vitalsigns.xhtml?faces-redirect=true";
 
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", e.getMessage()));
             return null;
         }
     }
 
-    // ==================== PACIENTE NUEVO ====================
+    // ==================== NUEVO PACIENTE ====================
+    private void initNewPatient() {
+        newPatient = new Patient();
+        newPatientReason = "";
+    }
+
     public void showNewPatientForm() {
         showNewPatientForm = true;
         showSearchResults = false;
@@ -147,65 +166,59 @@ public class NurseDashboardController implements Serializable {
 
     public String registerNewPatientAndCreateRecord() {
         try {
-            // Validaciones
             if (newPatient.getFirstname() == null || newPatient.getFirstname().trim().isEmpty()
                     || newPatient.getLastname() == null || newPatient.getLastname().trim().isEmpty()) {
+
                 FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Nombre y apellido son obligatorios"));
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Error", "Nombre y apellido son obligatorios"));
                 return null;
             }
 
-            // Generar HC automático
             newPatient.setHc(patientService.generateNextHc());
             newPatient.setCreatedat(LocalDateTime.now());
             newPatient.setCreatedby(getCurrentUserId());
 
             patientService.save(newPatient);
 
-            // Crear MedicalRecord automáticamente
             Medicalrecord record = new Medicalrecord();
             record.setPatientid(newPatient);
             record.setReason(newPatientReason != null ? newPatientReason : "");
-            // medicid = null por ahora
 
             medicalRecordService.saveForNurse(record, getCurrentUserId());
 
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito",
-                            "Paciente registrado: " + newPatient.getHc()));
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "Éxito", "Paciente registrado: " + newPatient.getHc()));
 
-            // Redirigir a toma de signos vitales
-            session.setAttribute("currentNurseRecord", record);
-            session.setAttribute("currentNursePatient", newPatient);
+            // ✅ Contexto compartido
+            consultationContext.setCurrentMedicalRecord(record);
+            consultationContext.setCurrentPatient(newPatient);
 
             return "/views/nurse/vitalsigns.xhtml?faces-redirect=true";
 
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", e.getMessage()));
             return null;
         }
     }
 
     // ==================== NAVEGACIÓN ====================
     public String startVitalSigns(Medicalrecord record) {
-        session.setAttribute("currentNurseRecord", record);
-        session.setAttribute("currentNursePatient", record.getPatientid());
-        return "/views/nurse/SignosVitales.xhtml?faces-redirect=true";
+        consultationContext.setCurrentMedicalRecord(record);
+        consultationContext.setCurrentPatient(record.getPatientid());
+        return "/views/nurse/vitalsigns.xhtml?faces-redirect=true";
     }
 
     public String viewOnlyVitalSigns(Medicalrecord record) {
-        session.setAttribute("currentNurseRecord", record);
-        session.setAttribute("currentNursePatient", record.getPatientid());
-        session.setAttribute("vitalsignReadOnly", true);
+        consultationContext.setCurrentMedicalRecord(record);
+        consultationContext.setCurrentPatient(record.getPatientid());
         return "/views/nurse/vitalsigns.xhtml?faces-redirect=true";
     }
 
     // ==================== HELPERS ====================
-    private Integer getCurrentUserId() {
-        return currentUser != null ? currentUser.getId() : 1;
-    }
-
     public int calculateAge(java.time.LocalDate birthDate) {
         if (birthDate == null) {
             return 0;
@@ -216,7 +229,8 @@ public class NurseDashboardController implements Serializable {
     public void refresh() {
         loadAllLists();
         FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_INFO, "Actualizado", "Listas refrescadas"));
+                new FacesMessage(FacesMessage.SEVERITY_INFO,
+                        "Actualizado", "Listas refrescadas"));
     }
 
     // ==================== GETTERS / SETTERS ====================

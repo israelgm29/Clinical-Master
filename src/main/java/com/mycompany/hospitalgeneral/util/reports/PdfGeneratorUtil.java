@@ -1,7 +1,6 @@
 package com.mycompany.hospitalgeneral.util.reports;
 
-import com.itextpdf.kernel.pdf.canvas.draw.ILineDrawer;
-import com.itextpdf.layout.borders.SolidBorder;
+import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.UnitValue;
 
@@ -90,8 +89,12 @@ public final class PdfGeneratorUtil {
      * Crea separador de línea
      */
     public static LineSeparator createLineSeparator() {
-        return new LineSeparator((ILineDrawer) new SolidBorder(ReportStyles.PRIMARY_COLOR, 2))
-            .setWidth(UnitValue.createPercentValue(100));
+        SolidLine line = new SolidLine(1.5f);
+        line.setColor(ReportStyles.PRIMARY_COLOR);
+        return new LineSeparator(line)
+            .setWidth(UnitValue.createPercentValue(100))
+            .setMarginTop(4)
+            .setMarginBottom(4);
     }
     
     /**

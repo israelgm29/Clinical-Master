@@ -6,8 +6,15 @@ import com.mycompany.hospitalgeneral.model.Patient;
 import com.mycompany.hospitalgeneral.model.Vitalsign;
 import com.mycompany.hospitalgeneral.services.MedicService;
 import com.mycompany.hospitalgeneral.services.MedicalRecordService;
+import com.mycompany.hospitalgeneral.dto.ReportResult;
+import com.mycompany.hospitalgeneral.services.ReportService;
 import com.mycompany.hospitalgeneral.session.ConsultationContext;
+import com.mycompany.hospitalgeneral.session.ReportContext;
 import com.mycompany.hospitalgeneral.session.UserSession;
+import java.util.Base64;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
+import java.io.ByteArrayInputStream;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -38,6 +45,12 @@ public class MedicDashboardController implements Serializable {
     @Inject
     private ConsultationContext consultationContext;
 
+    @Inject
+    private ReportService reportService;
+
+    @Inject
+    private ReportContext reportContext;
+
     // === DATOS DEL DASHBOARD ===
     private List<Medicalrecord> pendingConsultations;
     private List<Medicalrecord> todayConsultations;
@@ -54,6 +67,11 @@ public class MedicDashboardController implements Serializable {
 
     // === CONSULTA SELECCIONADA ===
     private Medicalrecord selectedRecord;
+
+    // === REPORTE ===
+    private String currentPdfDataUrl;
+    private String reportFileName;
+    private boolean reportLoading = false;
 
     @PostConstruct
     public void init() {
@@ -255,6 +273,44 @@ public class MedicDashboardController implements Serializable {
         return firstInitial + lastInitial;
     }
 
+    // ==================== REPORTE PDF ====================
+    public void prepareReport(Medicalrecord record) {
+        try {
+            reportLoading = true;
+            currentPdfDataUrl = null;
+            reportFileName = null;
+
+            ReportResult result = reportService.generateConsultationReport(record);
+            reportContext.setCurrentReport(result);
+
+            // Convertir a Base64 para el iframe
+            String base64 = Base64.getEncoder().encodeToString(result.getContent());
+            currentPdfDataUrl = "data:application/pdf;base64," + base64;
+            reportFileName = result.getFileName();
+
+        } catch (Exception e) {
+            currentPdfDataUrl = null;
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", "No se pudo generar el reporte: " + e.getMessage()));
+        } finally {
+            reportLoading = false;
+        }
+    }
+
+    public StreamedContent downloadReport() {
+        ReportResult report = reportContext.getCurrentReport();
+        if (report == null) {
+            return null;
+        }
+
+        return DefaultStreamedContent.builder()
+                .name(report.getFileName())
+                .contentType("application/pdf")
+                .stream(() -> new ByteArrayInputStream(report.getContent()))
+                .build();
+    }
+
     // ==================== GETTERS Y SETTERS ====================
     public List<Medicalrecord> getPendingConsultations() {
         return pendingConsultations;
@@ -326,5 +382,17 @@ public class MedicDashboardController implements Serializable {
 
     public void setSelectedRecord(Medicalrecord selectedRecord) {
         this.selectedRecord = selectedRecord;
+    }
+
+    public String getCurrentPdfDataUrl() {
+        return currentPdfDataUrl;
+    }
+
+    public String getReportFileName() {
+        return reportFileName;
+    }
+
+    public boolean isReportLoading() {
+        return reportLoading;
     }
 }

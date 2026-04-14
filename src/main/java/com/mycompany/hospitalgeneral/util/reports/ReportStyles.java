@@ -5,7 +5,7 @@ import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
-import com.itextpdf.layout.element.AreaBreak;
+import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.properties.TextAlignment;
 
 import java.io.IOException;
@@ -55,8 +55,15 @@ public final class ReportStyles {
     public static final float FONT_SIZE_SMALL = 9f;
     public static final float FONT_SIZE_TINY = 8f;
 
-    static AreaBreak createSectionTitle(String prescripciones, PdfFont boldFont) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public static Paragraph createSectionTitle(String title, PdfFont font) {
+        return new Paragraph(title)
+                .setFont(font)
+                .setFontSize(FONT_SIZE_SECTION)
+                .setFontColor(PRIMARY_COLOR)
+                .setBackgroundColor(LIGHT_GRAY)
+                .setPadding(4)
+                .setMarginTop(8)
+                .setMarginBottom(6);
     }
 
     private ReportStyles() {

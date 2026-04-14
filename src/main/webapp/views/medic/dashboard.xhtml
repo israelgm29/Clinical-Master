@@ -320,8 +320,17 @@
                                         <p:commandButton icon="pi pi-eye"
                                                          action="#{medicDashboardController.viewHistory(record)}"
                                                          styleClass="ui-button-secondary ui-button-rounded"
-                                                         title="Ver Detalles"
+                                                         title="Ver Historia"
                                                          ajax="false"/>
+                                        <h:panelGroup rendered="#{record.done}">
+                                            <p:commandButton icon="pi pi-file-pdf"
+                                                             action="#{medicDashboardController.prepareReport(record)}"
+                                                             update=":reportDialog :messages"
+                                                             oncomplete="PF('reportDialogWidget').show()"
+                                                             styleClass="ui-button-danger ui-button-rounded"
+                                                             style="margin-left: 6px;"
+                                                             title="Ver Reporte PDF"/>
+                                        </h:panelGroup>
                                     </p:column>
                                 </p:dataTable>
                             </h:panelGroup>
@@ -330,6 +339,59 @@
                 </div>
 
             </h:form>
+
+            <!-- === DIALOG REPORTE PDF === -->
+            
+
+            <p:dialog id="reportDialog"
+                      widgetVar="reportDialogWidget"
+                      header="Reporte de Consulta"
+                      modal="true"
+                      width="80%"
+                      height="90vh"
+                      showEffect="fade"
+                      hideEffect="fade"
+                      resizable="false"
+                      closable="true">
+
+                <h:form id="reportDialogForm">
+                    <h:panelGroup rendered="#{medicDashboardController.reportLoading}">
+                        <div style="text-align:center; padding: 48px;">
+                            <p:progressBar mode="indeterminate" style="width:60%; margin: 0 auto;"/>
+                            <p style="margin-top: 16px; color: var(--text-muted);">Generando reporte...</p>
+                        </div>
+                    </h:panelGroup>
+
+                    <h:panelGroup rendered="#{!medicDashboardController.reportLoading and medicDashboardController.currentPdfDataUrl != null}">
+                        <!-- Info del reporte -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding: 8px 0 16px 0;">
+                            <div style="font-size:0.85rem; color:var(--text-muted);">
+                                <strong style="color:var(--primary);">#{medicDashboardController.reportFileName}</strong>
+                            </div>
+                            <p:commandButton value="Descargar PDF"
+                                             icon="pi pi-download"
+                                             ajax="false"
+                                             styleClass="ui-button-success">
+                                <p:fileDownload value="#{medicDashboardController.downloadReport()}"/>
+                            </p:commandButton>
+                        </div>
+
+                        <!-- Vista previa -->
+                        <iframe src="#{medicDashboardController.currentPdfDataUrl}"
+                                style="width:100%; height:70vh; border:1px solid var(--border); border-radius:8px;"
+                                title="Reporte PDF"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup rendered="#{!medicDashboardController.reportLoading and medicDashboardController.currentPdfDataUrl == null}">
+                        <div style="text-align:center; padding:48px; color:var(--text-muted);">
+                            <span class="material-symbols-outlined" style="font-size:48px;">error_outline</span>
+                            <p style="margin-top:12px;">No se pudo generar el reporte</p>
+                        </div>
+                    </h:panelGroup>
+                </h:form>
+
+            </p:dialog>
+
         </ui:define>
 
         <ui:define name="scripts">
