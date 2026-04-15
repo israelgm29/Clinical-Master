@@ -5,6 +5,7 @@ import com.mycompany.hospitalgeneral.model.Medicalrecord;
 import com.mycompany.hospitalgeneral.model.Patient;
 import com.mycompany.hospitalgeneral.model.Tuser;
 import com.mycompany.hospitalgeneral.model.Option;
+import com.mycompany.hospitalgeneral.model.Vitalsign;
 import com.mycompany.hospitalgeneral.services.MedicService;
 import com.mycompany.hospitalgeneral.services.MedicalRecordService;
 import com.mycompany.hospitalgeneral.services.OptionService;
@@ -21,10 +22,12 @@ import jakarta.inject.Named;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import org.primefaces.PrimeFaces;
 
 @Named
+
 @ViewScoped
 public class NurseDashboardController implements Serializable {
 
@@ -207,18 +210,19 @@ public class NurseDashboardController implements Serializable {
             Medicalrecord record = new Medicalrecord();
             record.setPatientid(newPatient);
             record.setReason(newPatientReason != null ? newPatientReason : "");
-
+            record.setMedicid(selectedMedicForAssignment);
+            
             medicalRecordService.saveForNurse(record, getCurrentUserId());
 
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO,
                             "Éxito", "Paciente registrado: " + newPatient.getHc()));
 
-            // ✅ Contexto compartido
+            // Contexto compartido
             consultationContext.setCurrentMedicalRecord(record);
             consultationContext.setCurrentPatient(newPatient);
 
-            return "/views/nurse/vitalsigns.xhtml?faces-redirect=true";
+            return "/views/nurse/signos-vitales.xhtml?faces-redirect=true";
 
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
@@ -231,14 +235,14 @@ public class NurseDashboardController implements Serializable {
     // ==================== SELECCION DE MEDICO ====================
     /**
      * Carga médicos disponibles y muestra modal
+     *
      * @param patient
      */
     public void prepareMedicAssignment(Patient patient) {
-        System.out.println(patient.getFirstname());
+
         this.pendingPatient = patient;
         this.selectedMedicForAssignment = null;
         this.availableMedics = medicService.findAllActive();
-        System.out.println(availableMedics.size());
 
         PrimeFaces.current().executeScript("PF('medicDialog').show()");
     }
@@ -247,13 +251,13 @@ public class NurseDashboardController implements Serializable {
     public String startVitalSigns(Medicalrecord record) {
         consultationContext.setCurrentMedicalRecord(record);
         consultationContext.setCurrentPatient(record.getPatientid());
-        return "/views/nurse/vitalsigns.xhtml?faces-redirect=true";
+        return "/views/nurse/signos-vitales.xhtml?faces-redirect=true";
     }
 
     public String viewOnlyVitalSigns(Medicalrecord record) {
         consultationContext.setCurrentMedicalRecord(record);
         consultationContext.setCurrentPatient(record.getPatientid());
-        return "/views/nurse/vitalsigns.xhtml?faces-redirect=true";
+        return "/views/nurse/signos-vitales.xhtml?faces-redirect=true";
     }
 
     // ==================== HELPERS ====================
@@ -269,6 +273,18 @@ public class NurseDashboardController implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO,
                         "Actualizado", "Listas refrescadas"));
+    }
+
+    public Vitalsign lastVitalSign(Medicalrecord record) {
+        if (record == null || record.getVitalsignCollection() == null || record.getVitalsignCollection().isEmpty()) {
+            return null;
+        }
+        // Si quieres el último, puedes usar un stream o lista ordenada
+        return record.getVitalsignCollection()
+                .stream()
+                .max(Comparator.comparing(Vitalsign::getCreatedat))
+                .orElse(null);
+
     }
 
     // ==================== GETTERS / SETTERS ====================
@@ -362,5 +378,5 @@ public class NurseDashboardController implements Serializable {
     public void setAvailableMedics(List<Medic> availableMedics) {
         this.availableMedics = availableMedics;
     }
-    
+
 }

@@ -1373,4 +1373,25 @@ div.ui-datepicker.ui-widget-content {
 .medic-sidebar.collapsed .ui-panelmenu-icon-left {
     font-size: 20px !important;
 }
+.vital-normal {
+    color: #27ae60;
+    font-weight: 600;
+}
+.vital-warning {
+    color: #f39c12;
+    font-weight: 600;
+}
+.vital-danger {
+    color: #e74c3c;
+    font-weight: 600;
+    animation: pulse 1s infinite;
+}
 
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}

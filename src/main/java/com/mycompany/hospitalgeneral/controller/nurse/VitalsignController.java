@@ -3,9 +3,9 @@ package com.mycompany.hospitalgeneral.controller.nurse;
 import com.mycompany.hospitalgeneral.model.Medicalrecord;
 import com.mycompany.hospitalgeneral.model.Patient;
 import com.mycompany.hospitalgeneral.model.Vitalsign;
-import com.mycompany.hospitalgeneral.model.Tuser;
 import com.mycompany.hospitalgeneral.services.VitalsignService;
 import com.mycompany.hospitalgeneral.session.ConsultationContext;
+import com.mycompany.hospitalgeneral.session.UserSession;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -34,6 +34,9 @@ public class VitalsignController implements Serializable {
     // === SESSION CONTEXT (REUTILIZADO) ===
     @Inject
     private ConsultationContext consultationContext;
+
+    @Inject
+    private UserSession userSession;
 
     // === DATOS ===
     private Patient currentPatient;
@@ -100,6 +103,7 @@ public class VitalsignController implements Serializable {
      */
     public void saveVitalsign() {
         try {
+            validateVitalRanges();
             if (selectedRecord == null) {
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_WARN,
@@ -131,8 +135,51 @@ public class VitalsignController implements Serializable {
 
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN,
+                            "Valor fuera de rango", e.getMessage()));
+
+            FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR,
                             "Error", "No se pudo guardar: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Validacion de rangos
+     */
+    private void validateVitalRanges() {
+        Vitalsign v = newVitalsign;
+
+        if (v.getTemperature() != null) {
+            double temp = Double.parseDouble(v.getTemperature());
+            if (temp < 34 || temp > 43) {
+                throw new IllegalArgumentException(
+                        "Temperatura fuera de rango válido (34-43°C): " + temp + "°C");
+            }
+        }
+
+        if (v.getOxygensaturation() != null) {
+            double spo2 = Double.parseDouble(v.getOxygensaturation());
+            if (spo2 < 50 || spo2 > 100) {
+                throw new IllegalArgumentException(
+                        "SpO2 fuera de rango válido (50-100%): " + spo2 + "%");
+            }
+        }
+
+        if (v.getSystolicpressure() != null) {
+            int sys = Integer.parseInt(v.getSystolicpressure());
+            if (sys < 60 || sys > 260) {
+                throw new IllegalArgumentException(
+                        "Presión sistólica fuera de rango (60-260 mmHg): " + sys);
+            }
+        }
+
+        if (v.getPulse() != null) {
+            int pulse = Integer.parseInt(v.getPulse());
+            if (pulse < 30 || pulse > 220) {
+                throw new IllegalArgumentException(
+                        "Pulso fuera de rango (30-220 bpm): " + pulse);
+            }
         }
     }
 
@@ -194,19 +241,65 @@ public class VitalsignController implements Serializable {
 
     // ==================== HELPERS ====================
     private Integer getCurrentUserId() {
-        FacesContext context = FacesContext.getCurrentInstance();
+        return userSession.getUser() != null ? userSession.getUser().getId() : null;
+    }
 
-        if (context != null) {
-            Tuser currentUser = (Tuser) context.getExternalContext()
-                    .getSessionMap()
-                    .get("currentUser");
-
-            if (currentUser != null) {
-                return currentUser.getId();
-            }
+    /**
+     * Retorna clase CSS según rango normal/anormal
+     */
+    public String getTemperatureClass(String temp) {
+        if (temp == null) {
+            return "";
         }
+        try {
+            double value = Double.parseDouble(temp);
+            if (value >= 37.5) {
+                return "vital-warning";  // Fiebre
+            }
+            if (value < 36.0) {
+                return "vital-danger";    // Hipotermia
+            }
+            return "vital-normal";
+        } catch (NumberFormatException e) {
+            return "";
+        }
+    }
 
-        return 1; // fallback
+    public String getSpo2Class(String spo2) {
+        if (spo2 == null) {
+            return "";
+        }
+        try {
+            double value = Double.parseDouble(spo2);
+            if (value < 90) {
+                return "vital-danger";     // Crítico
+            }
+            if (value < 95) {
+                return "vital-warning";    // Precaución
+            }
+            return "vital-normal";
+        } catch (NumberFormatException e) {
+            return "";
+        }
+    }
+
+    public String getPressureClass(String systolic, String diastolic) {
+        if (systolic == null || diastolic == null) {
+            return "";
+        }
+        try {
+            int sys = Integer.parseInt(systolic);
+            int dia = Integer.parseInt(diastolic);
+            if (sys >= 140 || dia >= 90) {
+                return "vital-danger";   // Hipertensión
+            }
+            if (sys < 90 || dia < 60) {
+                return "vital-warning";    // Hipotensión
+            }
+            return "vital-normal";
+        } catch (NumberFormatException e) {
+            return "";
+        }
     }
 
     // ==================== GETTERS ====================

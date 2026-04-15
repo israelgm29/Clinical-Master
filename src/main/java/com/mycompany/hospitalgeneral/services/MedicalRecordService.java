@@ -208,11 +208,7 @@ public class MedicalRecordService {
     @Transactional
     public void saveForNurse(Medicalrecord record, Integer nurseId) {
         record.setCreatedby(nurseId);
-        record.setCreatedat(LocalDateTime.now());
-        record.setDone(false);
-        record.setCanceled(false);
-        record.setDeleted(false);
-
+      
         // medicid puede ser null - se asignará cuando el médico tome la consulta
         if (record.getId() == null) {
             em.persist(record);

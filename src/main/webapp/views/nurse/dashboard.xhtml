@@ -227,9 +227,11 @@
 
                             <p:commandButton value="Guardar y Continuar a Signos Vitales"
                                              icon="pi pi-arrow-right"
-                                             action="#{nurseDashboardController.registerNewPatientAndCreateRecord}"
+                                             action="#{nurseDashboardController.registerNewPatient}"
                                              update="triageForm messages"
+                                             oncomplete="PF('medicDialog').show()"
                                              styleClass="ui-button-success"/>
+
                         </div>
                     </h:panelGroup>
                 </div>
@@ -278,16 +280,23 @@
                         </p:column>
 
                         <p:column headerText="Últimos Signos Vitales" style="width: 250px;">
-                            <div style="font-size: 0.85rem;">
-                                <span style="color: var(--text-muted);">PA:</span> #{record.vitalsignCollection.iterator().next().systolicpressure}/#{record.vitalsignCollection.iterator().next().diastolicpressure} | 
-                                <span style="color: var(--text-muted);">T:</span> #{record.vitalsignCollection.iterator().next().temperature}°C | 
-                                <span style="color: var(--text-muted);">P:</span> #{record.vitalsignCollection.iterator().next().pulse}
-                            </div>
+                            <h:panelGroup rendered="#{nurseDashboardController.lastVitalSign(record) != null}">
+                                <div style="font-size: 0.85rem;">
+                                    <span style="color: var(--text-muted);">PA:</span> 
+                                    #{nurseDashboardController.lastVitalSign(record).systolicpressure}/#{nurseDashboardController.lastVitalSign(record).diastolicpressure} | 
+                                    <span style="color: var(--text-muted);">T:</span> #{nurseDashboardController.lastVitalSign(record).temperature}°C | 
+                                    <span style="color: var(--text-muted);">P:</span> #{nurseDashboardController.lastVitalSign(record).pulse}
+                                </div>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{nurseDashboardController.lastVitalSign(record) == null}">
+                                <span>Sin registros</span>
+                            </h:panelGroup>
                         </p:column>
+
 
                         <p:column headerText="Estado" style="width: 120px; text-align: center;">
                             <span style="background: rgba(42,157,143,0.15); color: var(--accent-dark); padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; font-weight: 600;">
-                                Esperando médico
+                                En atención
                             </span>
                         </p:column>
 

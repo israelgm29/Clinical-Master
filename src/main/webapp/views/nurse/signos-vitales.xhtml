@@ -157,7 +157,9 @@
                                 </h:outputText>
                             </p:column>
                             <p:column headerText="Temp." style="width:70px; text-align:center">
-                                #{v.temperature}°C
+                                <span class="#{vitalsignController.getTemperatureClass(v.temperature)}">
+                                    #{v.temperature}°C
+                                </span>
                             </p:column>
                             <p:column headerText="Presión" style="width:90px; text-align:center">
                                 #{v.systolicpressure}/#{v.diastolicpressure}
@@ -166,7 +168,9 @@
                                 #{v.pulse}
                             </p:column>
                             <p:column headerText="SpO2" style="width:70px; text-align:center">
-                                #{v.oxygensaturation}%
+                                <span class="#{vitalsignController.getSpo2Class(v.oxygensaturation)}">
+                                    #{v.oxygensaturation}%
+                                </span>
                             </p:column>
                             <p:column headerText="Peso/Talla" style="width:100px; text-align:center">
                                 #{v.weight}kg / #{v.tall}cm
