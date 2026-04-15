@@ -1,9 +1,11 @@
 package com.mycompany.hospitalgeneral.controller.nurse;
 
+import com.mycompany.hospitalgeneral.model.Medic;
 import com.mycompany.hospitalgeneral.model.Medicalrecord;
 import com.mycompany.hospitalgeneral.model.Patient;
 import com.mycompany.hospitalgeneral.model.Tuser;
 import com.mycompany.hospitalgeneral.model.Option;
+import com.mycompany.hospitalgeneral.services.MedicService;
 import com.mycompany.hospitalgeneral.services.MedicalRecordService;
 import com.mycompany.hospitalgeneral.services.OptionService;
 import com.mycompany.hospitalgeneral.services.PatientService;
@@ -20,6 +22,7 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.primefaces.PrimeFaces;
 
 @Named
 @ViewScoped
@@ -36,6 +39,9 @@ public class NurseDashboardController implements Serializable {
 
     @Inject
     private OptionService optionService;
+
+    @Inject
+    private MedicService medicService;
 
     // === SESSION ===
     @Inject
@@ -65,7 +71,12 @@ public class NurseDashboardController implements Serializable {
     private String newPatientReason;
     private boolean showNewPatientForm = false;
 
+    private Medic selectedMedicForAssignment;
+    private List<Medic> availableMedics;
+    private Patient pendingPatient;
+
     @PostConstruct
+
     public void init() {
         loadCurrentUser();
 
@@ -131,9 +142,20 @@ public class NurseDashboardController implements Serializable {
 
     // ==================== SELECCIÓN PACIENTE ====================
     public String selectPatientAndCreateRecord(Patient patient) {
+        if (patient == null) {
+            patient = this.pendingPatient;
+        }
+
+        if (selectedMedicForAssignment == null) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN,
+                            "Atención", "Debe seleccionar un médico primero"));
+            return null;
+        }
         try {
             Medicalrecord record = new Medicalrecord();
             record.setPatientid(patient);
+            record.setMedicid(selectedMedicForAssignment);
             record.setReason("");
 
             medicalRecordService.saveForNurse(record, getCurrentUserId());
@@ -141,8 +163,9 @@ public class NurseDashboardController implements Serializable {
             // ✅ Guardar en contexto (NO HttpSession)
             consultationContext.setCurrentMedicalRecord(record);
             consultationContext.setCurrentPatient(patient);
+            consultationContext.setCurrentMedic(selectedMedicForAssignment);
 
-            return "/views/nurse/vitalsigns.xhtml?faces-redirect=true";
+            return "/views/nurse/signos-vitales.xhtml?faces-redirect=true";
 
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
@@ -203,6 +226,21 @@ public class NurseDashboardController implements Serializable {
                             "Error", e.getMessage()));
             return null;
         }
+    }
+
+    // ==================== SELECCION DE MEDICO ====================
+    /**
+     * Carga médicos disponibles y muestra modal
+     * @param patient
+     */
+    public void prepareMedicAssignment(Patient patient) {
+        System.out.println(patient.getFirstname());
+        this.pendingPatient = patient;
+        this.selectedMedicForAssignment = null;
+        this.availableMedics = medicService.findAllActive();
+        System.out.println(availableMedics.size());
+
+        PrimeFaces.current().executeScript("PF('medicDialog').show()");
     }
 
     // ==================== NAVEGACIÓN ====================
@@ -300,4 +338,29 @@ public class NurseDashboardController implements Serializable {
     public List<Option> getCivilStatusList() {
         return civilStatusList;
     }
+
+    public Patient getPendingPatient() {
+        return pendingPatient;
+    }
+
+    public void setPendingPatient(Patient pendingPatient) {
+        this.pendingPatient = pendingPatient;
+    }
+
+    public Medic getSelectedMedicForAssignment() {
+        return selectedMedicForAssignment;
+    }
+
+    public void setSelectedMedicForAssignment(Medic selectedMedicForAssignment) {
+        this.selectedMedicForAssignment = selectedMedicForAssignment;
+    }
+
+    public List<Medic> getAvailableMedics() {
+        return availableMedics;
+    }
+
+    public void setAvailableMedics(List<Medic> availableMedics) {
+        this.availableMedics = availableMedics;
+    }
+    
 }

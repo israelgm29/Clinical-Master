@@ -13,6 +13,7 @@ import org.primefaces.model.StreamedContent;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
+import java.util.Base64;
 
 @Named
 @ViewScoped
@@ -47,11 +48,21 @@ public class MedicReportController implements Serializable {
         return "/views/medic/dashboard.xhtml?faces-redirect=true";
     }
 
+    public String getPdfDataUrl() {
+        if (currentReport == null || currentReport.getContent() == null) {
+            return "";
+        }
+        // Convierte los bytes del PDF a un formato que el navegador entienda directamente
+        String base64 = Base64.getEncoder().encodeToString(currentReport.getContent());
+        return "data:application/pdf;base64," + base64;
+    }
+
     public ReportResult getCurrentReport() {
         return currentReport;
     }
 
-    public boolean hasReport() {
+    public boolean isHasReport() {
         return currentReport != null;
     }
+
 }

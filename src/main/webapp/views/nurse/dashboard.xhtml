@@ -76,7 +76,9 @@
                                 <p:column headerText="Acción" style="text-align: center;">
                                     <p:commandButton value="Seleccionar" 
                                                      icon="pi pi-check"
-                                                     action="#{nurseDashboardController.selectPatientAndCreateRecord(patient)}"
+                                                     action="#{nurseDashboardController.prepareMedicAssignment(patient)}"
+                                                     update=":triageForm:medicPanel"
+                                                     oncomplete="PF('medicDialog').show()"
                                                      styleClass="ui-button-success ui-button-sm"/>
                                 </p:column>
                             </p:dataTable>
@@ -259,7 +261,7 @@
 
                         <p:column headerText="Hora SV" style="width: 80px;">
                             <h:outputText value="#{record.patientid.createdat}">
-                                <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss.SSS Z" />
+                                <f:convertDateTime type="localDateTime" pattern="dd MMMM yyyy HH:mm a" />
                             </h:outputText>
                         </p:column>
 
@@ -297,6 +299,44 @@
                         </p:column>
                     </p:dataTable>
                 </div>
+
+                <!-- Modal de selección de médico -->
+                <p:dialog header="Asignar Médico" widgetVar="medicDialog" 
+                          modal="true" responsive="true" width="450"
+                          closable="false">
+
+                    <p:outputPanel id="medicPanel">
+                        <div style="margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+                            <strong>Paciente:</strong> #{nurseDashboardController.pendingPatient.lastname} #{nurseDashboardController.pendingPatient.firstname}<br/>
+                            <small>HC: #{nurseDashboardController.pendingPatient.hc}</small>
+                        </div>
+
+                        <div class="field">
+                            <label style="display: block; margin-bottom: 6px; font-weight: 600;">Médico que atenderá *</label>
+                            <p:selectOneMenu value="#{nurseDashboardController.selectedMedicForAssignment}"
+                                             converter="medicConverter"
+                                             style="width: 100%">
+                                <f:selectItem itemLabel="Seleccione médico" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{nurseDashboardController.availableMedics}" 
+                                               var="medic"
+                                               itemLabel="#{medic.lastname} #{medic.firstname}"
+                                               itemValue="#{medic}"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </p:outputPanel>
+
+                    <f:facet name="footer">
+                        <p:commandButton value="Cancelar" 
+                                         onclick="PF('medicDialog').hide()"
+                                         styleClass="ui-button-secondary"
+                                         immediate="true"/>
+                        <p:commandButton value="Continuar a Signos Vitales" 
+                                         icon="pi pi-arrow-right"
+                                         action="#{nurseDashboardController.selectPatientAndCreateRecord(null)}"
+                                         update="triageForm messages"
+                                         styleClass="ui-button-success"/>
+                    </f:facet>
+                </p:dialog>
 
             </h:form>
         </ui:define>

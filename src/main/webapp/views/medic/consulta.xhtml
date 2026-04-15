@@ -850,7 +850,12 @@
                                                      value="#{medicConsultationController.selectedDisease}" 
                                                      placeholder="Seleccione una enfermedad"
                                                      converter="diseaseConverter"
-                                                     style="flex: 1;">
+                                                     filter="true" 
+                                                     filterMatchMode="contains"
+                                                     autoWidth="false"
+                                                     panelStyle="width:400px"
+                                                     style="width: 100%; flex: 1;">
+
                                         <f:selectItem itemLabel="Seleccione una enfermedad" itemValue="#{null}" noSelectionOption="true"/>
                                         <f:selectItems value="#{medicConsultationController.availableDiseases}" 
                                                        var="disease" 
