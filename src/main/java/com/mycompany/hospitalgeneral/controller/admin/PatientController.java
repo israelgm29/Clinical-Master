@@ -4,6 +4,7 @@ import com.mycompany.hospitalgeneral.model.Option;
 import com.mycompany.hospitalgeneral.model.Patient;
 import com.mycompany.hospitalgeneral.services.OptionService;
 import com.mycompany.hospitalgeneral.services.PatientService;
+import com.mycompany.hospitalgeneral.session.UserSession;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -22,6 +23,8 @@ public class PatientController implements Serializable {
     private PatientService patientService;
     @Inject
     private OptionService optionService;
+    @Inject
+    private UserSession userSession;
 
     private List<Patient> patients;
     private Patient selectedPatient;
@@ -36,7 +39,6 @@ public class PatientController implements Serializable {
     @PostConstruct
     public void init() {
         loadPatients();
-        // Carga de catálogos
         bloodTypes = optionService.findByGroup(1);
         civilStatusList = optionService.findByGroup(2);
         genders = optionService.findByGroup(3);
@@ -50,6 +52,8 @@ public class PatientController implements Serializable {
     public void prepareNewPatient() {
         this.newPatient = new Patient();
         this.editMode = false;  // <-- MODO CREACIÓN
+        String nextHc = patientService.generateNextHc();
+        this.newPatient.setHc(nextHc);
     }
 
     public void savePatient() {
@@ -67,7 +71,7 @@ public class PatientController implements Serializable {
             }
 
             if (newPatient.getId() == null) {
-                newPatient.setCreatedby(0);
+                newPatient.setCreatedby(getCurrentUserId());
             }
 
             patientService.save(newPatient);
@@ -94,8 +98,9 @@ public class PatientController implements Serializable {
         }
     }
 
-    private void addMessage(FacesMessage.Severity severity, String summary, String detail) {
-        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severity, summary, detail));
+
+    private Integer getCurrentUserId() {
+        return userSession.getUser() != null ? userSession.getUser().getId() : null;
     }
 
     // Getters y Setters

@@ -203,12 +203,35 @@ public class MedicalRecordService {
     }
 
     /**
+     * NUEVO: Pacientes atendidos hoy — médico marcó la consulta como done =
+     * true Muestra: nombre+HC del paciente, hora de atención, médico asignado
+     */
+    public List<Medicalrecord> findAttendedToday() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();           // 00:00:00
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay(); // 00:00:00 mañana
+
+        return em.createQuery(
+                "SELECT m FROM Medicalrecord m "
+                + "WHERE m.done = true "
+                + "AND (m.canceled = false OR m.canceled IS NULL) "
+                + "AND (m.deleted = false OR m.deleted IS NULL) "
+                + "AND m.createdat >= :start "
+                + "AND m.createdat < :end "
+                + "ORDER BY m.createdat DESC",
+                Medicalrecord.class)
+                .setParameter("start", startOfDay)
+                .setParameter("end", endOfDay)
+                .getResultList();
+    }
+
+    /**
      * NUEVO: Guarda un MedicalRecord (para enfermería)
      */
     @Transactional
     public void saveForNurse(Medicalrecord record, Integer nurseId) {
         record.setCreatedby(nurseId);
-      
+
         // medicid puede ser null - se asignará cuando el médico tome la consulta
         if (record.getId() == null) {
             em.persist(record);

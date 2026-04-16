@@ -13,9 +13,7 @@
         <ui:define name="content">
             <h:form id="triageForm">
 
-                <p:growl id="messages" showDetail="true" life="5000"/>
-
-                <!-- ===== SECCIÓN 1: BÚSQUEDA / REGISTRO RÁPIDO ===== -->
+                <!-- ===== BUSCADOR (siempre visible, fuera de los tabs) ===== -->
                 <div class="card" style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid var(--border);">
 
                     <h3 style="margin: 0 0 20px 0; color: var(--primary); display: flex; align-items: center; gap: 10px;">
@@ -28,22 +26,23 @@
                             <label style="display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 600; color: var(--text);">
                                 Buscar por Cédula, HC o Nombre
                             </label>
-                            <p:inputText value="#{nurseDashboardController.searchQuery}" 
+                            <p:inputText value="#{nurseDashboardController.searchQuery}"
                                          placeholder="Ej: 0954123456 o HC001234 o Juan Pérez"
                                          style="width: 100%;"/>
                         </div>
 
-                        <p:commandButton value="Buscar" 
+                        <p:commandButton value="Buscar"
                                          icon="pi pi-search"
                                          action="#{nurseDashboardController.searchPatient}"
                                          update="triageForm messages"
                                          styleClass="ui-button-primary"/>
 
-                        <p:commandButton value="Paciente Nuevo" 
-                                         icon="pi pi-user-plus"
-                                         action="#{nurseDashboardController.showNewPatientForm}"
+                        <p:commandButton icon="pi pi-times"
+                                         title="Limpiar búsqueda"
+                                         action="#{nurseDashboardController.clearSearch}"
                                          update="triageForm"
-                                         styleClass="ui-button-success"/>
+                                         styleClass="ui-button-secondary"
+                                         rendered="#{nurseDashboardController.showSearchResults}"/>
                     </div>
 
                     <!-- Resultados de búsqueda -->
@@ -51,7 +50,7 @@
                         <div style="margin-top: 20px;">
                             <h4 style="margin: 0 0 12px 0; color: var(--text);">Resultados encontrados:</h4>
 
-                            <p:dataTable value="#{nurseDashboardController.searchResults}" 
+                            <p:dataTable value="#{nurseDashboardController.searchResults}"
                                          var="patient"
                                          styleClass="ui-datatable-sm">
 
@@ -74,7 +73,7 @@
                                 </p:column>
 
                                 <p:column headerText="Acción" style="text-align: center;">
-                                    <p:commandButton value="Seleccionar" 
+                                    <p:commandButton value="Seleccionar"
                                                      icon="pi pi-check"
                                                      action="#{nurseDashboardController.prepareMedicAssignment(patient)}"
                                                      update=":triageForm:medicPanel"
@@ -84,233 +83,216 @@
                             </p:dataTable>
                         </div>
                     </h:panelGroup>
-
-                    <!-- Formulario de paciente nuevo (aparece si no hay resultados o se clickea "Paciente Nuevo") -->
-                    <h:panelGroup rendered="#{nurseDashboardController.showNewPatientForm}">
-                        <p:divider style="margin: 24px 0;"/>
-
-                        <h3 style="margin: 0 0 20px 0; color: var(--accent); display: flex; align-items: center; gap: 10px;">
-                            <span class="material-symbols-outlined">person_add</span>
-                            Registro de Paciente Nuevo
-                        </h3>
-
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
-
-                            <div class="field">
-                                <label>Nombres *</label>
-                                <p:inputText value="#{nurseDashboardController.newPatient.firstname}"
-                                             required="true"
-                                             requiredMessage="El nombre es obligatorio"
-                                             style="width:100%"/>
-                            </div>
-
-                            <div class="field">
-                                <label>Apellidos *</label>
-                                <p:inputText value="#{nurseDashboardController.newPatient.lastname}"
-                                             required="true"
-                                             requiredMessage="El apellido es obligatorio"
-                                             style="width:100%"/>
-                            </div>
-
-                            <div class="field">
-                                <label>Cédula</label>
-                                <p:inputText value="#{nurseDashboardController.newPatient.dni}"
-                                             placeholder="Ej: 0954123456"
-                                             maxlength="10"
-                                             style="width:100%"/>
-                            </div>
-
-                            <div class="field">
-                                <label>Pasaporte</label>
-                                <p:inputText value="#{nurseDashboardController.newPatient.passport}"
-                                             placeholder="Si no tiene cédula"
-                                             maxlength="13"
-                                             style="width:100%"/>
-                            </div>
-
-                            <div class="field">
-                                <label>Fecha de Nacimiento *</label>
-                                <p:datePicker value="#{nurseDashboardController.newPatient.birthday}"
-                                              pattern="dd/MM/yyyy"
-                                              style="width:100%"
-                                              required="true"
-                                              requiredMessage="La fecha de nacimiento es obligatoria"/>
-                            </div>
-
-                            <div class="field">
-                                <label>Ocupación *</label>
-                                <p:inputText value="#{nurseDashboardController.newPatient.ocupation}"
-                                             placeholder="Ej: Comerciante"
-                                             required="true"
-                                             requiredMessage="La ocupación es obligatoria"
-                                             style="width:100%"/>
-                            </div>
-
-                            <div class="field">
-                                <label>Sexo *</label>
-                                <p:selectOneMenu value="#{nurseDashboardController.newPatient.sex}"
-                                                 converter="optionConverter"
-                                                 required="true"
-                                                 requiredMessage="El sexo es obligatorio"
-                                                 style="width:100%">
-                                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{nurseDashboardController.genders}" var="g"
-                                                   itemLabel="#{g.name}" itemValue="#{g}"/>
-                                </p:selectOneMenu>
-                            </div>
-
-                            <div class="field">
-                                <label>Estado Civil *</label>
-                                <p:selectOneMenu value="#{nurseDashboardController.newPatient.civilstatus}"
-                                                 converter="optionConverter"
-                                                 required="true"
-                                                 requiredMessage="El estado civil es obligatorio"
-                                                 style="width:100%">
-                                    <f:selectItem itemLabel="Seleccione" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{nurseDashboardController.civilStatusList}" var="c"
-                                                   itemLabel="#{c.name}" itemValue="#{c}"/>
-                                </p:selectOneMenu>
-                            </div>
-
-                            <div class="field">
-                                <label>Tipo de Sangre</label>
-                                <p:selectOneMenu value="#{nurseDashboardController.newPatient.blootype}"
-                                                 converter="optionConverter"
-                                                 style="width:100%">
-                                    <f:selectItem itemLabel="Desconocido" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{nurseDashboardController.bloodTypes}" var="bt"
-                                                   itemLabel="#{bt.name}" itemValue="#{bt}"/>
-                                </p:selectOneMenu>
-                            </div>
-
-                            <div class="field" style="grid-column: span 3;">
-                                <label>Dirección *</label>
-                                <p:inputText value="#{nurseDashboardController.newPatient.address}"
-                                             placeholder="Ej: Av. Principal 123"
-                                             required="true"
-                                             requiredMessage="La dirección es obligatoria"
-                                             style="width:100%"/>
-                            </div>
-
-                            <div class="field">
-                                <label>Teléfono Móvil</label>
-                                <p:inputText value="#{nurseDashboardController.newPatient.mobile}"
-                                             placeholder="Ej: 0987654321"
-                                             maxlength="13"
-                                             style="width:100%"/>
-                            </div>
-
-                            <div class="field">
-                                <label>Teléfono Fijo</label>
-                                <p:inputText value="#{nurseDashboardController.newPatient.telephone}"
-                                             placeholder="Ej: 062345678"
-                                             maxlength="13"
-                                             style="width:100%"/>
-                            </div>
-
-                            <div class="field">
-                                <label>Correo Electrónico</label>
-                                <p:inputText value="#{nurseDashboardController.newPatient.email}"
-                                             placeholder="Ej: paciente@email.com"
-                                             style="width:100%"/>
-                            </div>
-
-                        </div>
-
-                        <div style="margin-top: 20px; text-align: right;">
-                            <p:commandButton value="Cancelar"
-                                             action="#{nurseDashboardController.setShowNewPatientForm(false)}"
-                                             update="triageForm"
-                                             styleClass="ui-button-secondary"
-                                             style="margin-right: 8px;"
-                                             immediate="true"/>
-
-                            <p:commandButton value="Guardar y Continuar a Signos Vitales"
-                                             icon="pi pi-arrow-right"
-                                             action="#{nurseDashboardController.registerNewPatient}"
-                                             update="triageForm messages"
-                                             oncomplete="PF('medicDialog').show()"
-                                             styleClass="ui-button-success"/>
-
-                        </div>
-                    </h:panelGroup>
                 </div>
 
-                <!-- ===== SECCIÓN 2: COLA DE ESPERA MÉDICA ===== -->
-                <div class="card" style="background: white; border-radius: 12px; padding: 24px; border: 1px solid var(--border);">
+                <!-- ===== TABS: COLAS + HISTORIAL ===== -->
+                <p:tabView id="dashboardTabs" dynamic="true">
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="margin: 0; color: var(--primary); display: flex; align-items: center; gap: 10px;">
-                            <span class="material-symbols-outlined">groups</span>
-                            Pacientes en Cola de Espera Médica
-                            <span style="background: var(--warning); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem;">
-                                #{nurseDashboardController.waitingForMedic.size()}
-                            </span>
-                        </h3>
+                    <!-- ── TAB 1: TRABAJO DEL DÍA ── -->
+                    <p:tab title="Trabajo del Día" titleStyleClass="tab-work">
 
-                        <p:commandButton icon="pi pi-refresh" 
-                                         action="#{nurseDashboardController.refresh()}"
-                                         update="triageForm"
-                                         styleClass="ui-button-secondary ui-button-sm"
-                                         title="Actualizar"/>
-                    </div>
+                        <!-- Cola 1: Pendientes de signos vitales -->
+                        <div class="card" style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border);">
 
-                    <p:dataTable value="#{nurseDashboardController.waitingForMedic}" 
-                                 var="record"
-                                 emptyMessage="No hay pacientes en espera"
-                                 paginator="true" rows="10"
-                                 styleClass="ui-datatable">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="margin: 0; color: var(--primary); display: flex; align-items: center; gap: 10px;">
+                                    <span class="material-symbols-outlined">monitor_heart</span>
+                                    Pendientes de Signos Vitales
+                                    <span style="background: var(--danger, #e63946); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem;">
+                                        #{nurseDashboardController.waitingForVitalsigns.size()}
+                                    </span>
+                                </h3>
 
-                        <p:column headerText="Hora SV" style="width: 80px;">
-                            <h:outputText value="#{record.patientid.createdat}">
-                                <f:convertDateTime type="localDateTime" pattern="dd MMMM yyyy HH:mm a" />
-                            </h:outputText>
-                        </p:column>
-
-                        <p:column headerText="Paciente">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
-                                    #{record.patientid.firstname.substring(0,1)}#{record.patientid.lastname.substring(0,1)}
-                                </div>
-                                <div>
-                                    <div style="font-weight: 600;">#{record.patientid.lastname} #{record.patientid.firstname}</div>
-                                    <small style="color: var(--text-muted);">HC: #{record.patientid.hc}</small>
-                                </div>
+                                <p:commandButton icon="pi pi-refresh"
+                                                 action="#{nurseDashboardController.refresh()}"
+                                                 update="triageForm"
+                                                 styleClass="ui-button-secondary ui-button-sm"
+                                                 title="Actualizar listas"/>
                             </div>
-                        </p:column>
 
-                        <p:column headerText="Últimos Signos Vitales" style="width: 250px;">
-                            <h:panelGroup rendered="#{nurseDashboardController.lastVitalSign(record) != null}">
-                                <div style="font-size: 0.85rem;">
-                                    <span style="color: var(--text-muted);">PA:</span> 
-                                    #{nurseDashboardController.lastVitalSign(record).systolicpressure}/#{nurseDashboardController.lastVitalSign(record).diastolicpressure} | 
-                                    <span style="color: var(--text-muted);">T:</span> #{nurseDashboardController.lastVitalSign(record).temperature}°C | 
-                                    <span style="color: var(--text-muted);">P:</span> #{nurseDashboardController.lastVitalSign(record).pulse}
-                                </div>
-                            </h:panelGroup>
-                            <h:panelGroup rendered="#{nurseDashboardController.lastVitalSign(record) == null}">
-                                <span>Sin registros</span>
-                            </h:panelGroup>
-                        </p:column>
+                            <p:dataTable value="#{nurseDashboardController.waitingForVitalsigns}"
+                                         var="record"
+                                         emptyMessage="No hay pacientes pendientes de signos vitales"
+                                         paginator="true" rows="5"
+                                         styleClass="ui-datatable">
 
+                                <p:column headerText="Hora Ingreso" style="width: 160px;">
+                                    <h:outputText value="#{record.createdat}">
+                                        <f:convertDateTime type="localDateTime" pattern="HH:mm - dd/MM/yyyy"/>
+                                    </h:outputText>
+                                </p:column>
 
-                        <p:column headerText="Estado" style="width: 120px; text-align: center;">
-                            <span style="background: rgba(42,157,143,0.15); color: var(--accent-dark); padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; font-weight: 600;">
-                                En atención
-                            </span>
-                        </p:column>
+                                <p:column headerText="Paciente">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                            #{record.patientid.firstname.substring(0,1)}#{record.patientid.lastname.substring(0,1)}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 600;">#{record.patientid.lastname} #{record.patientid.firstname}</div>
+                                            <small style="color: var(--text-muted);">HC: #{record.patientid.hc}</small>
+                                        </div>
+                                    </div>
+                                </p:column>
 
-                        <p:column headerText="Acciones" style="width: 100px; text-align: center;">
-                            <p:commandButton icon="pi pi-heart" 
-                                             title="Ver/Editar Signos Vitales"
-                                             action="#{nurseDashboardController.startVitalSigns(record)}"
-                                             styleClass="ui-button-primary ui-button-rounded ui-button-sm"/>
-                        </p:column>
-                    </p:dataTable>
-                </div>
+                                <p:column headerText="Estado" style="width: 140px; text-align: center;">
+                                    <span style="background: rgba(230,57,70,0.12); color: #e63946; padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; font-weight: 600;">
+                                        Sin signos vitales
+                                    </span>
+                                </p:column>
 
-                <!-- Modal de selección de médico -->
-                <p:dialog header="Asignar Médico" widgetVar="medicDialog" 
+                                <p:column headerText="Acción" style="width: 100px; text-align: center;">
+                                    <p:commandButton icon="pi pi-heart"
+                                                     title="Registrar Signos Vitales"
+                                                     action="#{nurseDashboardController.startVitalSigns(record)}"
+                                                     styleClass="ui-button-primary ui-button-rounded ui-button-sm"/>
+                                </p:column>
+                            </p:dataTable>
+                        </div>
+
+                        <!-- Cola 2: Esperando médico -->
+                        <div class="card" style="background: white; border-radius: 12px; padding: 24px; border: 1px solid var(--border);">
+
+                            <h3 style="margin: 0 0 20px 0; color: var(--primary); display: flex; align-items: center; gap: 10px;">
+                                <span class="material-symbols-outlined">groups</span>
+                                Pacientes Esperando Médico
+                                <span style="background: var(--warning, #f4a261); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem;">
+                                    #{nurseDashboardController.waitingForMedic.size()}
+                                </span>
+                            </h3>
+
+                            <p:dataTable value="#{nurseDashboardController.waitingForMedic}"
+                                         var="record"
+                                         emptyMessage="No hay pacientes en espera"
+                                         paginator="true" rows="10"
+                                         styleClass="ui-datatable">
+
+                                <p:column headerText="Hora SV" style="width: 160px;">
+                                    <h:outputText value="#{record.createdat}">
+                                        <f:convertDateTime type="localDateTime" pattern="HH:mm - dd/MM/yyyy"/>
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="Paciente">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                            #{record.patientid.firstname.substring(0,1)}#{record.patientid.lastname.substring(0,1)}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 600;">#{record.patientid.lastname} #{record.patientid.firstname}</div>
+                                            <small style="color: var(--text-muted);">HC: #{record.patientid.hc}</small>
+                                        </div>
+                                    </div>
+                                </p:column>
+
+                                <p:column headerText="Últimos Signos Vitales" style="width: 260px;">
+                                    <h:panelGroup rendered="#{nurseDashboardController.lastVitalSign(record) != null}">
+                                        <div style="font-size: 0.85rem;">
+                                            <span style="color: var(--text-muted);">PA:</span>
+                                            #{nurseDashboardController.lastVitalSign(record).systolicpressure}/#{nurseDashboardController.lastVitalSign(record).diastolicpressure} |
+                                            <span style="color: var(--text-muted);">T:</span> #{nurseDashboardController.lastVitalSign(record).temperature}°C |
+                                            <span style="color: var(--text-muted);">P:</span> #{nurseDashboardController.lastVitalSign(record).pulse}
+                                        </div>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{nurseDashboardController.lastVitalSign(record) == null}">
+                                        <span style="color: var(--text-muted); font-size: 0.85rem;">Sin registros</span>
+                                    </h:panelGroup>
+                                </p:column>
+
+                                <p:column headerText="Estado" style="width: 120px; text-align: center;">
+                                    <span style="background: rgba(42,157,143,0.15); color: var(--accent-dark); padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; font-weight: 600;">
+                                        En atención
+                                    </span>
+                                </p:column>
+
+                                <p:column headerText="Acciones" style="width: 100px; text-align: center;">
+                                    <p:commandButton icon="pi pi-heart"
+                                                     title="Ver/Editar Signos Vitales"
+                                                     action="#{nurseDashboardController.startVitalSigns(record)}"
+                                                     styleClass="ui-button-primary ui-button-rounded ui-button-sm"/>
+                                </p:column>
+                            </p:dataTable>
+                        </div>
+
+                    </p:tab>
+
+                    <!-- ── TAB 2: HISTORIAL DEL DÍA ── -->
+                    <p:tab title="Historial del Día">
+
+                        <div class="card" style="background: white; border-radius: 12px; padding: 24px; border: 1px solid var(--border);">
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="margin: 0; color: var(--primary); display: flex; align-items: center; gap: 10px;">
+                                    <span class="material-symbols-outlined">history</span>
+                                    Pacientes Atendidos Hoy
+                                    <span style="background: var(--success, #2a9d8f); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem;">
+                                        #{nurseDashboardController.attendedToday.size()}
+                                    </span>
+                                </h3>
+
+                                <p:commandButton icon="pi pi-refresh"
+                                                 value="Actualizar"
+                                                 action="#{nurseDashboardController.loadAttendedToday()}"
+                                                 update=":triageForm:historialTable messages"
+                                                 styleClass="ui-button-secondary ui-button-sm"
+                                                 title="Refrescar historial"/>
+                            </div>
+
+                            <p:dataTable id="historialTable"
+                                         value="#{nurseDashboardController.attendedToday}"
+                                         var="record"
+                                         emptyMessage="No hay pacientes atendidos hoy"
+                                         paginator="true" rows="10"
+                                         styleClass="ui-datatable"
+                                         sortBy="#{record.createdat}">
+
+                                <p:column headerText="HC" style="width: 110px;">
+                                    <span style="background: var(--primary-light); color: white; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;">
+                                        #{record.patientid.hc}
+                                    </span>
+                                </p:column>
+
+                                <p:column headerText="Paciente" sortBy="#{record.patientid.lastname}">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 36px; height: 36px; background: linear-gradient(135deg, var(--success, #2a9d8f) 0%, var(--primary) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.85rem;">
+                                            #{record.patientid.firstname.substring(0,1)}#{record.patientid.lastname.substring(0,1)}
+                                        </div>
+                                        <span style="font-weight: 600;">#{record.patientid.lastname} #{record.patientid.firstname}</span>
+                                    </div>
+                                </p:column>
+
+                                <p:column headerText="Hora de Atención" style="width: 160px;" sortBy="#{record.createdat}">
+                                    <h:outputText value="#{record.createdat}">
+                                        <f:convertDateTime type="localDateTime" pattern="HH:mm - dd/MM/yyyy"/>
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="Médico Asignado" style="width: 220px;">
+                                    <h:panelGroup rendered="#{record.medicid != null}">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span class="material-symbols-outlined" style="font-size: 1rem; color: var(--primary);">stethoscope</span>
+                                            Dr. #{record.medicid.lastname} #{record.medicid.firstname}
+                                        </div>
+                                    </h:panelGroup>
+                                    <h:panelGroup rendered="#{record.medicid == null}">
+                                        <span style="color: var(--text-muted); font-size: 0.85rem;">Sin asignar</span>
+                                    </h:panelGroup>
+                                </p:column>
+
+                                <p:column headerText="Estado" style="width: 120px; text-align: center;">
+                                    <span style="background: rgba(42,157,143,0.15); color: var(--accent-dark, #2a9d8f); padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; font-weight: 600;">
+                                        ✓ Atendido
+                                    </span>
+                                </p:column>
+
+                            </p:dataTable>
+                        </div>
+
+                    </p:tab>
+
+                </p:tabView>
+
+                <!-- ===== MODAL: SELECCIÓN DE MÉDICO ===== -->
+                <p:dialog header="Asignar Médico" widgetVar="medicDialog"
                           modal="true" responsive="true" width="450"
                           closable="false">
 
@@ -326,7 +308,7 @@
                                              converter="medicConverter"
                                              style="width: 100%">
                                 <f:selectItem itemLabel="Seleccione médico" itemValue="#{null}" noSelectionOption="true"/>
-                                <f:selectItems value="#{nurseDashboardController.availableMedics}" 
+                                <f:selectItems value="#{nurseDashboardController.availableMedics}"
                                                var="medic"
                                                itemLabel="#{medic.lastname} #{medic.firstname}"
                                                itemValue="#{medic}"/>
@@ -335,11 +317,11 @@
                     </p:outputPanel>
 
                     <f:facet name="footer">
-                        <p:commandButton value="Cancelar" 
+                        <p:commandButton value="Cancelar"
                                          onclick="PF('medicDialog').hide()"
                                          styleClass="ui-button-secondary"
                                          immediate="true"/>
-                        <p:commandButton value="Continuar a Signos Vitales" 
+                        <p:commandButton value="Continuar a Signos Vitales"
                                          icon="pi pi-arrow-right"
                                          action="#{nurseDashboardController.selectPatientAndCreateRecord(null)}"
                                          update="triageForm messages"
@@ -348,6 +330,11 @@
                 </p:dialog>
 
             </h:form>
+        </ui:define>
+        
+         <ui:define name="scripts">
+            <!-- Auto-refresh cada 30 segundos -->
+            <p:poll interval="30" update="triageForm" listener="#{nurseDashboardController.loadAllLists()}"/>
         </ui:define>
     </ui:composition>
 </html>

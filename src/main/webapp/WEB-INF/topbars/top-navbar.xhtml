@@ -1,0 +1,123 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core">
+
+    <header class="top-navbar">
+        <!-- Izquierda: Toggle sidebar + Logo -->
+        <div class="navbar-left">
+            <button type="button" class="sidebar-toggle" onclick="toggleSidebar()">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+
+        </div>
+
+        <!-- Centro: Breadcrumbs (opcional) -->
+        <div class="navbar-brand">
+            <span class="material-symbols-outlined">local_hospital</span>
+            <span class="brand-text">#{appInfo.companyName.name.toUpperCase()}</span>
+        </div>
+
+        <!-- Derecha: Notificaciones + Usuario -->
+        <div class="navbar-right">
+
+            <!-- Notificaciones -->
+            <div class="nav-item dropdown">
+                <button class="nav-btn" onclick="toggleNotifications()">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="badge" id="notifCount">3</span>
+                </button>
+                <div class="dropdown-menu notifications-menu" id="notificationsMenu">
+                    <div class="dropdown-header">
+                        <span>Notificaciones</span>
+                        <a href="#">Marcar todo leído</a>
+                    </div>
+                    <div class="notification-item unread">
+                        <span class="material-symbols-outlined">assignment_late</span>
+                        <div>
+                            <p>Nuevo paciente en espera</p>
+                            <small>Hace 5 minutos</small>
+                        </div>
+                    </div>
+                    <div class="notification-item">
+                        <span class="material-symbols-outlined">lab_profile</span>
+                        <div>
+                            <p>Resultado de laboratorio listo</p>
+                            <small>Hace 1 hora</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usuario -->
+            <div class="nav-item dropdown user-dropdown">
+                <button class="nav-btn user-btn" onclick="toggleUserMenu()">
+                    <div class="user-avatar-small">
+                        #{userSession.user.email}
+                    </div>
+                    <div class="user-info-mini">
+                        <span class="user-name">#{userSession.user.medic.lastname}</span>
+                        <span class="user-role">#{userSession.user.medic.specialtiesNames}</span>
+                    </div>
+                    <span class="material-symbols-outlined">expand_more</span>
+                </button>
+                <div class="dropdown-menu user-menu" id="userMenu">
+                    <div class="user-header">
+                        <div class="user-avatar-large">
+                            #{userSession.user.email}
+                        </div>
+                        <div>
+                            <strong>#{userSession.user.medic.fullName}</strong>
+                            <span>#{userSession.user.email}</span>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="#{request.contextPath}/views/medic/profile.xhtml" class="menu-item">
+                        <span class="material-symbols-outlined">person</span>
+                        Mi Perfil
+                    </a>
+                    <a href="#{request.contextPath}/views/medic/settings.xhtml" class="menu-item">
+                        <span class="material-symbols-outlined">settings</span>
+                        Configuración
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <h:form>
+                        <p:commandLink action="#{loginController.logout}" 
+                                       styleClass="menu-item text-danger">
+                            <span class="material-symbols-outlined">logout</span>
+                            Cerrar Sesión
+                        </p:commandLink>
+                    </h:form>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- JavaScript para toggles -->
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.body.classList.toggle('sidebar-collapsed');
+        }
+
+        function toggleUserMenu() {
+            document.getElementById('userMenu').classList.toggle('show');
+            document.getElementById('notificationsMenu').classList.remove('show');
+        }
+
+        function toggleNotifications() {
+            document.getElementById('notificationsMenu').classList.toggle('show');
+            document.getElementById('userMenu').classList.remove('show');
+        }
+
+        // Cerrar al hacer click fuera
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+            }
+        });
+    </script>
+
+</ui:composition>

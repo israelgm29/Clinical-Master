@@ -13,19 +13,24 @@ import java.io.Serializable;
 @SessionScoped
 public class MedicMenuBean implements Serializable {
 
+    private static final long serialVersionUID = 1L; // Añadido por seguridad de sesión
     private MenuModel menuModel;
 
     @PostConstruct
     public void init() {
         menuModel = new DefaultMenuModel();
 
+        // Al usar *.xhtml en web.xml, JSF se encarga de todo.
+        String redirect = "?faces-redirect=true";
+
         // === DASHBOARD ===
-        DefaultMenuItem dashboard = DefaultMenuItem.builder()
-                .value("Mi Agenda")
-                .icon("pi pi-calendar")
-                .url("/views/medic/dashboard.xhtml")
-                .build();
-        menuModel.getElements().add(dashboard);
+        menuModel.getElements().add(
+                DefaultMenuItem.builder()
+                        .value("Mi Agenda")
+                        .icon("pi pi-calendar")
+                        .outcome("/views/medic/dashboard.xhtml" + redirect)
+                        .build()
+        );
 
         // === PACIENTES (Submenú) ===
         DefaultSubMenu pacientesSub = DefaultSubMenu.builder()
@@ -33,20 +38,21 @@ public class MedicMenuBean implements Serializable {
                 .icon("pi pi-users")
                 .build();
 
-        DefaultMenuItem misPacientes = DefaultMenuItem.builder()
-                .value("Mis Pacientes")
-                .icon("pi pi-list")
-                .url("/views/medic/pacientes/lista.xhtml")
-                .build();
+        pacientesSub.getElements().add(
+                DefaultMenuItem.builder()
+                        .value("Mis Pacientes")
+                        .icon("pi pi-list")
+                        .outcome("/views/medic/dashboard.xhtml" + redirect)
+                        .build()
+        );
 
-        DefaultMenuItem nuevaConsulta = DefaultMenuItem.builder()
-                .value("Nueva Consulta")
-                .icon("pi pi-plus-circle")
-                .url("/views/medic/pacientes/consulta.xhtml")
-                .build();
-
-        pacientesSub.getElements().add(misPacientes);
-        pacientesSub.getElements().add(nuevaConsulta);
+        pacientesSub.getElements().add(
+                DefaultMenuItem.builder()
+                        .value("Nueva Consulta")
+                        .icon("pi pi-plus-circle")
+                        .outcome("/views/medic/consulta.xhtml" + redirect)
+                        .build()
+        );
         menuModel.getElements().add(pacientesSub);
 
         // === RECETAS (Submenú) ===
@@ -55,32 +61,38 @@ public class MedicMenuBean implements Serializable {
                 .icon("pi pi-file")
                 .build();
 
-        DefaultMenuItem emitirReceta = DefaultMenuItem.builder()
-                .value("Emitir Receta")
-                .icon("pi pi-pencil")
-                .url("/views/medic/recetas/emitir.xhtml")
-                .build();
+        recetasSub.getElements().add(
+                DefaultMenuItem.builder()
+                        .value("Emitir Receta")
+                        .icon("pi pi-pencil")
+                        .outcome("/views/medic/dashboard.xhtml" + redirect)
+                        .build()
+        );
 
-        DefaultMenuItem misRecetas = DefaultMenuItem.builder()
-                .value("Mis Recetas")
-                .icon("pi pi-book")
-                .url("/views/medic/recetas/mis-recetas.xhtml")
-                .build();
-
-        recetasSub.getElements().add(emitirReceta);
-        recetasSub.getElements().add(misRecetas);
+        recetasSub.getElements().add(
+                DefaultMenuItem.builder()
+                        .value("Mis Recetas")
+                        .icon("pi pi-book")
+                        .outcome("/views/medic/dashboard.xhtml" + redirect)
+                        .build()
+        );
         menuModel.getElements().add(recetasSub);
 
         // === RESULTADOS ===
-        DefaultMenuItem resultados = DefaultMenuItem.builder()
-                .value("Ver Exámenes")
-                .icon("pi pi-chart-bar")
-                .url("/views/medic/resultados/lista.xhtml")
-                .build();
-        menuModel.getElements().add(resultados);
+        menuModel.getElements().add(
+                DefaultMenuItem.builder()
+                        .value("Ver Exámenes")
+                        .icon("pi pi-chart-bar")
+                        .outcome("/views/medic/dashboard.xhtml" + redirect)
+                        .build()
+        );
     }
 
     public MenuModel getMenuModel() {
         return menuModel;
+    }
+
+    public void setMenuModel(MenuModel menuModel) {
+        this.menuModel = menuModel;
     }
 }

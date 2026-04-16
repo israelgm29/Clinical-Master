@@ -244,62 +244,91 @@ public class VitalsignController implements Serializable {
         return userSession.getUser() != null ? userSession.getUser().getId() : null;
     }
 
-    /**
-     * Retorna clase CSS según rango normal/anormal
-     */
-    public String getTemperatureClass(String temp) {
-        if (temp == null) {
-            return "";
+    public enum TriagePriority {
+        EMERGENCIA("Rojo - Emergencia", "vital-danger"),
+        URGENCIA("Naranja - Urgencia", "vital-warning"),
+        PRIORITARIO("Amarillo - Prioritario", "vital-warning"),
+        ESTABLE("Verde - Estable", "vital-normal");
+
+        private final String label;
+        private final String styleClass;
+
+        TriagePriority(String label, String styleClass) {
+            this.label = label;
+            this.styleClass = styleClass;
         }
-        try {
-            double value = Double.parseDouble(temp);
-            if (value >= 37.5) {
-                return "vital-warning";  // Fiebre
-            }
-            if (value < 36.0) {
-                return "vital-danger";    // Hipotermia
-            }
-            return "vital-normal";
-        } catch (NumberFormatException e) {
-            return "";
+
+        public String getLabel() {
+            return label;
+        }
+
+        public String getStyleClass() {
+            return styleClass;
         }
     }
 
-    public String getSpo2Class(String spo2) {
-        if (spo2 == null) {
-            return "";
+    // 2. Método de conversión segura (Varchar a Double)
+    private double safeParse(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return 0.0;
         }
         try {
-            double value = Double.parseDouble(spo2);
-            if (value < 90) {
-                return "vital-danger";     // Crítico
-            }
-            if (value < 95) {
-                return "vital-warning";    // Precaución
-            }
-            return "vital-normal";
+            return Double.parseDouble(value.replace(",", "."));
         } catch (NumberFormatException e) {
-            return "";
+            return 0.0;
         }
     }
 
-    public String getPressureClass(String systolic, String diastolic) {
-        if (systolic == null || diastolic == null) {
+    // 3. Lógica de Triaje (Formato compatible 100% con Java 21 estable)
+    public TriagePriority getCalculatedTriage() {
+        if (newVitalsign == null) {
+            return TriagePriority.ESTABLE;
+        }
+
+        double temp = safeParse(newVitalsign.getTemperature());
+        double oxygen = safeParse(newVitalsign.getOxygensaturation());
+        double pulse = safeParse(newVitalsign.getPulse());
+        double sys = safeParse(newVitalsign.getSystolicpressure());
+
+        // Lógica de decisión clínica
+        if (temp >= 39.5 || (oxygen > 0 && oxygen < 88) || sys >= 180) {
+            return TriagePriority.EMERGENCIA;
+        } else if (temp >= 38.5 || (oxygen > 0 && oxygen < 92) || sys >= 140) {
+            return TriagePriority.URGENCIA;
+        } else if (temp >= 37.5 || pulse > 110) {
+            return TriagePriority.PRIORITARIO;
+        } else {
+            return TriagePriority.ESTABLE;
+        }
+    }
+
+    // 4. Tus métodos de colores para las celdas de la tabla (Corregidos)
+    public String getTemperatureClass(String tempStr) {
+        double temp = safeParse(tempStr);
+        if (temp == 0.0) {
             return "";
         }
-        try {
-            int sys = Integer.parseInt(systolic);
-            int dia = Integer.parseInt(diastolic);
-            if (sys >= 140 || dia >= 90) {
-                return "vital-danger";   // Hipertensión
-            }
-            if (sys < 90 || dia < 60) {
-                return "vital-warning";    // Hipotensión
-            }
-            return "vital-normal";
-        } catch (NumberFormatException e) {
+        if (temp >= 38.5 || temp < 35.5) {
+            return "vital-danger";
+        }
+        if (temp >= 37.5) {
+            return "vital-warning";
+        }
+        return "vital-normal";
+    }
+
+    public String getSpo2Class(String spo2Str) {
+        double spo2 = safeParse(spo2Str);
+        if (spo2 == 0.0) {
             return "";
         }
+        if (spo2 < 90) {
+            return "vital-danger";
+        }
+        if (spo2 < 94) {
+            return "vital-warning";
+        }
+        return "vital-normal";
     }
 
     // ==================== GETTERS ====================

@@ -13,52 +13,67 @@ import java.io.Serializable;
 @SessionScoped
 public class NurseMenuBean implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private MenuModel menuModel;
 
     @PostConstruct
     public void init() {
         menuModel = new DefaultMenuModel();
 
-        // === DASHBOARD ===
-        DefaultMenuItem dashboard = DefaultMenuItem.builder()
-                .value("Dashboard Enfermería")
-                .icon("pi pi-home")
-                .url("/views/nurse/Dashboard.xhtml")
-                .build();
-        menuModel.getElements().add(dashboard);
+        // Al usar *.xhtml en web.xml, JSF maneja el contexto automáticamente.
+        // Mantenemos la extensión .xhtml para mayor claridad en el resultado.
+        String redirect = "?faces-redirect=true";
 
-        // === PACIENTES ===
+        // === DASHBOARD ===
+        menuModel.getElements().add(
+                DefaultMenuItem.builder()
+                        .value("Dashboard Enfermería")
+                        .icon("pi pi-home")
+                        .outcome("/views/nurse/dashboard.xhtml" + redirect)
+                        .build()
+        );
+
+        // === SUBMENÚ PACIENTES ===
         DefaultSubMenu pacientesSub = DefaultSubMenu.builder()
                 .label("Pacientes")
                 .icon("pi pi-users")
                 .build();
 
-        DefaultMenuItem recepcion = DefaultMenuItem.builder()
-                .value("Recepción")
-                .icon("pi pi-user-plus")
-                .url("/views/nurse/Dashboard.xhtml")
-                .build();
+        // Gestión de Pacientes
+        pacientesSub.getElements().add(
+                DefaultMenuItem.builder()
+                        .value("Gestión de Pacientes")
+                        .icon("pi pi-user-plus")
+                        .outcome("/views/nurse/gestion-pacientes.xhtml" + redirect)
+                        .build()
+        );
 
-        DefaultMenuItem signosVitales = DefaultMenuItem.builder()
-                .value("Signos Vitales")
-                .icon("pi pi-heart")
-                .url("/views/nurse/Dashboard.xhtml")
-                .build();
+        // Signos Vitales (temporalmente al dashboard según tu lógica)
+        pacientesSub.getElements().add(
+                DefaultMenuItem.builder()
+                        .value("Signos Vitales")
+                        .icon("pi pi-heart")
+                        .outcome("/views/nurse/dashboard.xhtml" + redirect)
+                        .build()
+        );
 
-        pacientesSub.getElements().add(recepcion);
-        pacientesSub.getElements().add(signosVitales);
         menuModel.getElements().add(pacientesSub);
 
         // === REPORTES ===
-        DefaultMenuItem reportes = DefaultMenuItem.builder()
-                .value("Reportes")
-                .icon("pi pi-chart-line")
-                .url("/views/nurse/reportes/lista.xhtml")
-                .build();
-        menuModel.getElements().add(reportes);
+        menuModel.getElements().add(
+                DefaultMenuItem.builder()
+                        .value("Reportes")
+                        .icon("pi pi-chart-line")
+                        .outcome("/views/nurse/reportes/lista.xhtml" + redirect)
+                        .build()
+        );
     }
 
     public MenuModel getMenuModel() {
         return menuModel;
+    }
+
+    public void setMenuModel(MenuModel menuModel) {
+        this.menuModel = menuModel;
     }
 }

@@ -335,7 +335,7 @@ public class Medic implements Serializable {
 
     // Helper profesional para la vista
     public String getFullName() {
-        return (lastname != null ? lastname.toUpperCase() : "") + " " + (firstname != null ? firstname : "");
+        return (lastname != null ? lastname : "") + " " + (firstname != null ? firstname : "");
     }
 
     // Helper para obtener las especialidades como una sola cadena de texto

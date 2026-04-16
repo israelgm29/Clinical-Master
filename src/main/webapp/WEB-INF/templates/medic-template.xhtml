@@ -21,12 +21,14 @@
 
         <!-- CSS -->
         <h:outputStylesheet library="css" name="jsfcrud.css"/>
+        <h:outputStylesheet library="css" name="topbar.css"/>
         <ui:insert name="head"/>
     </h:head>
 
     <h:body>
 
         <div class="medic-layout">
+            <ui:include src="/WEB-INF/topbars/top-navbar.xhtml"/>
 
             <!-- SIDEBAR -->
              <ui:include src="/WEB-INF/sidebars/medic-sidebar.xhtml"/>

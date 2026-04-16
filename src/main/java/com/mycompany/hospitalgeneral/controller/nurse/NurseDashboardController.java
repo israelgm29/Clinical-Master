@@ -4,11 +4,9 @@ import com.mycompany.hospitalgeneral.model.Medic;
 import com.mycompany.hospitalgeneral.model.Medicalrecord;
 import com.mycompany.hospitalgeneral.model.Patient;
 import com.mycompany.hospitalgeneral.model.Tuser;
-import com.mycompany.hospitalgeneral.model.Option;
 import com.mycompany.hospitalgeneral.model.Vitalsign;
 import com.mycompany.hospitalgeneral.services.MedicService;
 import com.mycompany.hospitalgeneral.services.MedicalRecordService;
-import com.mycompany.hospitalgeneral.services.OptionService;
 import com.mycompany.hospitalgeneral.services.PatientService;
 import com.mycompany.hospitalgeneral.session.UserSession;
 import com.mycompany.hospitalgeneral.session.ConsultationContext;
@@ -21,13 +19,11 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import org.primefaces.PrimeFaces;
 
 @Named
-
 @ViewScoped
 public class NurseDashboardController implements Serializable {
 
@@ -41,9 +37,6 @@ public class NurseDashboardController implements Serializable {
     private MedicalRecordService medicalRecordService;
 
     @Inject
-    private OptionService optionService;
-
-    @Inject
     private MedicService medicService;
 
     // === SESSION ===
@@ -55,47 +48,31 @@ public class NurseDashboardController implements Serializable {
 
     private Tuser currentUser;
 
-    // === CATÁLOGOS ===
-    private List<Option> genders;
-    private List<Option> bloodTypes;
-    private List<Option> civilStatusList;
-
     // === LISTAS DASHBOARD ===
-    private List<Medicalrecord> waitingForVitalsigns;
-    private List<Medicalrecord> waitingForMedic;
+    private List<Medicalrecord> waitingForVitalsigns;  // Pendientes de signos vitales
+    private List<Medicalrecord> waitingForMedic;       // Con signos vitales, esperando médico
+    private List<Medicalrecord> attendedToday;         // Atendidos hoy (médico finalizó)
 
     // === BÚSQUEDA ===
     private String searchQuery;
     private List<Patient> searchResults;
     private boolean showSearchResults = false;
 
-    // === NUEVO PACIENTE ===
-    private Patient newPatient;
-    private String newPatientReason;
-    private boolean showNewPatientForm = false;
-
+    // === ASIGNACIÓN DE MÉDICO ===
     private Medic selectedMedicForAssignment;
     private List<Medic> availableMedics;
     private Patient pendingPatient;
 
+    // ==================== INIT ====================
     @PostConstruct
-
     public void init() {
         loadCurrentUser();
-
-        // Catálogos
-        this.genders = optionService.findByGroup(3);
-        this.bloodTypes = optionService.findByGroup(1);
-        this.civilStatusList = optionService.findByGroup(2);
-
         loadAllLists();
-        initNewPatient();
     }
 
     // ==================== SESSION ====================
     private void loadCurrentUser() {
         currentUser = userSession.getUser();
-
         if (currentUser == null) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -108,20 +85,31 @@ public class NurseDashboardController implements Serializable {
     }
 
     // ==================== LISTAS ====================
+    public void loadPendingForVitalsigns() {
+        waitingForVitalsigns = medicalRecordService.findPendingForVitalsigns();
+    }
+
     public void loadWaitingPatients() {
         waitingForMedic = medicalRecordService.findWaitingForMedic();
     }
 
-    public void loadPendingForVitalsigns() {
-        waitingForVitalsigns = medicalRecordService.findPendingForVitalsigns();
+    public void loadAttendedToday() {
+        // Requiere: medicalRecordService.findAttendedToday()
+        // Query sugerida (ver comentario al final del archivo)
+        attendedToday = medicalRecordService.findAttendedToday();
     }
 
     public void loadAllLists() {
         loadPendingForVitalsigns();
         loadWaitingPatients();
+        loadAttendedToday();
     }
 
     // ==================== BÚSQUEDA ====================
+    /**
+     * Busca pacientes YA REGISTRADOS por DNI, HC o nombre. El registro de
+     * nuevos pacientes se gestiona desde otra pantalla.
+     */
     public void searchPatient() {
         if (searchQuery == null || searchQuery.trim().isEmpty()) {
             FacesContext.getCurrentInstance().addMessage(null,
@@ -132,18 +120,26 @@ public class NurseDashboardController implements Serializable {
 
         searchResults = patientService.searchFlexible(searchQuery.trim());
         showSearchResults = true;
-        showNewPatientForm = false;
 
         if (searchResults.isEmpty()) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO,
                             "No encontrado",
-                            "No existe paciente. Puede registrar uno nuevo."));
-            showNewPatientForm = true;
+                            "Paciente no encontrado. Regístrelo desde la pantalla de pacientes."));
         }
     }
 
+    public void clearSearch() {
+        searchQuery = null;
+        searchResults = null;
+        showSearchResults = false;
+    }
+
     // ==================== SELECCIÓN PACIENTE ====================
+    /**
+     * Crea el registro médico y navega a signos vitales. Se llama desde el
+     * modal después de seleccionar médico.
+     */
     public String selectPatientAndCreateRecord(Patient patient) {
         if (patient == null) {
             patient = this.pendingPatient;
@@ -155,6 +151,7 @@ public class NurseDashboardController implements Serializable {
                             "Atención", "Debe seleccionar un médico primero"));
             return null;
         }
+
         try {
             Medicalrecord record = new Medicalrecord();
             record.setPatientid(patient);
@@ -163,7 +160,6 @@ public class NurseDashboardController implements Serializable {
 
             medicalRecordService.saveForNurse(record, getCurrentUserId());
 
-            // ✅ Guardar en contexto (NO HttpSession)
             consultationContext.setCurrentMedicalRecord(record);
             consultationContext.setCurrentPatient(patient);
             consultationContext.setCurrentMedic(selectedMedicForAssignment);
@@ -178,83 +174,19 @@ public class NurseDashboardController implements Serializable {
         }
     }
 
-    // ==================== NUEVO PACIENTE ====================
-    private void initNewPatient() {
-        newPatient = new Patient();
-        newPatientReason = "";
-    }
-
-    public void showNewPatientForm() {
-        showNewPatientForm = true;
-        showSearchResults = false;
-        initNewPatient();
-    }
-
-    public String registerNewPatientAndCreateRecord() {
-        try {
-            if (newPatient.getFirstname() == null || newPatient.getFirstname().trim().isEmpty()
-                    || newPatient.getLastname() == null || newPatient.getLastname().trim().isEmpty()) {
-
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                                "Error", "Nombre y apellido son obligatorios"));
-                return null;
-            }
-
-            newPatient.setHc(patientService.generateNextHc());
-            newPatient.setCreatedat(LocalDateTime.now());
-            newPatient.setCreatedby(getCurrentUserId());
-
-            patientService.save(newPatient);
-
-            Medicalrecord record = new Medicalrecord();
-            record.setPatientid(newPatient);
-            record.setReason(newPatientReason != null ? newPatientReason : "");
-            record.setMedicid(selectedMedicForAssignment);
-            
-            medicalRecordService.saveForNurse(record, getCurrentUserId());
-
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO,
-                            "Éxito", "Paciente registrado: " + newPatient.getHc()));
-
-            // Contexto compartido
-            consultationContext.setCurrentMedicalRecord(record);
-            consultationContext.setCurrentPatient(newPatient);
-
-            return "/views/nurse/signos-vitales.xhtml?faces-redirect=true";
-
-        } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", e.getMessage()));
-            return null;
-        }
-    }
-
-    // ==================== SELECCION DE MEDICO ====================
+    // ==================== SELECCIÓN DE MÉDICO ====================
     /**
-     * Carga médicos disponibles y muestra modal
-     *
-     * @param patient
+     * Carga médicos disponibles y abre el modal de asignación.
      */
     public void prepareMedicAssignment(Patient patient) {
-
         this.pendingPatient = patient;
         this.selectedMedicForAssignment = null;
         this.availableMedics = medicService.findAllActive();
-
         PrimeFaces.current().executeScript("PF('medicDialog').show()");
     }
 
     // ==================== NAVEGACIÓN ====================
     public String startVitalSigns(Medicalrecord record) {
-        consultationContext.setCurrentMedicalRecord(record);
-        consultationContext.setCurrentPatient(record.getPatientid());
-        return "/views/nurse/signos-vitales.xhtml?faces-redirect=true";
-    }
-
-    public String viewOnlyVitalSigns(Medicalrecord record) {
         consultationContext.setCurrentMedicalRecord(record);
         consultationContext.setCurrentPatient(record.getPatientid());
         return "/views/nurse/signos-vitales.xhtml?faces-redirect=true";
@@ -268,23 +200,22 @@ public class NurseDashboardController implements Serializable {
         return java.time.Period.between(birthDate, java.time.LocalDate.now()).getYears();
     }
 
+    public Vitalsign lastVitalSign(Medicalrecord record) {
+        if (record == null || record.getVitalsignCollection() == null
+                || record.getVitalsignCollection().isEmpty()) {
+            return null;
+        }
+        return record.getVitalsignCollection()
+                .stream()
+                .max(Comparator.comparing(Vitalsign::getCreatedat))
+                .orElse(null);
+    }
+
     public void refresh() {
         loadAllLists();
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO,
                         "Actualizado", "Listas refrescadas"));
-    }
-
-    public Vitalsign lastVitalSign(Medicalrecord record) {
-        if (record == null || record.getVitalsignCollection() == null || record.getVitalsignCollection().isEmpty()) {
-            return null;
-        }
-        // Si quieres el último, puedes usar un stream o lista ordenada
-        return record.getVitalsignCollection()
-                .stream()
-                .max(Comparator.comparing(Vitalsign::getCreatedat))
-                .orElse(null);
-
     }
 
     // ==================== GETTERS / SETTERS ====================
@@ -294,6 +225,10 @@ public class NurseDashboardController implements Serializable {
 
     public List<Medicalrecord> getWaitingForMedic() {
         return waitingForMedic;
+    }
+
+    public List<Medicalrecord> getAttendedToday() {
+        return attendedToday;
     }
 
     public String getSearchQuery() {
@@ -312,71 +247,31 @@ public class NurseDashboardController implements Serializable {
         return showSearchResults;
     }
 
-    public boolean isShowNewPatientForm() {
-        return showNewPatientForm;
-    }
-
-    public Patient getNewPatient() {
-        return newPatient;
-    }
-
-    public void setNewPatient(Patient p) {
-        this.newPatient = p;
-    }
-
-    public String getNewPatientReason() {
-        return newPatientReason;
-    }
-
-    public void setNewPatientReason(String r) {
-        this.newPatientReason = r;
-    }
-
     public Tuser getCurrentUser() {
         return currentUser;
-    }
-
-    public void setShowNewPatientForm(boolean show) {
-        this.showNewPatientForm = show;
-        if (!show) {
-            initNewPatient();
-        }
-    }
-
-    public List<Option> getGenders() {
-        return genders;
-    }
-
-    public List<Option> getBloodTypes() {
-        return bloodTypes;
-    }
-
-    public List<Option> getCivilStatusList() {
-        return civilStatusList;
     }
 
     public Patient getPendingPatient() {
         return pendingPatient;
     }
 
-    public void setPendingPatient(Patient pendingPatient) {
-        this.pendingPatient = pendingPatient;
+    public void setPendingPatient(Patient p) {
+        this.pendingPatient = p;
     }
 
     public Medic getSelectedMedicForAssignment() {
         return selectedMedicForAssignment;
     }
 
-    public void setSelectedMedicForAssignment(Medic selectedMedicForAssignment) {
-        this.selectedMedicForAssignment = selectedMedicForAssignment;
+    public void setSelectedMedicForAssignment(Medic m) {
+        this.selectedMedicForAssignment = m;
     }
 
     public List<Medic> getAvailableMedics() {
         return availableMedics;
     }
 
-    public void setAvailableMedics(List<Medic> availableMedics) {
-        this.availableMedics = availableMedics;
+    public void setAvailableMedics(List<Medic> list) {
+        this.availableMedics = list;
     }
-
 }

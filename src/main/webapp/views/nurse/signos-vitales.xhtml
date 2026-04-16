@@ -42,6 +42,20 @@
                         </div>
                     </div>
                 </h:panelGroup>
+                <p:outputPanel id="triageIndicator" style="margin-bottom: 24px;">
+                    <div class="card" style="padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px;
+                         background-color: #f8f9fa; display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <h3 style="margin: 0; color: #444;">Prioridad de Atención Sugerida</h3>
+                            <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #666;">Basado en los parámetros ingresados</p>
+                        </div>
+                        <p:tag severity="#{vitalsignController.calculatedTriage.styleClass.contains('danger') ? 'danger' : 
+                                           (vitalsignController.calculatedTriage.styleClass.contains('warning') ? 'warning' : 'success')}"
+                               value="#{vitalsignController.calculatedTriage.label}"
+                               rounded="true"
+                               style="font-size: 1.2rem; padding: 10px 20px;"/>
+                    </div>
+                </p:outputPanel>
 
                 <!-- Formulario de signos vitales -->
                 <div class="card" style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border);">
@@ -56,7 +70,9 @@
                             <p:outputLabel for="temp" value="Temperatura (°C)"/>
                             <p:inputText id="temp" value="#{vitalsignController.newVitalsign.temperature}"
                                          style="width:100%"
-                                         placeholder="Ej: 36.5"/>
+                                         placeholder="Ej: 36.5">
+                                <p:ajax event="keyup" update="triageIndicator" process="@this" delay="500"/>
+                            </p:inputText>
                         </div>
 
                         <div class="field">
@@ -156,10 +172,10 @@
                                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="localDateTime"/>
                                 </h:outputText>
                             </p:column>
-                            <p:column headerText="Temp." style="width:70px; text-align:center">
-                                <span class="#{vitalsignController.getTemperatureClass(v.temperature)}">
-                                    #{v.temperature}°C
-                                </span>
+                            <p:column headerText="Temp" styleClass="#{vitalsignController.getTemperatureClass(v.temperature)}">
+                                <h:outputText value="#{v.temperature}">
+                                    <f:convertNumber pattern="#0.0 '°C'"/>
+                                </h:outputText>
                             </p:column>
                             <p:column headerText="Presión" style="width:90px; text-align:center">
                                 #{v.systolicpressure}/#{v.diastolicpressure}
@@ -167,10 +183,8 @@
                             <p:column headerText="Pulso" style="width:70px; text-align:center">
                                 #{v.pulse}
                             </p:column>
-                            <p:column headerText="SpO2" style="width:70px; text-align:center">
-                                <span class="#{vitalsignController.getSpo2Class(v.oxygensaturation)}">
-                                    #{v.oxygensaturation}%
-                                </span>
+                            <p:column headerText="SpO2" styleClass="#{vitalsignController.getSpo2Class(v.oxygensaturation)}">
+                                <h:outputText value="#{v.oxygensaturation}%"/>
                             </p:column>
                             <p:column headerText="Peso/Talla" style="width:100px; text-align:center">
                                 #{v.weight}kg / #{v.tall}cm

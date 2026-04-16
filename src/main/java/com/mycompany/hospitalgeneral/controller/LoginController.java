@@ -54,7 +54,7 @@ public class LoginController {
                 return null;
             }
 
-            // ✅ GUARDAR EN SESSION BEAN (NO HttpSession)
+            // ✅ GUARDAR EN SESSION BEAN
             session.setUser(user);
 
             // ✅ Cargar entidad según rol
@@ -65,18 +65,21 @@ public class LoginController {
                 session.setMedic(medic);
             }
 
-            // 🔁 Redirección
+            // 🔁 Redirección (REFACTORIZADA: Sin el prefijo /faces)
+            String redirect = "?faces-redirect=true";
+
             switch (role) {
                 case "Administración":
-                    return "/faces/views/admin/dashboard.xhtml?faces-redirect=true";
+                    return "/views/admin/dashboard.xhtml" + redirect;
                 case "Médico":
-                    return "/faces/views/medic/dashboard.xhtml?faces-redirect=true";
+                    return "/views/medic/dashboard.xhtml" + redirect;
                 case "Enfermería":
-                    return "/faces/views/nurse/dashboard.xhtml?faces-redirect=true";
+                    return "/views/nurse/dashboard.xhtml" + redirect;
                 case "Analista":
-                    return "/faces/views/analista/dashboard.xhtml?faces-redirect=true";
+                    return "/views/analista/dashboard.xhtml" + redirect;
                 default:
-                    return "/faces/views/medic/dashboard.xhtml?faces-redirect=true";
+                    // Es preferible redirigir a una página de error o al login si el rol no existe
+                    return "/login.xhtml" + redirect;
             }
 
         } catch (Exception e) {
