@@ -1,5 +1,6 @@
 package com.mycompany.hospitalgeneral.model;
 
+import com.mycompany.hospitalgeneral.services.interfaces.DisplayUser;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -56,7 +57,7 @@ import jakarta.persistence.Transient;
     )
 
 })
-public class Medic implements Serializable {
+public class Medic implements Serializable, DisplayUser{
 
     private static final long serialVersionUID = 1L;
 
@@ -229,6 +230,7 @@ public class Medic implements Serializable {
         this.mobile = mobile;
     }
 
+    @Override
     public String getEmail() {
         return email;
     }
@@ -334,6 +336,7 @@ public class Medic implements Serializable {
     }
 
     // Helper profesional para la vista
+    @Override
     public String getFullName() {
         return (lastname != null ? lastname : "") + " " + (firstname != null ? firstname : "");
     }
@@ -371,5 +374,15 @@ public class Medic implements Serializable {
     @Override
     public String toString() {
         return "Medic[ id=" + id + ", name=" + getFullName() + " ]";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return firstname;
+    }
+
+    @Override
+    public String getRoleName() {
+        return this.userid.getRoleName() ;
     }
 }

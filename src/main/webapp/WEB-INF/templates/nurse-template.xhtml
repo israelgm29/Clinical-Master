@@ -3,11 +3,11 @@
       xmlns:h="jakarta.faces.html"
       xmlns:ui="jakarta.faces.facelets"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:f="jakarta.faces.core">
+      xmlns:nav="jakarta.faces.composite/components">
 
     <h:head>
         <meta charset="UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" lang="es"/>
         <title>
             <ui:insert name="title">Enfermería - Hospital General</ui:insert>
         </title>
@@ -26,6 +26,7 @@
 
     <h:body>
         <div class="medic-layout">
+            <nav:navbar sidebarId="medicNavbar" showNotifications="true" user="#{userSession.displayProfile}"/>
 
             <!-- SIDEBAR -->
             <ui:include src="/WEB-INF/sidebars/nurse-sidebar.xhtml"/>

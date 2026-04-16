@@ -1,5 +1,6 @@
 package com.mycompany.hospitalgeneral.model;
 
+import com.mycompany.hospitalgeneral.services.interfaces.DisplayUser;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,7 +29,7 @@ import java.util.Date;
     @NamedQuery(name = "Tuser.findByEmail", query = "SELECT t FROM Tuser t WHERE t.email = :email AND (t.deleted = false OR t.deleted IS NULL)"),
     @NamedQuery(name = "Tuser.findByIsactive", query = "SELECT t FROM Tuser t WHERE t.isactive = :isactive AND (t.deleted = false OR t.deleted IS NULL)")
 })
-public class Tuser implements Serializable {
+public class Tuser implements Serializable, DisplayUser {
 
     private static final long serialVersionUID = 1L;
 
@@ -145,6 +146,7 @@ public class Tuser implements Serializable {
         this.id = id;
     }
 
+    @Override
     public String getEmail() {
         return email;
     }
@@ -290,5 +292,23 @@ public class Tuser implements Serializable {
     @Override
     public String toString() {
         return "Tuser[ id=" + id + ", email=" + email + " ]";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return this.profileid.getFirstname() + this.profileid.getLastname();
+    }
+
+    @Override
+    public String getRoleName() {
+        return this.roleid.getName();
+    }
+
+    @Override
+    public String getFullName() {
+        if (this.profileid != null) {
+            return this.profileid.getFirstname()+ " " + this.profileid.getLastname();
+        }
+        return "Usuario sin Perfil"; // O un valor por defecto
     }
 }
