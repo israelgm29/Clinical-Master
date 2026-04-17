@@ -22,13 +22,16 @@
         <!-- CSS -->
         <h:outputStylesheet library="css" name="jsfcrud.css"/>
         <h:outputStylesheet library="css" name="topbar.css"/>
+        <h:outputStylesheet library="css" name="profile.css"/>
+        
+        
         <ui:insert name="head"/>
     </h:head>
 
     <h:body>
 
         <div class="medic-layout">
-            <nav:navbar sidebarId="medicNavbar" showNotifications="true" user="#{userSession.displayProfile}"/>
+            <nav:navbar sidebarId="medicNavbar" showNotifications="true" user="#{userSession.user}"/>
 
             <!-- SIDEBAR -->
              <ui:include src="/WEB-INF/sidebars/medic-sidebar.xhtml"/>

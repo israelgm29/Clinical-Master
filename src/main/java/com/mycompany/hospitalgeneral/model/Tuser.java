@@ -1,6 +1,7 @@
 package com.mycompany.hospitalgeneral.model;
 
 import com.mycompany.hospitalgeneral.services.interfaces.DisplayUser;
+import com.mycompany.hospitalgeneral.services.interfaces.ProfileData;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,9 +20,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 @Entity
+
 @Table(name = "tuser")
 @NamedQueries({
     @NamedQuery(name = "Tuser.findAll", query = "SELECT t FROM Tuser t WHERE t.deleted = false OR t.deleted IS NULL"),
@@ -29,7 +34,7 @@ import java.util.Date;
     @NamedQuery(name = "Tuser.findByEmail", query = "SELECT t FROM Tuser t WHERE t.email = :email AND (t.deleted = false OR t.deleted IS NULL)"),
     @NamedQuery(name = "Tuser.findByIsactive", query = "SELECT t FROM Tuser t WHERE t.isactive = :isactive AND (t.deleted = false OR t.deleted IS NULL)")
 })
-public class Tuser implements Serializable, DisplayUser {
+public class Tuser implements Serializable, DisplayUser, ProfileData {
 
     private static final long serialVersionUID = 1L;
 
@@ -151,6 +156,7 @@ public class Tuser implements Serializable, DisplayUser {
         return email;
     }
 
+    @Override
     public void setEmail(String email) {
         this.email = email;
     }
@@ -163,10 +169,12 @@ public class Tuser implements Serializable, DisplayUser {
         this.password = password;
     }
 
+    @Override
     public boolean getIsactive() {
         return isactive;
     }
 
+    @Override
     public void setIsactive(boolean isactive) {
         this.isactive = isactive;
     }
@@ -307,8 +315,162 @@ public class Tuser implements Serializable, DisplayUser {
     @Override
     public String getFullName() {
         if (this.profileid != null) {
-            return this.profileid.getFirstname()+ " " + this.profileid.getLastname();
+            return this.profileid.getFirstname() + " " + this.profileid.getLastname();
         }
         return "Usuario sin Perfil"; // O un valor por defecto
+    }
+
+    @Override
+    public String getFirstName() {
+        return this.profileid != null ? this.profileid.getFirstname() : null;
+    }
+
+    @Override
+    public void setFirstName(String firstName) {
+        if (this.profileid != null) {
+            this.profileid.setFirstname(firstName);
+        }
+    }
+
+    @Override
+    public String getLastName() {
+        return this.profileid != null ? this.profileid.getLastname() : null;
+    }
+
+    @Override
+    public void setLastName(String lastName) {
+        if (this.profileid != null) {
+            this.profileid.setLastname(lastName);
+        }
+    }
+
+    @Override
+    public String getDni() {
+        return this.profileid != null ? this.profileid.getDni() : null;
+    }
+
+    @Override
+    public void setDni(String dni) {
+        if (this.profileid != null) {
+            this.profileid.setDni(dni);
+        }
+    }
+
+    @Override
+    public String getPassport() {
+        return this.profileid != null ? this.profileid.getPassport() : null;
+    }
+
+    @Override
+    public void setPassport(String passport) {
+        if (this.profileid != null) {
+            this.profileid.setPassport(passport);
+        }
+    }
+
+    @Override
+    public String getTelephone() {
+        return this.profileid != null ? this.profileid.getTelephone() : null;
+    }
+
+    @Override
+    public void setTelephone(String telephone) {
+        if (this.profileid != null) {
+            this.profileid.setTelephone(telephone);
+        }
+    }
+
+    @Override
+    public String getMobile() {
+        return this.profileid != null ? this.profileid.getMobile() : null;
+    }
+
+    @Override
+    public void setMobile(String mobile) {
+        if (this.profileid != null) {
+            this.profileid.setMobile(mobile);
+        }
+    }
+
+    @Override
+    public String getAddress() {
+        return this.profileid != null ? this.profileid.getAddress() : null;
+    }
+
+    @Override
+    public void setAddress(String address) {
+        if (this.profileid != null) {
+            this.profileid.setAddress(address);
+        }
+    }
+
+    @Override
+    public String getImageUrl() {
+        return this.profileid != null ? this.profileid.getImage() : null;
+    }
+
+    @Override
+    public void setImageUrl(String imageUrl) {
+        if (this.profileid != null) {
+            this.profileid.setImage(imageUrl);
+        }
+    }
+
+    @Override
+    public boolean isMedic() {
+        return "Médico".equals(getRoleName()) && this.medic != null;
+    }
+
+    @Override
+    public String getProfessionalId() {
+        if (isMedic() && this.medic != null) {
+            return this.medic.getRegprofessional();
+        }
+        return null;
+    }
+
+    @Override
+    public void setProfessionalId(String professionalId) {
+        if (isMedic() && this.medic != null) {
+            this.medic.setRegprofessional(professionalId);
+        }
+    }
+
+    @Override
+    public List<String> getSpecialties() {
+        if (isMedic() && this.medic != null) {
+            String specialties = this.medic.getSpecialtiesNames();
+            if (specialties != null && !specialties.isEmpty()) {
+                return Arrays.asList(specialties.split(",\\s*"));
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public LocalDateTime getCreatedAt() {
+        return this.createdat;
+    }
+
+    @Override
+    public LocalDateTime getUpdatedAt() {
+        if (this.editedat != null) {
+            return this.editedat;
+        }
+        if (this.profileid != null && this.profileid.getEditedat() != null) {
+            return this.profileid.getEditedat();
+        }
+        return this.createdat;
+
+    }
+
+    @Override
+    public String getInitials() {
+        return ProfileData.super.getInitials(); 
+    }
+
+    @Override
+    public boolean hasProfileImage() {
+        return ProfileData.super.hasProfileImage();
     }
 }

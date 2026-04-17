@@ -5,6 +5,7 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+import jakarta.transaction.Transactional;
 
 @Stateless
 public class TuserService {
@@ -31,4 +32,11 @@ public class TuserService {
     public Tuser findById(Integer id) {
         return em.find(Tuser.class, id);
     }
+
+    @Transactional
+    public Tuser update(Tuser editingUser) {
+       return em.merge(editingUser);
+         
+    }
+
 }

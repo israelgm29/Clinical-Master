@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:clinical="jakarta.faces.composite/components"
+      xmlns:f="jakarta.faces.core">
+    <f:metadata>
+        <f:viewParam name="mode" value="#{profileController.modeFromUrl}" />
+        <f:viewAction action="#{profileController.initializeFromUrl}" />
+    </f:metadata>
+
+    <ui:composition template="/WEB-INF/templates/medic-template.xhtml">
+
+        <ui:define name="content">
+            <clinical:profile data="#{userSession.user}" 
+                              mode="#{empty profileController.modeFromUrl ? 'VIEW' : profileController.modeFromUrl}"
+                              showAudit="true" />
+        </ui:define>
+
+    </ui:composition>
+</html>

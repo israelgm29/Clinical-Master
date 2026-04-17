@@ -57,7 +57,7 @@ import jakarta.persistence.Transient;
     )
 
 })
-public class Medic implements Serializable, DisplayUser{
+public class Medic implements Serializable, DisplayUser {
 
     private static final long serialVersionUID = 1L;
 
@@ -378,11 +378,11 @@ public class Medic implements Serializable, DisplayUser{
 
     @Override
     public String getDisplayName() {
-        return firstname;
+        return firstname + " " + lastname;
     }
 
     @Override
     public String getRoleName() {
-        return this.userid.getRoleName() ;
+        return this.userid.getRoleName();
     }
 }

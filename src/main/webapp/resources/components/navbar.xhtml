@@ -4,7 +4,8 @@
       xmlns:h="jakarta.faces.html"
       xmlns:ui="jakarta.faces.facelets"
       xmlns:p="primefaces"
-      xmlns:cc="jakarta.faces.composite">
+      xmlns:cc="jakarta.faces.composite"
+      xmlns:f="jakarta.faces.core">
 
     <!-- ═══════════════════════════════════════════
          INTERFACE: declara los atributos del componente
@@ -32,14 +33,6 @@
     <cc:implementation>
 
         <header class="top-navbar">
-
-            <!-- Izquierda: Toggle sidebar + Logo -->
-            <div class="navbar-left">
-                <button type="button" class="sidebar-toggle"
-                        onclick="toggleSidebar('#{cc.attrs.sidebarId}')">
-                    <span class="material-symbols-outlined">menu</span>
-                </button>
-            </div>
 
             <!-- Centro: Brand -->
             <div class="navbar-brand">
@@ -109,16 +102,18 @@
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
-                        <a href="#{request.contextPath}/views/medic/profile.xhtml" 
-                           class="menu-item">
+                        <h:link outcome="/views/shared/profile" 
+                                styleClass="menu-item">
+                            <f:param name="mode" value="VIEW" />
                             <span class="material-symbols-outlined">person</span>
                             Mi Perfil
-                        </a>
-                        <a href="#{request.contextPath}/views/medic/settings.xhtml" 
-                           class="menu-item">
+                        </h:link>
+                        <h:link outcome="/views/shared/profile" 
+                                styleClass="menu-item">
+                            <f:param name="mode" value="EDIT" />
                             <span class="material-symbols-outlined">settings</span>
                             Configuración
-                        </a>
+                        </h:link>
                         <div class="dropdown-divider"></div>
                         <h:form>
                             <p:commandLink action="#{loginController.logout}"
@@ -135,10 +130,7 @@
 
         <!-- JavaScript encapsulado en el componente -->
         <script>
-            function toggleSidebar(sidebarId) {
-                document.getElementById(sidebarId).classList.toggle('collapsed');
-                document.body.classList.toggle('sidebar-collapsed');
-            }
+
             function toggleUserMenu() {
                 document.getElementById('userMenu').classList.toggle('show');
                 document.getElementById('notificationsMenu').classList.remove('show');
