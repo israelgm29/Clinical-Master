@@ -1,0 +1,41 @@
+
+/* 
+    Created on : 19 abr 2026, 18:47:25
+    Author     : jhonatan
+*/
+/* ============================================
+   HOSPITAL GENERAL - SISTEMA CLÍNICO
+   nurse.css — Módulo Enfermería
+   Requiere: base.css
+   ============================================ */
+
+/*
+ * Este archivo es el módulo CSS exclusivo del rol Enfermería.
+ * Agrega aquí todos los estilos propios de las vistas de enfermería
+ * usando el prefijo .nurse- para evitar colisiones con otros módulos.
+ *
+ * Estructura sugerida:
+ *   .nurse-layout        → layout principal del módulo
+ *   .nurse-sidebar       → sidebar específico si difiere del genérico
+ *   .nurse-dashboard     → dashboard y tarjetas de enfermería
+ *   .nurse-vitals-form   → formulario de registro de signos vitales
+ *   .nurse-task-list     → listado de tareas / indicaciones
+ */
+
+/* ── Layout enfermería ──────────────────────── */
+.nurse-layout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg);
+}
+
+.nurse-main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    padding: 24px 32px;
+    transition: margin-left 0.3s ease;
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+/* ── Añade aquí los estilos del rol Enfermería ─ */

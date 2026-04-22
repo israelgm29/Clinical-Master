@@ -4,6 +4,7 @@ import com.mycompany.hospitalgeneral.model.Option;
 import com.mycompany.hospitalgeneral.model.Tgroup;
 import com.mycompany.hospitalgeneral.services.OptionService;
 import com.mycompany.hospitalgeneral.services.TgroupService;
+import com.mycompany.hospitalgeneral.session.UserSession;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -13,11 +14,12 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.List;
 import org.primefaces.PrimeFaces;
-import org.primefaces.event.SelectEvent;
 
 @Named
 @ViewScoped
 public class CatalogController implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     private TgroupService tgroupService;
@@ -25,38 +27,33 @@ public class CatalogController implements Serializable {
     @Inject
     private OptionService optionService;
 
-    // Para Tgroup (Master) - SIN auditoría
+    @Inject
+    private UserSession userSession;
+
+    // Para Tgroup (Master)
     private List<Tgroup> groups;
     private Tgroup selectedGroup;
     private Tgroup newGroup;
     private boolean editGroupMode;
 
-    // Para Option (Detail) - CON auditoría
+    // Para Option (Detail)
     private List<Option> options;
-    private Option selectedOption;
     private Option newOption;
     private boolean editOptionMode;
 
-    private static final Integer DEFAULT_USER_ID = 1;
+    // Grupo actual para el diálogo de opciones
+    private Tgroup currentGroup;
 
     @PostConstruct
     public void init() {
-        System.out.println(">>> CatalogController.init() ejecutado");
         loadGroups();
         prepareNewGroup();
         prepareNewOption();
-        System.out.println(">>> Grupos cargados: " + (groups != null ? groups.size() : "null"));
     }
 
+    // ==================== MÉTODOS PARA GRUPOS ====================
     public void loadGroups() {
-        System.out.println(">>> loadGroups() ejecutado");
         groups = tgroupService.findAll();
-        System.out.println(">>> Grupos encontrados: " + (groups != null ? groups.size() : "null"));
-        if (groups != null && !groups.isEmpty()) {
-            for (Tgroup g : groups) {
-                System.out.println("  - Grupo: " + g.getId() + " = " + g.getName());
-            }
-        }
     }
 
     public void prepareNewGroup() {
@@ -73,7 +70,8 @@ public class CatalogController implements Serializable {
         try {
             if (newGroup.getName() == null || newGroup.getName().trim().isEmpty()) {
                 FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Validación", "El nombre del grupo es obligatorio"));
+                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Validación",
+                                "El nombre del grupo es obligatorio"));
                 return;
             }
 
@@ -82,12 +80,12 @@ public class CatalogController implements Serializable {
                 Tgroup existing = tgroupService.findByName(newGroup.getName().trim());
                 if (existing != null) {
                     FacesContext.getCurrentInstance().addMessage(null,
-                            new FacesMessage(FacesMessage.SEVERITY_WARN, "Validación", "Ya existe un grupo con ese nombre"));
+                            new FacesMessage(FacesMessage.SEVERITY_WARN, "Validación",
+                                    "Ya existe un grupo con ese nombre"));
                     return;
                 }
             }
 
-            // SIN parámetro de usuario - Tgroup no tiene auditoría
             tgroupService.save(newGroup);
             loadGroups();
 
@@ -118,7 +116,6 @@ public class CatalogController implements Serializable {
                 return;
             }
 
-            // SIN parámetro de usuario - Tgroup no tiene auditoría
             tgroupService.delete(group.getId());
             loadGroups();
 
@@ -137,7 +134,7 @@ public class CatalogController implements Serializable {
         }
     }
 
-    // ==================== OPTION (DETAIL) - CON AUDITORÍA ====================
+    // ==================== MÉTODOS PARA OPCIONES ====================
     public void selectGroup(Tgroup group) {
         this.selectedGroup = group;
         loadOptions();
@@ -158,7 +155,30 @@ public class CatalogController implements Serializable {
         this.editOptionMode = false;
     }
 
+    /**
+     * Prepara una nueva opción para un grupo específico (desde la tarjeta)
+     */
+    public void prepareNewOptionForGroup(Tgroup group) {
+        this.currentGroup = group;
+        this.selectedGroup = group;
+        this.newOption = new Option();
+        this.newOption.setGroupid(group);
+        this.editOptionMode = false;
+    }
+
     public void prepareEditOption(Option option) {
+        this.newOption = option;
+        this.selectedGroup = option.getGroupid();
+        this.currentGroup = option.getGroupid();
+        this.editOptionMode = true;
+    }
+
+    /**
+     * Prepara edición de una opción desde la tarjeta
+     */
+    public void prepareEditOptionFromGroup(Option option, Tgroup group) {
+        this.currentGroup = group;
+        this.selectedGroup = group;
         this.newOption = option;
         this.editOptionMode = true;
     }
@@ -167,13 +187,20 @@ public class CatalogController implements Serializable {
         try {
             if (newOption.getName() == null || newOption.getName().trim().isEmpty()) {
                 FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Validación", "El nombre de la opción es obligatorio"));
+                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Validación",
+                                "El nombre de la opción es obligatorio"));
                 return;
             }
 
             // Verificar duplicados en el mismo grupo
             if (!editOptionMode) {
-                List<Option> existingInGroup = optionService.findByGroup(selectedGroup.getId());
+                Tgroup group = newOption.getGroupid();
+                if (group == null) {
+                    group = currentGroup;
+                    newOption.setGroupid(group);
+                }
+
+                List<Option> existingInGroup = optionService.findByGroup(group.getId());
                 boolean duplicate = existingInGroup.stream()
                         .anyMatch(o -> o.getName().equalsIgnoreCase(newOption.getName().trim())
                         && (o.getDeleted() == null || !o.getDeleted()));
@@ -186,13 +213,13 @@ public class CatalogController implements Serializable {
             }
 
             // Asegurar que tenga el grupo asignado
-            if (newOption.getGroupid() == null) {
-                newOption.setGroupid(selectedGroup);
+            if (newOption.getGroupid() == null && currentGroup != null) {
+                newOption.setGroupid(currentGroup);
             }
 
-            // CON parámetro de usuario - Option tiene auditoría
-            optionService.save(newOption, DEFAULT_USER_ID);
-            loadOptions();
+            Integer userId = getCurrentUserId();
+            optionService.save(newOption, userId);
+            loadGroups(); // Recargar grupos para actualizar contadores
 
             String msg = editOptionMode ? "Opción actualizada" : "Opción creada";
             FacesContext.getCurrentInstance().addMessage(null,
@@ -208,9 +235,9 @@ public class CatalogController implements Serializable {
 
     public void deleteOption(Option option) {
         try {
-            // CON parámetro de usuario - Option tiene auditoría
-            optionService.delete(option.getId(), DEFAULT_USER_ID);
-            loadOptions();
+            Integer userId = getCurrentUserId();
+            optionService.delete(option.getId(), userId);
+            loadGroups(); // Recargar grupos para actualizar contadores
 
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Opción eliminada"));
@@ -221,16 +248,89 @@ public class CatalogController implements Serializable {
         }
     }
 
-    public void onGroupSelect(SelectEvent<Tgroup> event) {
-        this.selectedGroup = event.getObject();
-        System.out.println(">>> Grupo seleccionado (tabla): " + selectedGroup.getName());
-        loadOptions();
-        prepareNewOption();
+    // ==================== MÉTODOS AUXILIARES ====================
+    private Integer getCurrentUserId() {
+        if (userSession != null && userSession.getUser() != null) {
+            return userSession.getUser().getId();
+        }
+        return 1; // Usuario administrador por defecto
+    }
+
+    /**
+     * Obtiene la clase CSS del icono según el nombre del grupo
+     */
+    public String getCardIconClass(String groupName) {
+        if (groupName == null) {
+            return "default";
+        }
+
+        String name = groupName.toLowerCase();
+        if (name.contains("sangre")) {
+            return "blood";
+        }
+        if (name.contains("civil")) {
+            return "civil";
+        }
+        if (name.contains("sexo") || name.contains("género")) {
+            return "gender";
+        }
+        if (name.contains("documento")) {
+            return "document";
+        }
+        if (name.contains("parentesco")) {
+            return "kinship";
+        }
+
+        return "default";
+    }
+
+    /**
+     * Obtiene el icono de PrimeFaces según el nombre del grupo
+     */
+    public String getGroupIcon(String groupName) {
+        if (groupName == null) {
+            return "pi-folder";
+        }
+
+        String name = groupName.toLowerCase();
+        if (name.contains("sangre")) {
+            return "pi-heart";
+        }
+        if (name.contains("civil")) {
+            return "pi-heart-fill";
+        }
+        if (name.contains("sexo") || name.contains("género")) {
+            return "pi-users";
+        }
+        if (name.contains("documento")) {
+            return "pi-id-card";
+        }
+        if (name.contains("parentesco")) {
+            return "pi-user-plus";
+        }
+
+        return "pi-folder";
+    }
+
+    /**
+     * Total de opciones en todos los grupos
+     */
+    public int getTotalOptions() {
+        if (groups == null) {
+            return 0;
+        }
+        return groups.stream()
+                .mapToInt(g -> g.getOptionCollection() != null ? g.getOptionCollection().size() : 0)
+                .sum();
     }
 
     // ==================== GETTERS Y SETTERS ====================
     public List<Tgroup> getGroups() {
         return groups;
+    }
+
+    public void setGroups(List<Tgroup> groups) {
+        this.groups = groups;
     }
 
     public Tgroup getSelectedGroup() {
@@ -253,16 +353,16 @@ public class CatalogController implements Serializable {
         return editGroupMode;
     }
 
+    public void setEditGroupMode(boolean editGroupMode) {
+        this.editGroupMode = editGroupMode;
+    }
+
     public List<Option> getOptions() {
         return options;
     }
 
-    public Option getSelectedOption() {
-        return selectedOption;
-    }
-
-    public void setSelectedOption(Option selectedOption) {
-        this.selectedOption = selectedOption;
+    public void setOptions(List<Option> options) {
+        this.options = options;
     }
 
     public Option getNewOption() {
@@ -275,5 +375,17 @@ public class CatalogController implements Serializable {
 
     public boolean isEditOptionMode() {
         return editOptionMode;
+    }
+
+    public void setEditOptionMode(boolean editOptionMode) {
+        this.editOptionMode = editOptionMode;
+    }
+
+    public Tgroup getCurrentGroup() {
+        return currentGroup;
+    }
+
+    public void setCurrentGroup(Tgroup currentGroup) {
+        this.currentGroup = currentGroup;
     }
 }

@@ -1,0 +1,530 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/admin-template.xhtml">
+
+    <ui:define name="page-title">
+        Catálogos del Sistema
+    </ui:define>
+
+    <ui:define name="content">
+
+        <style>
+            /* ============================================ */
+            /* CATÁLOGOS - DISEÑO DE TARJETAS               */
+            /* ============================================ */
+            .catalog-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+                gap: 24px;
+                margin-top: 8px;
+            }
+
+            .catalog-card {
+                background: var(--bg-card);
+                border-radius: 20px;
+                border: 1px solid var(--border-light);
+                box-shadow: var(--shadow-sm);
+                overflow: hidden;
+                transition: all 0.25s ease;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .catalog-card:hover {
+                box-shadow: var(--shadow-lg);
+                transform: translateY(-2px);
+            }
+
+            /* Header de la tarjeta */
+            .card-header {
+                padding: 20px 20px 16px;
+                border-bottom: 1px solid var(--border-light);
+                background: linear-gradient(135deg, #fafbfc 0%, #f5f7fa 100%);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .card-title {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .card-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+            }
+
+            .card-icon.blood {
+                background: #fee2e2;
+                color: #dc2626;
+            }
+            .card-icon.civil {
+                background: #fce7f3;
+                color: #be185d;
+            }
+            .card-icon.gender {
+                background: #dcfce7;
+                color: #15803d;
+            }
+            .card-icon.document {
+                background: #e0f2fe;
+                color: #0369a1;
+            }
+            .card-icon.kinship {
+                background: #fef3c7;
+                color: #d97706;
+            }
+            .card-icon.default {
+                background: #f1f5f9;
+                color: #64748b;
+            }
+
+            .card-title-text {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: var(--text);
+            }
+
+            .card-subtitle {
+                font-size: 0.75rem;
+                color: var(--text-muted);
+                margin-top: 2px;
+            }
+
+            .card-badge {
+                background: var(--primary);
+                color: white;
+                padding: 6px 12px;
+                border-radius: 30px;
+                font-size: 0.8rem;
+                font-weight: 600;
+            }
+
+            /* Cuerpo de la tarjeta - Lista de opciones */
+            .card-body {
+                padding: 12px 8px;
+                flex: 1;
+                max-height: 350px;
+                overflow-y: auto;
+            }
+
+            .card-body::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .card-body::-webkit-scrollbar-track {
+                background: var(--border-light);
+                border-radius: 4px;
+            }
+
+            .card-body::-webkit-scrollbar-thumb {
+                background: var(--border);
+                border-radius: 4px;
+            }
+
+            .option-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 12px;
+                margin: 2px 0;
+                border-radius: 10px;
+                transition: background 0.15s ease;
+            }
+
+            .option-item:hover {
+                background: var(--bg);
+            }
+
+            .option-name {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 500;
+                color: var(--text);
+            }
+
+            .option-bullet {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--primary);
+            }
+
+            .option-actions {
+                display: flex;
+                gap: 4px;
+                opacity: 0.6;
+                transition: opacity 0.15s ease;
+            }
+
+            .option-item:hover .option-actions {
+                opacity: 1;
+            }
+
+            .empty-options {
+                text-align: center;
+                padding: 24px 16px;
+                color: var(--text-muted);
+            }
+
+            .empty-options i {
+                font-size: 32px;
+                color: var(--border);
+                margin-bottom: 12px;
+            }
+
+            /* Footer de la tarjeta */
+            .card-footer {
+                padding: 12px 20px 20px;
+                border-top: 1px solid var(--border-light);
+                display: flex;
+                gap: 8px;
+            }
+
+            .card-footer .ui-button {
+                flex: 1;
+            }
+
+            /* Tarjeta para crear nuevo grupo */
+            .new-group-card {
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                border: 2px dashed var(--border);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 280px;
+                cursor: pointer;
+                transition: all 0.25s ease;
+            }
+
+            .new-group-card:hover {
+                border-color: var(--primary);
+                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            }
+
+            .new-group-content {
+                text-align: center;
+            }
+
+            .new-group-content i {
+                font-size: 48px;
+                color: var(--primary);
+                margin-bottom: 16px;
+            }
+
+            .new-group-content h4 {
+                margin: 0 0 8px;
+                font-weight: 600;
+                color: var(--text);
+            }
+
+            .new-group-content p {
+                margin: 0;
+                color: var(--text-muted);
+                font-size: 0.875rem;
+            }
+
+            /* Diálogos */
+            .dialog-form {
+                padding: 8px 0;
+            }
+
+            .dialog-info-box {
+                background: #f0fdf4;
+                border-radius: 10px;
+                padding: 14px 18px;
+                margin-bottom: 24px;
+                border-left: 4px solid var(--success);
+            }
+        </style>
+
+        <h:form id="form">
+            <p:growl id="messages" showDetail="true" />
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- HEADER                                                             -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div class="flex-between mb-4" style="align-items: flex-end; border-bottom: 2px solid var(--border-light); padding-bottom: 16px;">
+                <div>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem;">
+                        <i class="pi pi-info-circle" style="margin-right: 6px;"></i>
+                        Administre los valores de las listas desplegables del sistema
+                    </p>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <span style="background: var(--bg); padding: 8px 16px; border-radius: 30px; font-size: 0.9rem; color: var(--text-muted);">
+                        <i class="pi pi-folder-open" style="margin-right: 6px;"></i>
+                        <span class="font-semibold">#{catalogController.groups.size()}</span> grupos
+                    </span>
+                    <span style="background: var(--bg); padding: 8px 16px; border-radius: 30px; font-size: 0.9rem; color: var(--text-muted);">
+                        <i class="pi pi-list" style="margin-right: 6px;"></i>
+                        <span class="font-semibold">#{catalogController.totalOptions}</span> opciones
+                    </span>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- GRID DE TARJETAS DE CATÁLOGOS                                    -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div class="catalog-grid">
+
+                <!-- Tarjetas de grupos existentes -->
+                <ui:repeat value="#{catalogController.groups}" var="group">
+                    <div class="catalog-card">
+
+                        <!-- Header -->
+                        <div class="card-header">
+                            <div class="card-title">
+                                <div class="card-icon #{catalogController.getCardIconClass(group.name)}">
+                                    <i class="pi #{catalogController.getGroupIcon(group.name)}"></i>
+                                </div>
+                                <div>
+                                    <div class="card-title-text">#{group.name}</div>
+                                    <div class="card-subtitle">
+                                        #{group.optionCollection != null ? group.optionCollection.size() : 0} opciones
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 4px;">
+                                <p:commandButton icon="pi pi-pencil" 
+                                                 title="Editar grupo"
+                                                 actionListener="#{catalogController.prepareEditGroup(group)}"
+                                                 update=":dialogs:manage-group-content" 
+                                                 oncomplete="PF('manageGroupDialog').show()"
+                                                 styleClass="ui-button-flat ui-button-sm"
+                                                 style="background: transparent; color: var(--text-muted); padding: 6px 8px;"
+                                                 process="@this"/>
+                                <p:commandButton icon="pi pi-trash" 
+                                                 title="Eliminar grupo"
+                                                 actionListener="#{catalogController.deleteGroup(group)}"
+                                                 update=":form:messages"
+                                                 styleClass="ui-button-flat ui-button-sm"
+                                                 style="background: transparent; color: var(--danger); padding: 6px 8px;"
+                                                 process="@this">
+                                    <p:confirm header="Confirmar eliminación" 
+                                               message="¿Eliminar el grupo '#{group.name}' y todas sus opciones?" 
+                                               icon="pi pi-exclamation-triangle"/>
+                                </p:commandButton>
+                            </div>
+                        </div>
+
+                        <!-- Body - Lista de opciones -->
+                        <div class="card-body">
+                            <h:panelGroup rendered="#{empty group.optionCollection}">
+                                <div class="empty-options">
+                                    <i class="pi pi-inbox"></i>
+                                    <p>No hay opciones</p>
+                                    <p style="font-size: 0.8rem;">Añade la primera opción</p>
+                                </div>
+                            </h:panelGroup>
+
+                            <ui:repeat value="#{group.optionCollection}" var="option">
+                                <div class="option-item">
+                                    <span class="option-name">
+                                        <span class="option-bullet"></span>
+                                        #{option.name}
+                                    </span>
+                                    <span class="option-actions">
+                                        <p:commandButton icon="pi pi-pencil" 
+                                                         title="Editar opción"
+                                                         actionListener="#{catalogController.prepareEditOptionFromGroup(option, group)}"
+                                                         update=":dialogs:manage-option-content" 
+                                                         oncomplete="PF('manageOptionDialog').show()"
+                                                         styleClass="ui-button-flat"
+                                                         style="background: transparent; color: var(--text-muted); padding: 4px 6px;"
+                                                         process="@this"/>
+                                        <p:commandButton icon="pi pi-trash" 
+                                                         title="Eliminar opción"
+                                                         actionListener="#{catalogController.deleteOption(option)}"
+                                                         update=":form:catalog-grid-container :form:messages"
+                                                         styleClass="ui-button-flat"
+                                                         style="background: transparent; color: var(--danger); padding: 4px 6px;"
+                                                         process="@this">
+                                            <p:confirm header="Confirmar eliminación" 
+                                                       message="¿Eliminar '#{option.name}'?" />
+                                        </p:commandButton>
+                                    </span>
+                                </div>
+                            </ui:repeat>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="card-footer">
+                            <p:commandButton value="Añadir opción" 
+                                             icon="pi pi-plus-circle"
+                                             actionListener="#{catalogController.prepareNewOptionForGroup(group)}"
+                                             update=":dialogs:manage-option-content" 
+                                             oncomplete="PF('manageOptionDialog').show()"
+                                             styleClass="ui-button-outlined ui-button-secondary"
+                                             style="width: 100%; justify-content: center;" />
+                        </div>
+                    </div>
+                </ui:repeat>
+
+                <!-- Tarjeta para crear nuevo grupo -->
+                <div class="catalog-card new-group-card" style="min-height: 300px;">
+                    <p:commandLink actionListener="#{catalogController.prepareNewGroup}"
+                                   update=":dialogs:manage-group-content" 
+                                   oncomplete="PF('manageGroupDialog').show()"
+                                   styleClass="new-group-link"
+                                   style="text-decoration: none; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                        <div class="new-group-content">
+                            <i class="pi pi-plus-circle"></i>
+                            <h4>Crear nuevo grupo</h4>
+                            <p>Añade una nueva categoría al sistema</p>
+                        </div>
+                    </p:commandLink>
+                </div>
+
+            </div>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="400">
+                <p:commandButton value="Sí, eliminar" type="button" styleClass="ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="Cancelar" type="button" styleClass="ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- DIÁLOGOS DE GESTIÓN                                               -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <h:form id="dialogs">
+
+            <!-- DIÁLOGO: Nuevo/Editar Grupo -->
+            <p:dialog header="#{catalogController.editGroupMode ? '✏️ Editar Grupo' : '🆕 Nuevo Grupo'}" 
+                      widgetVar="manageGroupDialog" 
+                      modal="true" 
+                      width="450" 
+                      resizable="false"
+                      showEffect="fade"
+                      styleClass="catalog-dialog">
+
+                <p:outputPanel id="manage-group-content" class="ui-fluid dialog-form">
+                    <p:outputPanel rendered="#{not empty catalogController.newGroup}">
+
+                        <div class="field">
+                            <p:outputLabel for="groupName" styleClass="font-semibold">
+                                <i class="pi pi-tag" style="margin-right: 6px;"></i>
+                                Nombre del Grupo <span style="color: var(--danger);">*</span>
+                            </p:outputLabel>
+                            <p:inputText id="groupName" 
+                                         value="#{catalogController.newGroup.name}" 
+                                         required="true"
+                                         requiredMessage="El nombre del grupo es obligatorio"
+                                         maxlength="50"
+                                         placeholder="Ej: Tipo de Sangre, Estado Civil..."
+                                         style="width: 100%;" />
+                            <small class="text-muted">
+                                Este nombre identificará el catálogo en todo el sistema
+                            </small>
+                        </div>
+
+                        <!-- Previsualización del icono -->
+                        <div style="background: var(--bg); border-radius: 12px; padding: 16px; margin-top: 20px; text-align: center;">
+                            <p style="margin: 0 0 8px; font-size: 0.8rem; color: var(--text-muted);">Vista previa</p>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                                <div class="card-icon default" style="width: 40px; height: 40px; font-size: 20px;">
+                                    <i class="pi pi-folder"></i>
+                                </div>
+                                <span style="font-weight: 600; font-size: 1.1rem;" id="groupNamePreview">
+                                    #{empty catalogController.newGroup.name ? 'Nombre del grupo' : catalogController.newGroup.name}
+                                </span>
+                            </div>
+                        </div>
+
+                    </p:outputPanel>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <p:commandButton value="Cancelar" 
+                                         icon="pi pi-times"
+                                         onclick="PF('manageGroupDialog').hide()" 
+                                         styleClass="ui-button-secondary" />
+                        <p:commandButton value="#{catalogController.editGroupMode ? 'Actualizar' : 'Crear Grupo'}" 
+                                         icon="pi pi-save"
+                                         actionListener="#{catalogController.saveGroup}"
+                                         update="manage-group-content :form:catalog-grid-container :form:messages"
+                                         process="manage-group-content @this"
+                                         oncomplete="if (!args.validationFailed) PF('manageGroupDialog').hide()"
+                                         styleClass="ui-button-success" />
+                    </div>
+                </f:facet>
+            </p:dialog>
+
+            <!-- DIÁLOGO: Nuevo/Editar Opción -->
+            <p:dialog header="#{catalogController.editOptionMode ? '✏️ Editar Opción' : '🆕 Nueva Opción'}" 
+                      widgetVar="manageOptionDialog" 
+                      modal="true" 
+                      width="450" 
+                      resizable="false"
+                      showEffect="fade"
+                      styleClass="catalog-dialog">
+
+                <p:outputPanel id="manage-option-content" class="ui-fluid dialog-form">
+                    <p:outputPanel rendered="#{not empty catalogController.newOption}">
+
+                        <!-- Info del grupo -->
+                        <div class="dialog-info-box">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="card-icon #{catalogController.getCardIconClass(catalogController.currentGroup.name)}" 
+                                     style="width: 40px; height: 40px; font-size: 20px;">
+                                    <i class="pi #{catalogController.getGroupIcon(catalogController.currentGroup.name)}"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Grupo</div>
+                                    <div style="font-weight: 700; color: var(--text);">#{catalogController.currentGroup.name}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <p:outputLabel for="optionName" styleClass="font-semibold">
+                                <i class="pi pi-circle" style="margin-right: 6px; font-size: 10px;"></i>
+                                Nombre de la Opción <span style="color: var(--danger);">*</span>
+                            </p:outputLabel>
+                            <p:inputText id="optionName" 
+                                         value="#{catalogController.newOption.name}" 
+                                         required="true"
+                                         requiredMessage="El nombre de la opción es obligatorio"
+                                         maxlength="75"
+                                         placeholder="Ej: A+, Soltero, Masculino..."
+                                         style="width: 100%;" />
+                            <small class="text-muted">
+                                Este valor aparecerá en las listas desplegables del sistema
+                            </small>
+                        </div>
+
+                    </p:outputPanel>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <p:commandButton value="Cancelar" 
+                                         icon="pi pi-times"
+                                         onclick="PF('manageOptionDialog').hide()" 
+                                         styleClass="ui-button-secondary" />
+                        <p:commandButton value="#{catalogController.editOptionMode ? 'Actualizar' : 'Añadir Opción'}" 
+                                         icon="pi pi-save"
+                                         actionListener="#{catalogController.saveOption}"
+                                         update="manage-option-content :form:catalog-grid-container :form:messages"
+                                         process="manage-option-content @this"
+                                         oncomplete="if (!args.validationFailed) PF('manageOptionDialog').hide()"
+                                         styleClass="ui-button-success" />
+                    </div>
+                </f:facet>
+            </p:dialog>
+
+        </h:form>
+    </ui:define>
+</ui:composition>

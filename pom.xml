@@ -41,6 +41,12 @@
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
+        <dependency>
+            <groupId>software.xdev</groupId>
+            <artifactId>chartjs-java-model</artifactId>
+            <version>3.0.1</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     
     <build>

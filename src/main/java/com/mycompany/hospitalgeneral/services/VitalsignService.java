@@ -37,8 +37,8 @@ public class VitalsignService {
      */
     public List<Vitalsign> findByMedicalRecord(Integer medicalRecordId) {
         return em.createNamedQuery("Vitalsign.findByMedicalrecord", Vitalsign.class)
-                 .setParameter("medicalRecordId", medicalRecordId)
-                 .getResultList();
+                .setParameter("medicalRecordId", medicalRecordId)
+                .getResultList();
     }
 
     /**
@@ -46,12 +46,28 @@ public class VitalsignService {
      */
     public Vitalsign getLastVitalSign(Medicalrecord record) {
         List<Vitalsign> list = em.createQuery(
-            "SELECT v FROM Vitalsign v WHERE v.medicalrecordid = :record AND (v.deleted = false OR v.deleted IS NULL) ORDER BY v.createdat DESC",
-            Vitalsign.class)
-            .setParameter("record", record)
-            .setMaxResults(1)
-            .getResultList();
+                "SELECT v FROM Vitalsign v WHERE v.medicalrecordid = :record AND (v.deleted = false OR v.deleted IS NULL) ORDER BY v.createdat DESC",
+                Vitalsign.class)
+                .setParameter("record", record)
+                .setMaxResults(1)
+                .getResultList();
 
         return list.isEmpty() ? null : list.get(0);
+    }
+
+    public Vitalsign findLastByPatientId(Integer patientId) {
+        try {
+            return em.createQuery(
+                    "SELECT v FROM Vitalsign v "
+                    + "WHERE v.medicalrecordid.patientid.id = :patientId "
+                    + "AND (v.deleted = false OR v.deleted IS NULL) "
+                    + "ORDER BY v.createdat DESC",
+                    Vitalsign.class)
+                    .setParameter("patientId", patientId)
+                    .setMaxResults(1)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

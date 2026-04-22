@@ -1,0 +1,388 @@
+/* ============================================
+   HOSPITAL GENERAL - SISTEMA CLÍNICO
+   base.css — Variables, Reset, Layout, Componentes compartidos
+   ============================================ */
+
+/* ── Variables ─────────────────────────────── */
+:root {
+    --primary: #0b3c5d;
+    --primary-dark: #072a42;
+    --primary-light: #1d5f8b;
+    --accent: #2a9d8f;
+    --accent-dark: #21867a;
+
+    --success: #2a9d8f;
+    --danger: #d62828;
+    --warning: #f4a261;
+    --info: #4a90e2;
+
+    --bg: #f8f9fb;
+    --bg-card: #ffffff;
+    --text: #2b2d42;
+    --text-muted: #6c757d;
+    --border: #e0e0e0;
+    --border-light: #eef2f6;
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+    --sidebar-width: 240px;
+    --sidebar-collapsed-width: 72px;
+    --navbar-height: 60px;
+
+    --font-sans: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+/* ── Reset ──────────────────────────────────── */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+* {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ── Layout principal ───────────────────────── */
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.navbar {
+    height: var(--navbar-height);
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.content {
+    flex: 1;
+    padding: 24px;
+}
+
+.content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* ── Componentes UI compartidos ─────────────── */
+.card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Tablas */
+.ui-datatable {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border) !important;
+}
+
+.ui-datatable thead th {
+    background: #f8f9fa !important;
+    color: var(--text);
+    font-weight: 600;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+
+.ui-datatable tbody tr:hover {
+    background: #f8f9fb !important;
+}
+
+/* Botones */
+.ui-button {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    padding: 8px 20px !important;
+    min-height: 38px !important;
+    transition: all 0.2s ease !important;
+}
+
+.ui-button-success {
+    background: var(--success) !important;
+    border: none !important;
+}
+
+.ui-button-primary {
+    background: var(--primary) !important;
+    border: none !important;
+}
+
+.ui-button-secondary {
+    background: #f0f0f0 !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+}
+
+.ui-button-sm {
+    padding: 6px 12px !important;
+    min-height: 32px !important;
+    font-size: 13px !important;
+}
+
+/* ── PrimeFaces – correcciones globales ─────── */
+.ui-calendar.ui-trigger-calendar {
+    display: flex !important;
+    width: 100% !important;
+}
+
+.ui-calendar.ui-trigger-calendar .ui-inputfield {
+    flex: 1 !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.ui-calendar .ui-datepicker-trigger.ui-button {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    width: 42px !important;
+    background: var(--primary) !important;
+    border: 1px solid var(--border) !important;
+    border-left: none !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+div.ui-datepicker.ui-widget-content {
+    display: none;
+    width: auto !important;
+}
+
+.ui-selectonemenu {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 !important;
+    min-height: 38px !important;
+    background: var(--bg-card) !important;
+    border-radius: 8px !important;
+}
+
+.ui-selectonemenu .ui-selectonemenu-label {
+    padding: 8px 12px !important;
+    text-align: left !important;
+    flex: 1;
+}
+
+.ui-selectonemenu-trigger {
+    width: 32px !important;
+    height: 100% !important;
+    background: transparent !important;
+    border-left: 1px solid var(--border) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.ui-inputfield,
+.ui-inputtext,
+.ui-inputmask {
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
+    padding: 8px 12px !important;
+    min-height: 38px !important;
+    width: 100% !important;
+}
+
+.ui-inputfield:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(11, 60, 93, 0.1) !important;
+}
+
+/* ── Formularios y Grid ──────────────────────── */
+.field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+}
+
+.form-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.form-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.form-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.ui-divider {
+    margin: 24px 0 !important;
+}
+
+/* Modales */
+.ui-dialog {
+    border-radius: 16px !important;
+    box-shadow: var(--shadow-lg) !important;
+}
+
+.ui-dialog .ui-dialog-titlebar {
+    background: white !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 16px 20px !important;
+}
+
+.ui-dialog .ui-dialog-footer {
+    padding: 16px 20px !important;
+    background: #fafbfc;
+    border-radius: 0 0 16px 16px;
+}
+
+/* Badges compartidos */
+.hc-badge {
+    background: #e3f2fd;
+    color: var(--primary);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.blood-badge {
+    background: #fdecea;
+    color: var(--danger);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+/* ── Utilidades ─────────────────────────────── */
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.mb-6 {
+    margin-bottom: 24px;
+}
+
+.gap-2 {
+    gap: 8px;
+}
+
+.flex {
+    display: flex;
+}
+
+.user-name {
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* ── Animaciones ────────────────────────────── */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to   {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to   {
+        opacity: 1;
+    }
+}
+
+/* ── Responsive ─────────────────────────────── */
+@media (max-width: 768px) {
+    .main {
+        margin-left: 0;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .form-grid-2,
+    .form-grid-3 {
+        grid-template-columns: 1fr;
+    }
+
+    :root {
+        --sidebar-width: 0px;
+    }
+
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+}

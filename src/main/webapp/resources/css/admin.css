@@ -1,0 +1,1131 @@
+/* 
+    Created on : 19 abr 2026, 18:47:09
+    Author     : jhonatan
+*/
+/* ============================================
+   HOSPITAL GENERAL - SISTEMA CLÍNICO
+   admin.css — Sidebar y menú del módulo Admin
+   Requiere: base.css
+   ============================================ */
+
+/* ── Sidebar Admin ──────────────────────────── */
+.admin-sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(165deg, var(--primary) 0%, #0a2e4a 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: width 0.3s ease;
+}
+
+.admin-sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.admin-sidebar::-webkit-scrollbar       {
+    width: 6px;
+}
+.admin-sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+.admin-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Header ─────────────────────────────────── */
+.admin-sidebar .sidebar-header {
+    padding: 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+    transition: padding 0.3s ease;
+    flex-shrink: 0;
+}
+
+.admin-sidebar.collapsed .sidebar-header {
+    padding: 16px 0;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Icono del header */
+.admin-sidebar .sidebar-header > .material-symbols-outlined {
+    font-size: 30px;
+    color: var(--accent);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    flex-shrink: 0;
+}
+
+/* Texto del header */
+.admin-sidebar .header-text {
+    flex: 1;
+    overflow: hidden;
+    transition: opacity 0.2s ease;
+}
+
+.admin-sidebar.collapsed .header-text {
+    display: none;
+}
+
+.admin-sidebar .logo {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-sidebar .subtitle {
+    font-size: 11px;
+    opacity: 0.65;
+    margin-top: 2px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+}
+
+/* ── Botón toggle (dentro del header) ───────── */
+.admin-sidebar .sidebar-toggle-btn {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.75);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    padding: 0;
+    margin-left: auto;
+}
+
+.admin-sidebar .sidebar-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: white;
+}
+
+.admin-sidebar .sidebar-toggle-btn i {
+    font-size: 13px;
+}
+
+/* Al colapsar: el botón ocupa todo el ancho debajo del ícono */
+.admin-sidebar.collapsed .sidebar-toggle-btn {
+    margin-left: 0;
+    width: 36px;
+    height: 28px;
+    border-radius: 6px;
+}
+
+/* ── PanelMenu Admin ─────────────────────────── */
+.admin-panelmenu {
+    flex: 1;
+    padding: 12px 8px;
+    background: transparent !important;
+    border: none !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.admin-panelmenu::-webkit-scrollbar       {
+    width: 4px;
+}
+.admin-panelmenu::-webkit-scrollbar-track {
+    background: transparent;
+}
+.admin-panelmenu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+}
+
+.admin-panelmenu .ui-panelmenu {
+    background: transparent !important;
+    border: none !important;
+}
+
+
+
+/* ── Submenús ────────────────────────────────── */
+.admin-panelmenu .ui-panelmenu-content {
+    background: rgba(0, 0, 0, 0.18) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    margin: 2px 4px 4px 8px !important;
+    padding: 4px 0 !important;
+}
+
+.admin-panelmenu .ui-menuitem {
+    margin: 1px 0 !important;
+}
+
+.admin-sidebar.collapsed .ui-menuitem-link {
+    pointer-events: auto;
+    position: relative;
+}
+
+.admin-panelmenu .ui-menuitem-link {
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 9px 14px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    text-decoration: none !important;
+    transition: background 0.2s ease, color 0.2s ease !important;
+    position: relative;
+    overflow: visible;
+}
+
+/* Línea indicadora izquierda */
+.admin-panelmenu .ui-menuitem-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) scaleY(0);
+    width: 3px;
+    height: 55%;
+    background: var(--accent);
+    border-radius: 0 3px 3px 0;
+    transition: transform 0.2s ease;
+}
+
+.admin-panelmenu .ui-menuitem-link:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+}
+
+.admin-panelmenu .ui-menuitem-link:hover::before {
+    transform: translateY(-50%) scaleY(1);
+}
+
+.admin-panelmenu .ui-menuitem-link.ui-state-active,
+.admin-panelmenu .ui-menuitem.ui-state-active > .ui-menuitem-link {
+    background: rgba(42, 157, 143, 0.18) !important;
+    color: white !important;
+}
+
+.admin-panelmenu .ui-menuitem-link.ui-state-active::before,
+.admin-panelmenu .ui-menuitem.ui-state-active > .ui-menuitem-link::before {
+    transform: translateY(-50%) scaleY(1);
+}
+
+.admin-panelmenu .ui-menuitem-icon {
+    font-size: 16px !important;
+    opacity: 0.85;
+    flex-shrink: 0;
+}
+
+.admin-panelmenu .ui-menuitem-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Estado colapsado ────────────────────────── */
+.admin-sidebar.collapsed .admin-panelmenu {
+    padding: 8px 4px;
+}
+
+/* Ocultar textos y flechas */
+.admin-sidebar.collapsed .admin-panelmenu .ui-menuitem-text,
+.admin-sidebar.collapsed .admin-panelmenu .ui-panelmenu-header-label,
+.admin-sidebar.collapsed .admin-panelmenu .ui-panelmenu-icon {
+    display: none !important;
+}
+
+/* Centrar cabeceras de grupo */
+.admin-sidebar.collapsed .admin-panelmenu .ui-panelmenu-header > a {
+    justify-content: center !important;
+    padding: 11px 0 !important;
+}
+
+/* Centrar ítems */
+.admin-sidebar.collapsed .admin-panelmenu .ui-menuitem-link {
+    justify-content: center !important;
+    padding: 11px 0 !important;
+}
+
+.admin-sidebar.collapsed .admin-panelmenu .ui-menuitem-link::before {
+    display: none;
+}
+
+/* Submenús como columna de iconos centrados */
+.admin-sidebar.collapsed .admin-panelmenu .ui-panelmenu-content {
+    display: block !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}
+
+.admin-sidebar.collapsed .admin-panelmenu .ui-menuitem-icon {
+    font-size: 20px !important;
+    opacity: 1;
+}
+
+/* ── Footer del sidebar ──────────────────────── */
+.admin-sidebar .sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.12) 100%);
+    flex-shrink: 0;
+}
+
+.admin-sidebar.collapsed .sidebar-footer {
+    padding: 12px 6px;
+}
+
+.admin-sidebar .footer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-sidebar .tech-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.admin-sidebar .tech-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.admin-sidebar .tech-item .material-symbols-outlined {
+    font-size: 14px;
+    opacity: 0.65;
+    flex-shrink: 0;
+}
+
+/* Ocultar info secundaria al colapsar */
+.admin-sidebar.collapsed .footer-content {
+    display: none;
+}
+
+.admin-sidebar .copyright {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 10px;
+    line-height: 1.6;
+    padding-top: 4px;
+}
+
+/* Botón logout */
+.admin-sidebar .sidebar-footer form {
+    margin-top: 10px !important;
+}
+
+.admin-sidebar.collapsed .sidebar-footer .ui-button-text {
+    display: none !important;
+}
+
+.admin-sidebar.collapsed .sidebar-footer .ui-button {
+    justify-content: center !important;
+    padding: 10px !important;
+    width: 100% !important;
+}
+
+/* ── Ajuste del .main al colapsar ────────────── */
+.layout {
+    display: flex;
+}
+
+.main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    transition: margin-left 0.3s ease;
+}
+
+.layout.collapsed .main {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+.sidebar-toggle-btn {
+    position: fixed;
+    top: 20px;
+    left: calc(var(--sidebar-width) - 14px);
+    z-index: 9999;
+
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+
+    border: none;
+    background: var(--primary);
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: left 0.3s ease, transform 0.2s ease;
+}
+
+.sidebar-toggle-btn:hover {
+    transform: scale(1.05);
+}
+
+/* cuando está colapsado */
+.layout.collapsed .sidebar-toggle-btn {
+    left: calc(var(--sidebar-collapsed-width) - 14px);
+}
+
+.layout.collapsed .admin-sidebar {
+    width: var(--sidebar-collapsed-width);
+}
+.layout.collapsed .admin-sidebar {
+    width: var(--sidebar-collapsed-width) !important;
+}
+
+
+/* ============================================ */
+/* KPI CARDS - Dashboard Admin                  */
+/* ============================================ */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    background: var(--bg-card, #ffffff);
+    border-radius: 16px;
+    padding: 24px 20px;
+    border: 1px solid var(--border, #e2e8f0);
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.08));
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg, 0 10px 25px rgba(0,0,0,0.1));
+}
+
+.kpi-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kpi-icon .material-symbols-outlined {
+    font-size: 32px;
+}
+
+.kpi-card.pending .kpi-icon {
+    background: rgba(244, 162, 97, 0.15);
+    color: var(--warning, #f4a261);
+}
+
+.kpi-card.active .kpi-icon {
+    background: rgba(42, 157, 143, 0.15);
+    color: var(--accent, #2a9d8f);
+}
+
+.kpi-card.roles .kpi-icon {
+    background: rgba(74, 144, 226, 0.15);
+    color: var(--info, #4a90e2);
+}
+
+.kpi-card.logs .kpi-icon {
+    background: rgba(11, 60, 93, 0.1);
+    color: var(--primary, #0b3c5d);
+}
+
+.kpi-content {
+    flex: 1;
+}
+
+.kpi-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text, #2b2d42);
+    margin-bottom: 4px;
+}
+
+.kpi-label {
+    font-size: 0.875rem;
+    color: var(--text-muted, #6c757d);
+    font-weight: 500;
+}
+
+.kpi-trend {
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+.kpi-trend.up {
+    color: var(--success, #2a9d8f);
+}
+
+.kpi-trend.down {
+    color: var(--danger, #d62828);
+}
+
+/* ============================================ */
+/* DASHBOARD GRID - 2 Columnas                  */
+/* ============================================ */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.dashboard-panel {
+    background: var(--bg-card, #ffffff);
+    border-radius: 16px;
+    border: 1px solid var(--border, #e2e8f0);
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.08));
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border-light, #eef2f6);
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fb 100%);
+}
+
+.panel-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text, #2b2d42);
+    margin: 0;
+}
+
+.panel-title .material-symbols-outlined {
+    color: var(--primary, #0b3c5d);
+    font-size: 22px;
+}
+
+.panel-badge {
+    background: var(--primary, #0b3c5d);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.panel-body {
+    padding: 20px 24px;
+}
+
+/* ============================================ */
+/* LISTA DE SOLICITUDES                         */
+/* ============================================ */
+.request-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.request-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--bg, #f8f9fb);
+    border-radius: 12px;
+    border-left: 3px solid var(--warning, #f4a261);
+    transition: all 0.2s;
+}
+
+.request-item:hover {
+    background: #f0f4f8;
+}
+
+.request-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.request-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary, #0b3c5d) 0%, #1d5f8b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+.request-details h4 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text, #2b2d42);
+}
+
+.request-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: var(--text-muted, #6c757d);
+}
+
+.request-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.request-meta .material-symbols-outlined {
+    font-size: 14px;
+}
+
+.request-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ============================================ */
+/* ESTADO DEL SISTEMA                           */
+/* ============================================ */
+.system-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stat-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--text-muted, #6c757d);
+}
+
+.stat-value {
+    font-weight: 600;
+    color: var(--text, #2b2d42);
+}
+
+.progress-bar {
+    height: 8px;
+    background: var(--border-light, #eef2f6);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.progress-fill.success {
+    background: var(--success, #2a9d8f);
+}
+
+.progress-fill.warning {
+    background: var(--warning, #f4a261);
+}
+
+.progress-fill.danger {
+    background: var(--danger, #d62828);
+}
+
+.service-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light, #eef2f6);
+}
+
+.service-status:last-child {
+    border-bottom: none;
+}
+
+.service-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.online {
+    background: #4ade80;
+    box-shadow: 0 0 8px #4ade80;
+}
+
+.status-indicator.warning {
+    background: #f4a261;
+    box-shadow: 0 0 8px #f4a261;
+}
+
+.status-indicator.offline {
+    background: #ef4444;
+}
+
+/* ============================================ */
+/* ACCESOS RÁPIDOS                              */
+/* ============================================ */
+.quick-actions {
+    background: var(--bg-card, #ffffff);
+    border-radius: 16px;
+    border: 1px solid var(--border, #e2e8f0);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+}
+
+.quick-actions-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text, #2b2d42);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+}
+
+.quick-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 8px;
+    background: var(--bg, #f8f9fb);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text, #2b2d42);
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.quick-action-btn:hover {
+    background: var(--primary, #0b3c5d);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.quick-action-btn .material-symbols-outlined {
+    font-size: 28px;
+}
+
+.quick-action-btn span:last-child {
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* ============================================ */
+/* ACTIVIDAD RECIENTE                           */
+/* ============================================ */
+.activity-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 14px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-light, #eef2f6);
+}
+
+.timeline-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.timeline-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.timeline-icon.approval {
+    background: rgba(42, 157, 143, 0.15);
+    color: var(--success, #2a9d8f);
+}
+
+.timeline-icon.login {
+    background: rgba(74, 144, 226, 0.15);
+    color: var(--info, #4a90e2);
+}
+
+.timeline-icon.config {
+    background: rgba(244, 162, 97, 0.15);
+    color: var(--warning, #f4a261);
+}
+
+.timeline-icon.system {
+    background: rgba(11, 60, 93, 0.1);
+    color: var(--primary, #0b3c5d);
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-title {
+    font-weight: 600;
+    color: var(--text, #2b2d42);
+    margin-bottom: 4px;
+}
+
+.timeline-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted, #6c757d);
+    margin-bottom: 4px;
+}
+
+.timeline-time {
+    font-size: 0.75rem;
+    color: var(--text-muted, #6c757d);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ============================================ */
+/* RESPONSIVE                                   */
+/* ============================================ */
+@media (max-width: 1200px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-actions-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .request-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .request-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* ============================================ */
+/* EMPTY STATE                                 */
+/* ============================================ */
+.empty-state-small {
+    text-align: center;
+    padding: 32px 24px;
+    color: var(--text-muted, #6c757d);
+}
+
+.empty-state-small .material-symbols-outlined {
+    font-size: 48px;
+    color: var(--border, #e0e0e0);
+    margin-bottom: 12px;
+}
+
+.empty-state-small p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* ── Collapse PanelMenu ─────────────────────── */
+.admin-sidebar.collapsed .ui-panelmenu .ui-menuitem-text,
+.admin-sidebar.collapsed .ui-panelmenu .ui-panelmenu-icon {
+    display: none;
+}
+
+.admin-sidebar.collapsed .ui-panelmenu .ui-menuitem-link {
+    justify-content: center;
+    padding: 12px 0 !important;
+}
+
+.admin-sidebar.collapsed .ui-panelmenu-header {
+    display: none;
+}
+
+/* Ocultar texto y flechas al colapsar */
+.admn-sidebar.collapsed .ui-menuitem-text      {
+    display: none !important;
+}
+.admin-sidebar.collapsed .ui-panelmenu-header-label {
+    display: none !important;
+}
+.admin-sidebar.collapsed .ui-panelmenu-icon     {
+    display: none !important;
+}
+
+/* Centrar iconos al colapsar */
+.admin-sidebar.collapsed .ui-menuitem-link {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    padding: 14px 0 !important;
+    visibility: visible !important; /* Forzamos visibilidad */
+}
+/* Estilo del Tooltip para que no se pierda en el fondo */
+.sidebar-tooltip-style {
+    z-index: 9999 !important; /* Por encima de todo */
+}
+
+.sidebar-tooltip-style .ui-tooltip-text {
+    background: #0a2e4a !important;
+    color: white !important;
+    box-shadow: 4px 0 10px rgba(0,0,0,0.3) !important;
+    white-space: nowrap;
+}
+
+/* ============================================ */
+/* KPI CARDS - Estilo Dashboard Moderno         */
+/* ============================================ */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.kpi-card {
+    background: var(--bg-card, #ffffff);
+    border-radius: 16px;
+    padding: 24px 20px;
+    border: 1px solid var(--border, #e2e8f0);
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.08));
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Línea decorativa superior */
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 16px 16px 0 0;
+}
+
+.kpi-card.primary::before {
+    background: var(--primary, #0b3c5d);
+}
+
+.kpi-card.success::before {
+    background: var(--success, #2a9d8f);
+}
+
+.kpi-card.info::before {
+    background: var(--info, #4a90e2);
+}
+
+.kpi-card.warning::before {
+    background: var(--warning, #f4a261);
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg, 0 10px 25px rgba(0,0,0,0.1));
+}
+
+.kpi-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kpi-card.primary .kpi-icon {
+    background: rgba(11, 60, 93, 0.1);
+    color: var(--primary, #0b3c5d);
+}
+
+.kpi-card.success .kpi-icon {
+    background: rgba(42, 157, 143, 0.1);
+    color: var(--success, #2a9d8f);
+}
+
+.kpi-card.info .kpi-icon {
+    background: rgba(74, 144, 226, 0.1);
+    color: var(--info, #4a90e2);
+}
+
+.kpi-card.warning .kpi-icon {
+    background: rgba(244, 162, 97, 0.1);
+    color: var(--warning, #f4a261);
+}
+
+.kpi-icon i {
+    font-size: 28px;
+}
+
+.kpi-content {
+    flex: 1;
+}
+
+.kpi-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text, #2b2d42);
+    margin-bottom: 4px;
+}
+
+.kpi-label {
+    font-size: 0.875rem;
+    color: var(--text-muted, #6c757d);
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.kpi-trend {
+    font-size: 0.75rem;
+    color: var(--text-muted, #6c757d);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kpi-trend i {
+    font-size: 12px;
+}
+
+.kpi-trend.up {
+    color: var(--success, #2a9d8f);
+}
+
+.kpi-trend.down {
+    color: var(--danger, #d62828);
+}
+
+.form-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 1200px) {
+    .form-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .form-grid-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width: 768px) {
+    .admin-sidebar {
+        display: none;
+    }
+    .main {
+        margin-left: 0 !important;
+    }
+
+
+}

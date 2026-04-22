@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition template="/WEB-INF/templates/admin-template.xhtml">
+
+        <ui:define name="titulo">
+            Dashboard de Administración
+        </ui:define>
+
+
+        <ui:define name="content">
+
+            <!-- ============================================================ -->
+            <!-- KPI CARDS - Métricas Principales                              -->
+            <!-- ============================================================ -->
+            <div class="kpi-grid">
+
+                <!-- Solicitudes Pendientes -->
+                <div class="kpi-card pending">
+                    <div class="kpi-icon">
+                        <span class="material-symbols-outlined">pending_actions</span>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{adminDashboard.pendingRequests}</div>
+                        <div class="kpi-label">Solicitudes Pendientes</div>
+                        <div class="kpi-trend #{adminDashboard.pendingRequests > 0 ? 'up' : ''}">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">
+                                #{adminDashboard.pendingRequests > 0 ? 'trending_up' : 'trending_flat'}
+                            </span>
+                            Requieren atención
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usuarios Activos -->
+                <div class="kpi-card active">
+                    <div class="kpi-icon">
+                        <span class="material-symbols-outlined">group</span>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{adminDashboard.activeUsers}</div>
+                        <div class="kpi-label">Usuarios Activos</div>
+                        <div class="kpi-trend">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">person_check</span>
+                            #{adminDashboard.totalUsers} totales
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Roles Configurados -->
+                <div class="kpi-card roles">
+                    <div class="kpi-icon">
+                        <span class="material-symbols-outlined">admin_panel_settings</span>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{adminDashboard.totalRoles}</div>
+                        <div class="kpi-label">Roles Configurados</div>
+                        <div class="kpi-trend">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">settings</span>
+                            #{adminDashboard.activeRoles} activos
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs del Sistema -->
+                <div class="kpi-card logs">
+                    <div class="kpi-icon">
+                        <span class="material-symbols-outlined">monitoring</span>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{adminDashboard.todayLogs}</div>
+                        <div class="kpi-label">Eventos Hoy</div>
+                        <div class="kpi-trend #{adminDashboard.errorLogs > 0 ? 'down' : ''}">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">error</span>
+                            #{adminDashboard.errorLogs} errores
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- GRID PRINCIPAL - 2 Columnas                                   -->
+            <!-- ============================================================ -->
+            <h:form>
+                <div class="dashboard-grid">
+
+                    <!-- COLUMNA IZQUIERDA: Solicitudes de Registro -->
+                    <div class="dashboard-panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title">
+                                <span class="material-symbols-outlined">approval_delegation</span>
+                                Solicitudes de Registro
+                            </h3>
+                            <span class="panel-badge">#{adminDashboard.pendingRequests} pendientes</span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="request-list">
+                                <ui:repeat value="#{adminDashboard.pendingRegistrationList}" var="request" varStatus="status">
+                                    <div class="request-item">
+                                        <div class="request-info">
+                                            <div class="request-avatar">
+                                                #{request.initials}
+                                            </div>
+                                            <div class="request-details">
+                                                <h4>#{request.fullName}</h4>
+                                                <div class="request-meta">
+                                                    <span>
+                                                        <span class="material-symbols-outlined">badge</span>
+                                                        #{request.roleName}
+                                                    </span>
+                                                    <span>
+                                                        <span class="material-symbols-outlined">mail</span>
+                                                        #{request.email}
+                                                    </span>
+                                                    <span>
+                                                        <span class="material-symbols-outlined">schedule</span>
+                                                        #{request.requestDate}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="request-actions">
+                                            <p:commandButton icon="pi pi-check" 
+                                                             styleClass="ui-button-success ui-button-sm"
+                                                             title="Aprobar"
+                                                             action="#{adminDashboard.approveRequest(request.id)}"
+                                                             update="@form"
+                                                             oncomplete="location.reload();"/>
+                                            <p:commandButton icon="pi pi-times" 
+                                                             styleClass="ui-button-danger ui-button-sm"
+                                                             title="Rechazar"
+                                                             action="#{adminDashboard.rejectRequest(request.id)}"
+                                                             update="@form"
+                                                             oncomplete="location.reload();"/>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+
+                                <!-- Empty State -->
+                                <ui:fragment rendered="#{empty adminDashboard.pendingRegistrationList}">
+                                    <div class="empty-state-small">
+                                        <span class="material-symbols-outlined">check_circle</span>
+                                        <p>No hay solicitudes pendientes</p>
+                                        <p style="font-size: 0.8rem; margin-top: 4px;">Todas las solicitudes han sido procesadas</p>
+                                    </div>
+                                </ui:fragment>
+                            </div>
+
+                            <div style="margin-top: 16px; text-align: right;">
+                                <p:commandButton value="Ver todas las solicitudes" 
+                                                 icon="pi pi-arrow-right"
+                                                 styleClass="ui-button-secondary ui-button-sm"
+                                                 action="/views/admin/user/GestionSolicitudes?faces-redirect=true"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA: Estado del Sistema -->
+                    <div class="dashboard-panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title">
+                                <span class="material-symbols-outlined">memory</span>
+                                Estado del Sistema
+                            </h3>
+                            <span class="panel-badge">#{systemInfo.uptime}</span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="system-stats">
+
+                                <!-- Memoria -->
+                                <div class="stat-item">
+                                    <div class="stat-label">
+                                        <span>Memoria Utilizada</span>
+                                        <span class="stat-value">#{systemInfo.usedMemory} / #{systemInfo.totalMemory}</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill #{systemInfo.memoryUsagePercent > 80 ? 'danger' : (systemInfo.memoryUsagePercent > 60 ? 'warning' : 'success')}"
+                                             style="width: #{systemInfo.memoryUsagePercent}%;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Servicios -->
+                                <div style="margin-top: 12px;">
+                                    <div class="service-status">
+                                        <span class="service-name">
+                                            <span class="status-indicator online"></span>
+                                            Base de Datos
+                                        </span>
+                                        <span style="color: var(--text-muted); font-size: 0.875rem;">
+                                            #{systemInfo.databaseStatus}
+                                        </span>
+                                    </div>
+                                    <div class="service-status">
+                                        <span class="service-name">
+                                            <span class="status-indicator online"></span>
+                                            Jakarta EE
+                                        </span>
+                                        <span style="color: var(--text-muted); font-size: 0.875rem;">
+                                            #{systemInfo.jakartaVersion}
+                                        </span>
+                                    </div>
+                                    <div class="service-status">
+                                        <span class="service-name">
+                                            <span class="status-indicator online"></span>
+                                            PrimeFaces
+                                        </span>
+                                        <span style="color: var(--text-muted); font-size: 0.875rem;">
+                                            #{systemInfo.primefacesVersion}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Info adicional -->
+                                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-light);">
+                                    <div class="service-status">
+                                        <span class="service-name">
+                                            <span class="material-symbols-outlined" style="font-size: 16px;">java</span>
+                                            Java Version
+                                        </span>
+                                        <span>#{systemInfo.javaVersion}</span>
+                                    </div>
+                                    <div class="service-status">
+                                        <span class="service-name">
+                                            <span class="material-symbols-outlined" style="font-size: 16px;">dns</span>
+                                            Servidor
+                                        </span>
+                                        <span>#{systemInfo.serverInfo}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 20px; text-align: right;">
+                                <p:commandButton value="Ver Logs del Sistema" 
+                                                 icon="pi pi-list"
+                                                 styleClass="ui-button-secondary ui-button-sm"
+                                                 action="/views/admin/logs/GestionLogs?faces-redirect=true"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </h:form>
+
+            <!-- ============================================================ -->
+            <!-- ACCESOS RÁPIDOS                                               -->
+            <!-- ============================================================ -->
+            <div class="quick-actions">
+                <div class="quick-actions-title">
+                    <span class="material-symbols-outlined">bolt</span>
+                    Accesos Rápidos
+                </div>
+                <div class="quick-actions-grid">
+
+                    <h:link outcome="/views/admin/medic/GestionMedicos" styleClass="quick-action-btn">
+                        <span class="material-symbols-outlined">group</span>
+                        <span>Gestión Usuarios</span>
+                    </h:link>
+
+                    <h:link outcome="/views/admin/role/List" styleClass="quick-action-btn">
+                        <span class="material-symbols-outlined">admin_panel_settings</span>
+                        <span>Gestión Roles</span>
+                    </h:link>
+
+                    <h:link outcome="/views/admin/permission/GestionPermisos" styleClass="quick-action-btn">
+                        <span class="material-symbols-outlined">shield</span>
+                        <span>Permisos</span>
+                    </h:link>
+
+                    <h:link outcome="/views/admin/module/GestionModulos" styleClass="quick-action-btn">
+                        <span class="material-symbols-outlined">extension</span>
+                        <span>Módulos</span>
+                    </h:link>
+
+                    <h:link outcome="/views/admin/option/GestionOpciones" styleClass="quick-action-btn">
+                        <span class="material-symbols-outlined">settings</span>
+                        <span>Configuración</span>
+                    </h:link>
+
+                    <h:link outcome="/views/admin/option/GestionOpciones" styleClass="quick-action-btn">
+                        <span class="material-symbols-outlined">monitoring</span>
+                        <span>Ver Logs</span>
+                    </h:link>
+
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ACTIVIDAD RECIENTE DEL SISTEMA                                -->
+            <!-- ============================================================ -->
+            <div class="dashboard-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <span class="material-symbols-outlined">history</span>
+                        Actividad Reciente del Sistema
+                    </h3>
+                    <span class="panel-badge">Últimas 24h</span>
+                </div>
+                <div class="panel-body">
+                    <div class="activity-timeline">
+                        <ui:repeat value="#{adminDashboard.recentActivity}" var="activity">
+                            <div class="timeline-item">
+                                <div class="timeline-icon #{activity.iconClass}">
+                                    <span class="material-symbols-outlined">#{activity.icon}</span>
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">#{activity.title}</div>
+                                    <div class="timeline-desc">#{activity.description}</div>
+                                    <div class="timeline-time">
+                                        <span class="material-symbols-outlined" style="font-size: 14px;">schedule</span>
+                                        #{activity.timeAgo}
+                                    </div>
+                                </div>
+                            </div>
+                        </ui:repeat>
+
+                        <!-- Empty State -->
+                        <ui:fragment rendered="#{empty adminDashboard.recentActivity}">
+                            <div class="empty-state-small">
+                                <span class="material-symbols-outlined">inbox</span>
+                                <p>No hay actividad reciente</p>
+                            </div>
+                        </ui:fragment>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensajes de feedback -->
+            <p:growl id="growl" showDetail="true" life="5000"/>
+
+        </ui:define>
+
+    </ui:composition>
+</html>

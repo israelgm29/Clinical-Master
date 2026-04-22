@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="jakarta.faces.core"
+      xmlns:fn="jakarta.tags.functions">
+
+    <ui:composition template="/WEB-INF/templates/medic-template.xhtml">
+
+        <ui:define name="title">Mis Pacientes</ui:define>
+        <ui:define name="page-title">Mis Pacientes</ui:define>
+
+        <ui:define name="head">
+            <style>
+                /* ============================================
+                   MIS PACIENTES - PRIMEFACES 15 STYLES
+                   ============================================ */
+
+                .patients-container {
+                    background: var(--surface-card);
+                    border-radius: var(--border-radius);
+                    padding: 1.5rem;
+                }
+
+                .patients-toolbar {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1.5rem;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+                }
+
+                .patients-search {
+                    flex: 1;
+                    min-width: 280px;
+                    max-width: 400px;
+                }
+
+                .patients-search .ui-input-icon-left {
+                    width: 100%;
+                }
+
+                .patients-search .ui-input-icon-left input {
+                    width: 100%;
+                    padding-left: 2.5rem;
+                }
+
+                .filter-buttons {
+                    display: flex;
+                    gap: 0.5rem;
+                    flex-wrap: wrap;
+                }
+
+                .filter-btn {
+                    border-radius: 2rem !important;
+                    padding: 0.5rem 1rem !important;
+                    font-size: 0.875rem !important;
+                    font-weight: 500 !important;
+                }
+
+                .filter-btn.ui-button-outlined {
+                    background: transparent !important;
+                    border: 1px solid var(--surface-border) !important;
+                    color: var(--text-color) !important;
+                }
+
+                .filter-btn.ui-button-outlined:hover {
+                    border-color: var(--primary-color) !important;
+                    color: var(--primary-color) !important;
+                }
+
+                .filter-btn.ui-button-secondary {
+                    background: var(--primary-color) !important;
+                    border-color: var(--primary-color) !important;
+                    color: white !important;
+                }
+
+                /* DataView para lista de pacientes */
+                .patients-dataview .ui-dataview-content {
+                    border: none;
+                    background: transparent;
+                }
+
+                .patient-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                    padding: 1rem;
+                    background: var(--surface-card);
+                    border: 1px solid var(--surface-border);
+                    border-radius: var(--border-radius);
+                    margin-bottom: 0.75rem;
+                    transition: box-shadow 0.2s, border-color 0.2s;
+                }
+
+                .patient-item:hover {
+                    border-color: var(--primary-color);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                }
+
+                .patient-avatar {
+                    width: 3rem;
+                    height: 3rem;
+                    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-400) 100%);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: 600;
+                    font-size: 1rem;
+                    flex-shrink: 0;
+                }
+
+                .patient-details {
+                    flex: 1;
+                    min-width: 0;
+                }
+
+                .patient-header-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    margin-bottom: 0.25rem;
+                }
+
+                .patient-name {
+                    font-weight: 600;
+                    font-size: 1rem;
+                    color: var(--text-color);
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .patient-hc-badge {
+                    background: var(--primary-color);
+                    color: white;
+                    padding: 0.125rem 0.5rem;
+                    border-radius: 0.25rem;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                }
+
+                .patient-meta {
+                    display: flex;
+                    gap: 1rem;
+                    color: var(--text-color-secondary);
+                    font-size: 0.875rem;
+                }
+
+                .patient-meta i {
+                    font-size: 0.875rem;
+                    margin-right: 0.25rem;
+                }
+
+                .patient-last-visit {
+                    text-align: right;
+                    min-width: 120px;
+                }
+
+                .patient-last-visit .label {
+                    font-size: 0.75rem;
+                    color: var(--text-color-secondary);
+                    text-transform: uppercase;
+                    margin-bottom: 0.125rem;
+                }
+
+                .patient-last-visit .date {
+                    font-weight: 500;
+                    color: var(--text-color);
+                }
+
+                .patient-last-visit .time-ago {
+                    font-size: 0.75rem;
+                    color: var(--primary-color);
+                }
+
+                .patient-actions {
+                    display: flex;
+                    gap: 0.5rem;
+                }
+
+                /* Empty state */
+                .empty-state {
+                    text-align: center;
+                    padding: 4rem 2rem;
+                    color: var(--text-color-secondary);
+                }
+
+                .empty-state i {
+                    font-size: 4rem;
+                    margin-bottom: 1rem;
+                    opacity: 0.3;
+                }
+
+                .empty-state h3 {
+                    margin: 0 0 0.5rem 0;
+                    color: var(--text-color);
+                }
+
+                /* Responsive */
+                @media (max-width: 768px) {
+                    .patients-toolbar {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+
+                    .patients-search {
+                        max-width: none;
+                        min-width: auto;
+                    }
+
+                    .patient-item {
+                        flex-wrap: wrap;
+                    }
+
+                    .patient-last-visit {
+                        width: 100%;
+                        text-align: left;
+                        margin-top: 0.75rem;
+                        padding-top: 0.75rem;
+                        border-top: 1px solid var(--surface-border);
+                    }
+
+                    .patient-actions {
+                        width: 100%;
+                        justify-content: flex-end;
+                    }
+                }
+            </style>
+        </ui:define>
+
+        <ui:define name="content">
+            <h:form id="patientsForm">
+
+                <div class="patients-container">
+
+                    <!-- Toolbar: Búsqueda y Filtros -->
+                    <div class="patients-toolbar">
+                        <div class="patients-search">
+
+                            <p:inputText value="#{medicPatientsController.searchQuery}"
+                                         placeholder="Buscar por nombre, HC o cédula..."
+                                         styleClass="ui-inputfield-lg">
+                                <p:ajax event="keyup" delay="300" 
+                                        listener="#{medicPatientsController.search}"
+                                        update="patientsDataView"/>
+                            </p:inputText>
+
+
+                        </div>
+
+                        <div class="filter-buttons">
+                            <p:commandButton value="Todos"
+                                             action="#{medicPatientsController.setFilter('ALL')}"
+                                             update="patientsDataView"
+                                             process="@this"
+                                             styleClass="filter-btn #{medicPatientsController.activeFilter == 'ALL' ? 'ui-button-secondary' : 'ui-button-outlined'}"/>
+
+                            <p:commandButton value="Consulta activa"
+                                             action="#{medicPatientsController.setFilter('ACTIVE')}"
+                                             update="patientsDataView"
+                                             process="@this"
+                                             styleClass="filter-btn #{medicPatientsController.activeFilter == 'ACTIVE' ? 'ui-button-secondary' : 'ui-button-outlined'}"/>
+
+                            <p:commandButton value="Completados"
+                                             action="#{medicPatientsController.setFilter('COMPLETED')}"
+                                             update="patientsDataView"
+                                             process="@this"
+                                             styleClass="filter-btn #{medicPatientsController.activeFilter == 'COMPLETED' ? 'ui-button-secondary' : 'ui-button-outlined'}"/>
+
+                            <p:commandButton value="Con signos vitales"
+                                             action="#{medicPatientsController.setFilter('WITH_VITALS')}"
+                                             update="patientsDataView"
+                                             process="@this"
+                                             styleClass="filter-btn #{medicPatientsController.activeFilter == 'WITH_VITALS' ? 'ui-button-secondary' : 'ui-button-outlined'}"/>
+
+                            <p:commandButton value="Con diagnóstico"
+                                             action="#{medicPatientsController.setFilter('WITH_DIAGNOSTIC')}"
+                                             update="patientsDataView"
+                                             process="@this"
+                                             styleClass="filter-btn #{medicPatientsController.activeFilter == 'WITH_DIAGNOSTIC' ? 'ui-button-secondary' : 'ui-button-outlined'}"/>
+
+                            <p:commandButton value="Sin diagnóstico"
+                                             action="#{medicPatientsController.setFilter('WITHOUT_DIAGNOSTIC')}"
+                                             update="patientsDataView"
+                                             process="@this"
+                                             styleClass="filter-btn #{medicPatientsController.activeFilter == 'WITHOUT_DIAGNOSTIC' ? 'ui-button-secondary' : 'ui-button-outlined'}"/>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Pacientes con DataView -->
+                    <p:dataView id="patientsDataView"
+                                value="#{medicPatientsController.patients}"
+                                var="patient"
+                                layout="list"
+                                paginator="true"
+                                rows="10"
+                                paginatorPosition="bottom"
+                                emptyMessage="No se encontraron pacientes"
+                                styleClass="patients-dataview">
+
+                        <p:dataViewListItem>
+                            <div class="patient-item">
+
+                                <!-- Avatar -->
+                                <div class="patient-avatar">
+                                    #{medicPatientsController.getInitials(patient)}
+                                </div>
+
+                                <!-- Info -->
+                                <div class="patient-details">
+                                    <div class="patient-header-row">
+                                        <span class="patient-name">
+                                            #{patient.lastname} #{patient.firstname}
+                                        </span>
+                                        <span class="patient-hc-badge">#{patient.hc}</span>
+                                    </div>
+                                    <div class="patient-meta">
+                                        <span>
+                                            <i class="pi pi-calendar"/>
+                                            #{medicPatientsController.calculateAge(patient.birthday)} años
+                                        </span>
+                                        <span>
+                                            <i class="pi pi-user"/>
+                                            #{patient.sex != null ? patient.sex.name : 'N/A'}
+                                        </span>
+                                        <span>
+                                            <i class="pi pi-heart"/>
+                                            #{patient.blootype != null ? patient.blootype.name : 'N/A'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Última visita -->
+                                <div class="patient-last-visit">
+                                    <div class="label">Última visita</div>
+                                    <div class="date">
+                                        <h:outputText value="#{medicPatientsController.getLastVisitDate(patient)}">
+                                            <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy"/>
+                                        </h:outputText>
+                                    </div>
+                                    <div class="time-ago">
+                                        #{medicPatientsController.getDaysSinceLastVisit(patient)}
+                                    </div>
+                                </div>
+
+                                <!-- Acciones -->
+                                <div class="patient-actions">
+                                    <p:commandButton icon="pi pi-file"
+                                                     title="Ver historia clínica"
+                                                     action="#{medicPatientsController.viewHistory(patient)}"
+                                                     styleClass="ui-button-secondary ui-button-rounded"
+                                                     ajax="false"/>
+                                    <p:commandButton icon="pi pi-plus"
+                                                     title="Nueva consulta"
+                                                     action="#{medicPatientsController.newConsultation(patient)}"
+                                                     styleClass="ui-button-success ui-button-rounded"
+                                                     ajax="false"/>
+                                </div>
+
+                            </div>
+                        </p:dataViewListItem>
+
+                        <!-- Empty State -->
+                        <f:facet name="empty">
+                            <div class="empty-state">
+                                <i class="pi pi-users"/>
+                                <h3>No se encontraron pacientes</h3>
+                                <p>Intenta con otra búsqueda o filtro</p>
+                            </div>
+                        </f:facet>
+
+                    </p:dataView>
+
+                </div>
+
+            </h:form>
+        </ui:define>
+
+    </ui:composition>
+</html>

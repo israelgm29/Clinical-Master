@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="jakarta.faces.core">
+
+    <ui:composition template="/WEB-INF/templates/medic-template.xhtml">
+
+        <ui:define name="title">Historia Clínica - #{patientHistoryController.patientFullName}</ui:define>
+        <ui:define name="page-title">Historia Clínica</ui:define>
+
+        <ui:define name="head">
+            <style>
+                /* ============================================
+                   HISTORIA CLÍNICA - PRIMEFACES STYLES
+                   ============================================ */
+
+                /* Header del paciente */
+                .patient-header-sticky {
+                    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
+                    color: white;
+                    padding: 1.25rem 1.5rem;
+                    border-radius: var(--border-radius);
+                    margin-bottom: 1.5rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 1.25rem;
+                    position: sticky;
+                    top: 0;
+                    z-index: 100;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+
+                .ph-avatar {
+                    width: 4rem;
+                    height: 4rem;
+                    background: rgba(255,255,255,0.2);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    border: 3px solid rgba(255,255,255,0.3);
+                    flex-shrink: 0;
+                }
+
+                .ph-info {
+                    flex: 1;
+                }
+
+                .ph-name {
+                    font-size: 1.5rem;
+                    font-weight: 600;
+                    margin: 0 0 0.25rem 0;
+                    color: white;
+                }
+
+                .ph-meta {
+                    display: flex;
+                    gap: 1.5rem;
+                    font-size: 0.875rem;
+                    opacity: 0.9;
+                }
+
+                .ph-meta span {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.375rem;
+                }
+
+                .ph-alerts {
+                    display: flex;
+                    gap: 0.5rem;
+                    flex-wrap: wrap;
+                }
+
+                .ph-alert {
+                    background: rgba(255,255,255,0.2);
+                    padding: 0.375rem 0.75rem;
+                    border-radius: 2rem;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.375rem;
+                    color: white;
+                }
+
+                .ph-alert.danger {
+                    background: var(--danger-color);
+                }
+
+                /* Layout principal */
+                .history-layout {
+                    display: grid;
+                    grid-template-columns: 280px 1fr;
+                    gap: 1.5rem;
+                    align-items: start;
+                }
+
+                /* Sidebar */
+                .history-sidebar {
+                    position: sticky;
+                    top: 7rem;
+                }
+
+                .sidebar-card {
+                    margin-bottom: 1rem;
+                }
+
+                .sidebar-card .ui-panel-title {
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                }
+
+                .sidebar-content {
+                    padding: 0.5rem;
+                }
+
+                .sidebar-item {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 0.75rem;
+                    padding: 0.75rem;
+                    border-bottom: 1px solid var(--surface-border);
+                }
+
+                .sidebar-item:last-child {
+                    border-bottom: none;
+                }
+
+                .sidebar-icon {
+                    width: 2rem;
+                    height: 2rem;
+                    background: var(--primary-50);
+                    border-radius: 0.5rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+
+                .sidebar-icon i {
+                    font-size: 1rem;
+                    color: var(--primary-color);
+                }
+
+                .sidebar-data {
+                    flex: 1;
+                }
+
+                .sidebar-label {
+                    font-size: 0.75rem;
+                    color: var(--text-color-secondary);
+                    margin-bottom: 0.125rem;
+                }
+
+                .sidebar-value {
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                }
+
+                .sidebar-value.alert {
+                    color: var(--danger-color);
+                    font-weight: 600;
+                }
+
+                .chronic-badge {
+                    display: inline-block;
+                    background: var(--primary-100);
+                    color: var(--primary-color);
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 0.25rem;
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                    margin: 0.125rem;
+                }
+
+                /* Timeline con PrimeFaces */
+                .timeline-panel {
+                    background: var(--surface-card);
+                    border-radius: var(--border-radius);
+                    border: 1px solid var(--surface-border);
+                }
+
+                .timeline-panel .ui-panel-title {
+                    font-size: 1.125rem;
+                    font-weight: 600;
+                }
+
+                .timeline-content {
+                    padding: 1rem;
+                }
+
+                /* Accordion personalizado */
+                .consultation-accordion {
+                    border: none;
+                }
+
+                .consultation-accordion .ui-accordion-header {
+                    background: var(--surface-ground);
+                    border: 1px solid var(--surface-border);
+                    border-radius: var(--border-radius);
+                    margin-bottom: 0.75rem;
+                    padding: 1rem 1.25rem;
+                }
+
+                .consultation-accordion .ui-accordion-header:hover {
+                    border-color: var(--primary-color);
+                }
+
+                .consultation-accordion .ui-accordion-header.ui-state-active {
+                    background: var(--primary-50);
+                    border-color: var(--primary-color);
+                }
+
+                .consultation-accordion .ui-accordion-content {
+                    background: white;
+                    border: 1px solid var(--surface-border);
+                    border-top: none;
+                    border-radius: 0 0 var(--border-radius) var(--border-radius);
+                    margin-top: -0.75rem;
+                    margin-bottom: 0.75rem;
+                    padding: 1.25rem;
+                }
+
+                /* Header del accordion */
+                .accordion-header-content {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 100%;
+                }
+
+                .accordion-main {
+                    flex: 1;
+                }
+
+                .accordion-date-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    margin-bottom: 0.25rem;
+                }
+
+                .accordion-date {
+                    font-weight: 600;
+                    color: var(--primary-color);
+                    font-size: 0.875rem;
+                }
+
+                .accordion-medic {
+                    font-size: 0.75rem;
+                    color: var(--text-color-secondary);
+                }
+
+                .accordion-reason {
+                    font-size: 1rem;
+                    color: var(--text-color);
+                    font-weight: 500;
+                }
+
+                .accordion-status {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                }
+
+                /* Detalles */
+                .detail-section {
+                    margin-bottom: 1.25rem;
+                }
+
+                .detail-section:last-child {
+                    margin-bottom: 0;
+                }
+
+                .detail-title {
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    color: var(--text-color);
+                    margin-bottom: 0.75rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                .detail-title i {
+                    color: var(--primary-color);
+                }
+
+                .detail-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                    gap: 1rem;
+                }
+
+                .detail-item {
+                    background: var(--surface-ground);
+                    padding: 0.875rem;
+                    border-radius: 0.5rem;
+                }
+
+                .detail-label {
+                    font-size: 0.75rem;
+                    color: var(--text-color-secondary);
+                    margin-bottom: 0.25rem;
+                }
+
+                .detail-value {
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: var(--text-color);
+                }
+
+                .detail-value.alert {
+                    color: var(--danger-color);
+                }
+
+                .detail-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+
+                .detail-list-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 0.625rem 0.875rem;
+                    background: var(--surface-ground);
+                    border-radius: 0.5rem;
+                }
+
+                .detail-list-main {
+                    font-weight: 500;
+                }
+
+                .detail-list-sub {
+                    font-size: 0.875rem;
+                    color: var(--text-color-secondary);
+                }
+
+                .timeline-actions {
+                    display: flex;
+                    gap: 0.5rem;
+                    margin-top: 1rem;
+                    padding-top: 1rem;
+                    border-top: 1px solid var(--surface-border);
+                }
+
+                /* Empty state */
+                .empty-state {
+                    text-align: center;
+                    padding: 4rem 2rem;
+                    color: var(--text-color-secondary);
+                }
+
+                .empty-state i {
+                    font-size: 4rem;
+                    margin-bottom: 1rem;
+                    opacity: 0.3;
+                }
+
+                /* Responsive */
+                @media (max-width: 992px) {
+                    .history-layout {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .history-sidebar {
+                        position: static;
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                        gap: 1rem;
+                    }
+
+                    .sidebar-card {
+                        margin-bottom: 0;
+                    }
+                }
+
+                @media (max-width: 576px) {
+                    .patient-header-sticky {
+                        flex-direction: column;
+                        text-align: center;
+                    }
+
+                    .ph-meta {
+                        flex-direction: column;
+                        gap: 0.5rem;
+                    }
+
+                    .accordion-header-content {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 0.5rem;
+                    }
+                }
+            </style>
+        </ui:define>
+
+        <ui:define name="content">
+            <h:form id="historyForm">
+
+                <!-- HEADER STICKY DEL PACIENTE -->
+                <div class="patient-header-sticky">
+                    <div class="ph-avatar">
+                        #{patientHistoryController.patientInitials}
+                    </div>
+                    <div class="ph-info">
+                        <h1 class="ph-name">#{patientHistoryController.patientFullName}</h1>
+                        <div class="ph-meta">
+                            <span>
+                                <i class="pi pi-id-card"/>
+                                HC: #{patientHistoryController.patient.hc}
+                            </span>
+                            <span>
+                                <i class="pi pi-calendar"/>
+                                #{patientHistoryController.patientAge} años
+                            </span>
+                            <span>
+                                <i class="pi pi-user"/>
+                                #{patientHistoryController.patient.sex != null ? patientHistoryController.patient.sex.name : 'N/A'}
+                            </span>
+                            <span>
+                                <i class="pi pi-heart"/>
+                                #{patientHistoryController.patient.blootype != null ? patientHistoryController.patient.blootype.name : 'N/A'}
+                            </span>
+                            <span>
+                                <i class="pi pi-phone"/>
+                                #{patientHistoryController.patient.mobile != null ? patientHistoryController.patient.mobile : 'Sin móvil'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="ph-alerts">
+                        <h:panelGroup rendered="#{patientHistoryController.allergies}">
+                            <span class="ph-alert danger">
+                                <i class="pi pi-exclamation-triangle"/>
+                                ALERGIAS
+                            </span>
+                        </h:panelGroup>
+                        <h:panelGroup rendered="#{patientHistoryController.chronicConditions}">
+                            <span class="ph-alert">
+                                <i class="pi pi-info-circle"/>
+                                CRÓNICO
+                            </span>
+                        </h:panelGroup>
+                    </div>
+                </div>
+
+                <!-- LAYOUT PRINCIPAL -->
+                <div class="history-layout">
+
+                    <!-- SIDEBAR DE RESUMEN -->
+                    <aside class="history-sidebar">
+
+                        <!-- Últimos signos vitales -->
+                        <p:panel header="Últimos Signos Vitales" styleClass="sidebar-card">
+                            <h:panelGroup rendered="#{patientHistoryController.lastVitalSign == null}">
+                                <div class="sidebar-empty" style="text-align: center; padding: 1.5rem; color: var(--text-color-secondary);">
+                                    <i class="pi pi-info-circle" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.4;"/>
+                                    <p>No hay signos vitales registrados</p>
+                                </div>
+                            </h:panelGroup>
+
+                            <h:panelGroup rendered="#{patientHistoryController.lastVitalSign != null}">
+                                <div class="sidebar-item">
+                                    <div class="sidebar-icon"><i class="pi pi-calendar"/></div>
+                                    <div class="sidebar-data">
+                                        <div class="sidebar-label">Fecha</div>
+                                        <div class="sidebar-value">
+                                            <h:outputText value="#{patientHistoryController.lastVitalSignDate}">
+                                                <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/>
+                                            </h:outputText>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="sidebar-item">
+                                    <div class="sidebar-icon"><i class="pi pi-sort"/></div>
+                                    <div class="sidebar-data">
+                                        <div class="sidebar-label">Presión</div>
+                                        <div class="sidebar-value #{patientHistoryController.bloodPressureAlert ? 'alert' : ''}">
+                                            #{patientHistoryController.lastVitalSign.systolicpressure}/#{patientHistoryController.lastVitalSign.diastolicpressure}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="sidebar-item">
+                                    <div class="sidebar-icon"><i class="pi pi-bolt"/></div>
+                                    <div class="sidebar-data">
+                                        <div class="sidebar-label">Pulso</div>
+                                        <div class="sidebar-value">#{patientHistoryController.lastVitalSign.pulse} bpm</div>
+                                    </div>
+                                </div>
+                                <div class="sidebar-item">
+                                    <div class="sidebar-icon"><i class="pi pi-thermometer"/></div>
+                                    <div class="sidebar-data">
+                                        <div class="sidebar-label">Temperatura</div>
+                                        <div class="sidebar-value">#{patientHistoryController.lastVitalSign.temperature}°C</div>
+                                    </div>
+                                </div>
+                                <div class="sidebar-item">
+                                    <div class="sidebar-icon"><i class="pi pi-percentage"/></div>
+                                    <div class="sidebar-data">
+                                        <div class="sidebar-label">SpO2</div>
+                                        <div class="sidebar-value">#{patientHistoryController.lastVitalSign.oxygensaturation}%</div>
+                                    </div>
+                                </div>
+                            </h:panelGroup>
+                        </p:panel>
+
+                        <!-- Alergias -->
+                        <p:panel header="Alergias" styleClass="sidebar-card">
+                            <h:panelGroup rendered="#{empty patientHistoryController.allergies}">
+                                <div style="text-align: center; padding: 1rem; color: var(--text-color-secondary);">
+                                    <p>No hay alergias registradas</p>
+                                </div>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not empty patientHistoryController.allergies}">
+                                <ui:repeat value="#{patientHistoryController.allergies}" var="allergy">
+                                    <div class="sidebar-value alert" style="margin-bottom: 0.5rem;">
+                                        <i class="pi pi-times-circle" style="font-size: 0.75rem;"/>
+                                        #{allergy}
+                                    </div>
+                                </ui:repeat>
+                            </h:panelGroup>
+                        </p:panel>
+
+                        <!-- Condiciones crónicas -->
+                        <p:panel header="Condiciones Crónicas" styleClass="sidebar-card">
+                            <h:panelGroup rendered="#{empty patientHistoryController.chronicConditions}">
+                                <div style="text-align: center; padding: 1rem; color: var(--text-color-secondary);">
+                                    <p>No hay condiciones crónicas registradas</p>
+                                </div>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not empty patientHistoryController.chronicConditions}">
+                                <ui:repeat value="#{patientHistoryController.chronicConditions}" var="chronic">
+                                    <span class="chronic-badge">#{chronic}</span>
+                                </ui:repeat>
+                            </h:panelGroup>
+                        </p:panel>
+
+                        <!-- Antecedentes -->
+                        <p:panel header="Antecedentes" styleClass="sidebar-card">
+                            <h:panelGroup rendered="#{patientHistoryController.antecedent == null}">
+                                <div style="text-align: center; padding: 1rem; color: var(--text-color-secondary);">
+                                    <p>No hay antecedentes registrados</p>
+                                </div>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{patientHistoryController.antecedent != null}">
+                                <h:panelGroup rendered="#{not empty patientHistoryController.antecedent.surgical}">
+                                    <div class="sidebar-item" style="padding-top: 0;">
+                                        <div class="sidebar-data">
+                                            <div class="sidebar-label">Quirúrgicos</div>
+                                            <div class="sidebar-value">#{patientHistoryController.antecedent.surgical}</div>
+                                        </div>
+                                    </div>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{not empty patientHistoryController.antecedent.allergy}">
+                                    <div class="sidebar-item">
+                                        <div class="sidebar-data">
+                                            <div class="sidebar-label">Alérgicos</div>
+                                            <div class="sidebar-value">#{patientHistoryController.antecedent.allergy}</div>
+                                        </div>
+                                    </div>
+                                </h:panelGroup>
+                                <h:panelGroup rendered="#{not empty patientHistoryController.antecedent.clinician}">
+                                    <div class="sidebar-item">
+                                        <div class="sidebar-data">
+                                            <div class="sidebar-label">Clínicos</div>
+                                            <div class="sidebar-value">#{patientHistoryController.antecedent.clinician}</div>
+                                        </div>
+                                    </div>
+                                </h:panelGroup>
+                            </h:panelGroup>
+                        </p:panel>
+
+                    </aside>
+
+                    <!-- TIMELINE PRINCIPAL CON ACCORDION -->
+                    <p:panel header="Historial de Consultas (#{patientHistoryController.totalConsultations} total)" 
+                             styleClass="timeline-panel">
+
+                        <!-- Filtros -->
+                        <f:facet name="actions">
+                            <p:selectOneButton value="#{patientHistoryController.filter}"
+                                               styleClass="timeline-filters">
+                                <f:selectItem itemLabel="Todo" itemValue="ALL"/>
+                                <f:selectItem itemLabel="Último año" itemValue="YEAR"/>
+                                <f:selectItem itemLabel="Completadas" itemValue="COMPLETED"/>
+                                <p:ajax listener="#{patientHistoryController.applyFilter}" 
+                                        update="consultationAccordion"/>
+                            </p:selectOneButton>
+                        </f:facet>
+
+                        <div class="timeline-content">
+                            
+                            <h:panelGroup rendered="#{empty patientHistoryController.filteredRecords}">
+                                <div class="empty-state">
+                                    <i class="pi pi-inbox"/>
+                                    <h3>No hay consultas registradas</h3>
+                                    <p>Este paciente no tiene historial médico en el sistema</p>
+                                </div>
+                            </h:panelGroup>
+
+                            <!-- ACCORDION DE CONSULTAS -->
+                            <p:accordionPanel id="consultationAccordion"
+                                              value="#{patientHistoryController.filteredRecords}" 
+                                              var="record"
+                                              multiple="true"
+                                              styleClass="consultation-accordion"
+                                              rendered="#{not empty patientHistoryController.filteredRecords}">
+
+                                <p:tab>
+                                    <!-- Título del tab personalizado -->
+                                    <f:facet name="title">
+                                        <div class="accordion-header-content">
+                                            <div class="accordion-main">
+                                                <div class="accordion-date-row">
+                                                    <span class="accordion-date">
+                                                        <h:outputText value="#{record.createdat}">
+                                                            <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/>
+                                                        </h:outputText>
+                                                    </span>
+                                                    <span class="accordion-medic">
+                                                        <i class="pi pi-user-md"/>
+                                                        Dr. #{record.medicid.lastname} #{record.medicid.firstname}
+                                                    </span>
+                                                </div>
+                                                <div class="accordion-reason">
+                                                    #{empty record.reason ? 'Sin motivo registrado' : record.reason}
+                                                </div>
+                                            </div>
+                                            <div class="accordion-status">
+                                                <span class="status-badge #{record.done ? 'completed' : (record.canceled ? 'canceled' : 'pending')}">
+                                                    #{record.done ? 'Completada' : (record.canceled ? 'Cancelada' : 'Pendiente')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </f:facet>
+
+                                    <!-- CONTENIDO EXPANDIDO -->
+                                    <h:panelGroup rendered="#{not empty record.vitalsignCollection}">
+                                        <div class="detail-section">
+                                            <div class="detail-title">
+                                                <i class="pi pi-heart"/>
+                                                Signos Vitales
+                                            </div>
+                                            <div class="detail-grid">
+                                                <ui:repeat value="#{record.vitalsignCollection}" var="vital">
+                                                    <h:panelGroup rendered="#{vital.deleted == null or !vital.deleted}">
+                                                        <div class="detail-item">
+                                                            <div class="detail-label">Presión</div>
+                                                            <div class="detail-value">#{vital.systolicpressure}/#{vital.diastolicpressure}</div>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <div class="detail-label">Pulso</div>
+                                                            <div class="detail-value">#{vital.pulse} bpm</div>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <div class="detail-label">Temperatura</div>
+                                                            <div class="detail-value">#{vital.temperature}°C</div>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <div class="detail-label">SpO2</div>
+                                                            <div class="detail-value">#{vital.oxygensaturation}%</div>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <div class="detail-label">Peso</div>
+                                                            <div class="detail-value">#{vital.weight} kg</div>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <div class="detail-label">IMC</div>
+                                                            <div class="detail-value">#{vital.mass}</div>
+                                                        </div>
+                                                    </h:panelGroup>
+                                                </ui:repeat>
+                                            </div>
+                                        </div>
+                                    </h:panelGroup>
+
+                                    <!-- Diagnósticos -->
+                                    <h:panelGroup rendered="#{not empty record.diagnosticCollection}">
+                                        <div class="detail-section">
+                                            <div class="detail-title">
+                                                <i class="pi pi-tag"/>
+                                                Diagnósticos
+                                            </div>
+                                            <div class="detail-list">
+                                                <ui:repeat value="#{record.diagnosticCollection}" var="diag">
+                                                    <h:panelGroup rendered="#{diag.deleted == null or !diag.deleted}">
+                                                        <div class="detail-list-item">
+                                                            <div>
+                                                                <div class="detail-list-main">#{diag.diseaseid.name}</div>
+                                                                <div class="detail-list-sub">Código: #{diag.diseaseid.code}</div>
+                                                            </div>
+                                                        </div>
+                                                    </h:panelGroup>
+                                                </ui:repeat>
+                                            </div>
+                                        </div>
+                                    </h:panelGroup>
+
+                                    <!-- Enfermedad actual -->
+                                    <h:panelGroup rendered="#{not empty record.currentillness}">
+                                        <div class="detail-section">
+                                            <div class="detail-title">
+                                                <i class="pi pi-file-edit"/>
+                                                Enfermedad Actual
+                                            </div>
+                                            <p style="margin: 0; color: var(--text-color); line-height: 1.6;">
+                                                #{record.currentillness}
+                                            </p>
+                                        </div>
+                                    </h:panelGroup>
+
+                                    <!-- Receta -->
+                                    <h:panelGroup rendered="#{not empty record.prescriptionCollection}">
+                                        <div class="detail-section">
+                                            <div class="detail-title">
+                                                <i class="pi pi-pills"/>
+                                                Receta Médica
+                                            </div>
+                                            <div class="detail-list">
+                                                <ui:repeat value="#{record.prescriptionCollection}" var="presc">
+                                                    <div class="detail-list-item">
+                                                        <div>
+                                                            <div class="detail-list-main">#{presc.medication}</div>
+                                                            <div class="detail-list-sub">
+                                                                #{presc.dose} - #{presc.frequency} - #{presc.duration}
+                                                                <h:panelGroup rendered="#{not empty presc.route}">
+                                                                    | Vía: #{presc.route}
+                                                                </h:panelGroup>
+                                                            </div>
+                                                            <h:panelGroup rendered="#{not empty presc.instructions}">
+                                                                <div style="font-size: 0.8rem; color: var(--text-color-secondary); margin-top: 0.25rem;">
+                                                                    <i class="pi pi-info-circle"/> #{presc.instructions}
+                                                                </div>
+                                                            </h:panelGroup>
+                                                        </div>
+                                                    </div>
+                                                </ui:repeat>
+                                            </div>
+                                        </div>
+                                    </h:panelGroup>
+
+                                    <!-- Exámenes -->
+                                    <h:panelGroup rendered="#{not empty record.medicalexamCollection}">
+                                        <div class="detail-section">
+                                            <div class="detail-title">
+                                                <i class="pi pi-microchip"/>
+                                                Exámenes Solicitados
+                                            </div>
+                                            <div class="detail-list">
+                                                <ui:repeat value="#{record.medicalexamCollection}" var="exam">
+                                                    <div class="detail-list-item">
+                                                        <div class="detail-list-main">#{exam.examid.name}</div>
+                                                        <div class="detail-list-sub">#{exam.done != null ? exam.done : 'Pendiente'}</div>
+                                                    </div>
+                                                </ui:repeat>
+                                            </div>
+                                        </div>
+                                    </h:panelGroup>
+
+                                    <!-- Acciones -->
+                                    <div class="timeline-actions">
+                                        <p:commandButton value="Ver consulta completa"
+                                                         icon="pi pi-eye"
+                                                         action="#{patientHistoryController.viewFullConsultation(record)}"
+                                                         styleClass="ui-button-outlined"/>
+                                        <p:commandButton value="Nueva consulta similar"
+                                                         icon="pi pi-copy"
+                                                         action="#{patientHistoryController.newSimilarConsultation(record)}"
+                                                         styleClass="ui-button-secondary"/>
+                                    </div>
+
+                                </p:tab>
+
+                            </p:accordionPanel>
+
+                        </div>
+
+                    </p:panel>
+
+                </div>
+
+            </h:form>
+        </ui:define>
+
+    </ui:composition>
+</html>

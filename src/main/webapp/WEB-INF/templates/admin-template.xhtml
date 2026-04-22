@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces"
+      xmlns:nav="jakarta.faces.composite/components">
+
+    <h:head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Hospital General | Administración</title>
+        <!-- ICONOS -->
+        <link rel="stylesheet"
+              href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"/>
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css"/>
+
+        <!-- CSS: base primero, luego el módulo -->
+        <h:outputStylesheet library="css" name="base.css"/>
+        <h:outputStylesheet library="css" name="admin.css"/>
+        <h:outputStylesheet library="css" name="topbar.css"/>
+        <h:outputStylesheet library="css" name="profile.css"/>
+    </h:head>
+
+    <h:body>
+
+        <div class="layout">
+
+            <!-- SIDEBAR -->
+            <ui:include src="/WEB-INF/sidebars/admin-sidebar.xhtml"/>
+
+            <!-- BOTÓN FLOAT (visible en mobile) -->
+            <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Colapsar menú">
+                <i class="pi pi-bars"></i>
+            </button>
+
+            <!-- MAIN -->
+            <div class="main" id="mainContent">
+
+                <!-- MENSAJES GLOBALES -->
+                <p:growl id="messages" showDetail="true" life="4000"/>
+
+                <!-- CONTENIDO -->
+                <main class="content fade-in">
+                    <!-- NAVBAR compartido -->
+                    <nav:navbar showNotifications="true"
+                                user="#{userSession.user}"/>
+                    <header class="content-header">
+                        <h1 class="page-title">
+                            <ui:insert name="page-title">Panel</ui:insert>
+                        </h1>
+                        <div class="header-actions">
+                            <ui:insert name="header-actions"/>
+                        </div>
+                    </header>
+
+                    <ui:insert name="content"/>
+                </main>
+            </div>
+        </div>
+
+        <!-- SCRIPTS de vistas hijas -->
+        <ui:insert name="scripts"/>
+
+        <h:outputScript library="js" name="admin.js"/>
+
+    </h:body>
+</html>

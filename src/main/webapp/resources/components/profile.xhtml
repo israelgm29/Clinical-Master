@@ -6,75 +6,74 @@
       xmlns:ui="jakarta.faces.facelets"
       xmlns:cc="jakarta.faces.composite"
       xmlns:pt="jakarta.faces.passthrough"
-      xmlns:p="primefaces">
+      xmlns:p="http://primefaces.org/ui">
 
     <!-- ═══════════════════════════════════════════════════════════════
-         INTERFACE: Atributos que recibe el componente
+         INTERFACE
          ═══════════════════════════════════════════════════════════════ -->
     <cc:interface>
-        <cc:attribute name="data" 
-                      type="com.mycompany.hospitalgeneral.services.interfaces.ProfileData" 
+        <cc:attribute name="data"
+                      type="com.mycompany.hospitalgeneral.services.interfaces.ProfileData"
                       required="true"
                       shortDescription="Objeto que implementa ProfileData (Tuser)"/>
 
-        <cc:attribute name="mode" 
-                      type="java.lang.String" 
-                      default="VIEW" 
+        <cc:attribute name="mode"
+                      type="java.lang.String"
+                      default="VIEW"
                       required="false"
                       shortDescription="VIEW o EDIT"/>
 
-        <cc:attribute name="showAudit" 
-                      type="java.lang.Boolean" 
-                      default="false" 
+        <cc:attribute name="showAudit"
+                      type="java.lang.Boolean"
+                      default="false"
                       required="false"
                       shortDescription="Muestra fechas de creación/edición"/>
 
-        <cc:attribute name="avatarSize" 
-                      type="java.lang.String" 
-                      default="lg" 
+        <cc:attribute name="avatarSize"
+                      type="java.lang.String"
+                      default="lg"
                       required="false"
                       shortDescription="Tamaño del avatar: sm, md, lg, xl"/>
 
-        <!-- Facetas para extensibilidad -->
-        <cc:facet name="header" 
-                  displayName="Encabezado personalizado"
-                  shortDescription="Contenido adicional antes de los datos del perfil"/>
-
-        <cc:facet name="actions" 
+        <cc:facet name="actions"
                   displayName="Botones de acción"
-                  shortDescription="Botones adicionales en la barra de acciones"/>
+                  shortDescription="Botones en el pie del componente"/>
 
-        <cc:facet name="footer" 
+        <cc:facet name="footer"
                   displayName="Pie personalizado"
-                  shortDescription="Contenido adicional después de los datos del perfil"/>
+                  shortDescription="Contenido adicional después del perfil"/>
     </cc:interface>
 
     <!-- ═══════════════════════════════════════════════════════════════
-         IMPLEMENTATION: Markup del componente
+         IMPLEMENTATION
          ═══════════════════════════════════════════════════════════════ -->
     <cc:implementation>
 
         <div class="profile-card #{cc.attrs.mode eq 'EDIT' ? 'profile-editable' : 'profile-view'}">
 
-            <!-- ═══════════════════════════════════════════════════════ -->
-            <!-- HEADER: Avatar y Nombre                                    -->
-            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- ── HEADER: Avatar + Nombre ──────────────────────────── -->
             <div class="profile-header">
+
                 <div class="profile-avatar-container avatar-#{cc.attrs.avatarSize}">
+
+                    <!-- Imagen de perfil -->
                     <ui:fragment rendered="#{cc.attrs.data.hasProfileImage()}">
-                        <img src="#{cc.attrs.data.imageUrl}" 
+                        <img src="#{cc.attrs.data.imageUrl}"
                              alt="#{cc.attrs.data.displayName}"
-                             class="profile-avatar-img" />
+                             class="profile-avatar-img"/>
                     </ui:fragment>
+
+                    <!-- Placeholder con iniciales -->
                     <ui:fragment rendered="#{not cc.attrs.data.hasProfileImage()}">
                         <div class="profile-avatar-placeholder">
                             #{cc.attrs.data.initials}
                         </div>
                     </ui:fragment>
 
-                    <!-- Botón de cambio de foto (solo modo EDIT) -->
+                    <!-- Botón de foto (solo EDIT) -->
                     <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
-                        <label for="#{cc.clientId}:avatarUpload" class="avatar-upload-btn">
+                        <label for="#{cc.clientId}:avatarUpload" class="avatar-upload-btn"
+                               title="Cambiar foto">
                             <span class="material-symbols-outlined">photo_camera</span>
                         </label>
                     </ui:fragment>
@@ -82,7 +81,13 @@
 
                 <div class="profile-title">
                     <h2 class="profile-name">#{cc.attrs.data.displayName}</h2>
-                    <span class="profile-role-badge">#{cc.attrs.data.roleName}</span>
+
+                    <span class="profile-role-badge">
+                        <span class="material-symbols-outlined" style="font-size:14px;">badge</span>
+                        #{cc.attrs.data.roleName}
+                    </span>
+
+                    <!-- Especialidad (solo médicos) -->
                     <ui:fragment rendered="#{cc.attrs.data.medic}">
                         <span class="profile-specialty">
                             <span class="material-symbols-outlined">stethoscope</span>
@@ -90,132 +95,151 @@
                         </span>
                     </ui:fragment>
                 </div>
-            </div>
 
-            <!-- ═══════════════════════════════════════════════════════ -->
-            <!-- FACETA HEADER (opcional)                                  -->
-            <!-- ═══════════════════════════════════════════════════════ -->
-            <cc:renderFacet name="header" rendered="#{not empty cc.facets.header}" />
+            </div><!-- /.profile-header -->
 
-            <!-- ═══════════════════════════════════════════════════════ -->
-            <!-- CUERPO: Información del perfil                            -->
-            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- ── BODY ─────────────────────────────────────────────── -->
             <div class="profile-body">
 
-                <!-- Sección: Información Personal -->
+                <!-- SECCIÓN: Información Personal -->
                 <div class="profile-section">
                     <div class="section-header">
                         <span class="material-symbols-outlined">person</span>
                         <h3>Información Personal</h3>
                     </div>
 
-                    <div class="profile-field-group">
+                    <div class="profile-field-grid">
+
                         <!-- Nombre -->
                         <div class="profile-field">
-                            <label>Nombre Completo</label>
+                            <label>Nombre</label>
                             <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
-                                <p class="field-value">#{cc.attrs.data.fullName}</p>
+                                <p class="field-value">#{cc.attrs.data.firstName}</p>
                             </ui:fragment>
                             <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
-                                <div class="field-input-group">
-                                    <h:inputText value="#{cc.attrs.data.firstName}" 
-                                                 styleClass="field-input"
-                                                 pt:placeholder="Nombre" />
-                                    <h:inputText value="#{cc.attrs.data.lastName}" 
-                                                 styleClass="field-input"
-                                                 pt:placeholder="Apellido" />
-                                </div>
+                                <h:inputText value="#{cc.attrs.data.firstName}"
+                                             styleClass="field-input"
+                                             pt:placeholder="Nombre"/>
                             </ui:fragment>
                         </div>
 
-                        <!-- Email -->
+                        <!-- Apellido -->
                         <div class="profile-field">
+                            <label>Apellido</label>
+                            <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
+                                <p class="field-value">#{cc.attrs.data.lastName}</p>
+                            </ui:fragment>
+                            <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
+                                <h:inputText value="#{cc.attrs.data.lastName}"
+                                             styleClass="field-input"
+                                             pt:placeholder="Apellido"/>
+                            </ui:fragment>
+                        </div>
+
+                        <!-- DNI -->
+                        <div class="profile-field">
+                            <label>DNI / Cédula</label>
+                            <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
+                                <p class="field-value">
+                                    #{not empty cc.attrs.data.dni ? cc.attrs.data.dni : '—'}
+                                </p>
+                            </ui:fragment>
+                            <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
+                                <h:inputText value="#{cc.attrs.data.dni}"
+                                             styleClass="field-input"
+                                             pt:placeholder="Ej: 0954123456"/>
+                            </ui:fragment>
+                        </div>
+
+                        <!-- Pasaporte -->
+                        <div class="profile-field">
+                            <label>Pasaporte</label>
+                            <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
+                                <p class="field-value">
+                                    #{not empty cc.attrs.data.passport ? cc.attrs.data.passport : '—'}
+                                </p>
+                            </ui:fragment>
+                            <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
+                                <h:inputText value="#{cc.attrs.data.passport}"
+                                             styleClass="field-input"
+                                             pt:placeholder="Opcional"/>
+                            </ui:fragment>
+                        </div>
+
+                        <!-- Dirección (full width) -->
+                        <div class="profile-field full-width">
+                            <label>Dirección</label>
+                            <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
+                                <p class="field-value">
+                                    #{not empty cc.attrs.data.address ? cc.attrs.data.address : '—'}
+                                </p>
+                            </ui:fragment>
+                            <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
+                                <h:inputText value="#{cc.attrs.data.address}"
+                                             styleClass="field-input"
+                                             pt:placeholder="Dirección"/>
+                            </ui:fragment>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: Contacto -->
+                <div class="profile-section">
+                    <div class="section-header">
+                        <span class="material-symbols-outlined">contact_phone</span>
+                        <h3>Contacto</h3>
+                    </div>
+
+                    <div class="profile-field-grid">
+
+                        <!-- Email -->
+                        <div class="profile-field full-width">
                             <label>Correo Electrónico</label>
                             <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
                                 <p class="field-value">#{cc.attrs.data.email}</p>
                             </ui:fragment>
                             <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
-                                <h:inputText value="#{cc.attrs.data.email}" 
-                                             styleClass="field-input" />
+                                <h:inputText value="#{cc.attrs.data.email}"
+                                             styleClass="field-input"
+                                             pt:placeholder="correo@ejemplo.com"/>
                             </ui:fragment>
                         </div>
 
-                        <!-- Documento de Identidad -->
-                        <div class="profile-field-row">
-                            <div class="profile-field half">
-                                <label>DNI</label>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
-                                    <p class="field-value">#{cc.attrs.data.dni}</p>
-                                </ui:fragment>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
-                                    <h:inputText value="#{cc.attrs.data.dni}" 
-                                                 styleClass="field-input" />
-                                </ui:fragment>
-                            </div>
-                            <div class="profile-field half">
-                                <label>Pasaporte</label>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
-                                    <p class="field-value">
-                                        <ui:fragment rendered="#{not empty cc.attrs.data.passport}">
-                                            #{cc.attrs.data.passport}
-                                        </ui:fragment>
-                                        <ui:fragment rendered="#{empty cc.attrs.data.passport}">
-                                            <span class="field-empty">—</span>
-                                        </ui:fragment>
-                                    </p>
-                                </ui:fragment>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
-                                    <h:inputText value="#{cc.attrs.data.passport}" 
-                                                 styleClass="field-input" />
-                                </ui:fragment>
-                            </div>
-                        </div>
-
-                        <!-- Teléfonos -->
-                        <div class="profile-field-row">
-                            <div class="profile-field half">
-                                <label>Teléfono</label>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
-                                    <p class="field-value">
-                                        #{not empty cc.attrs.data.telephone ? cc.attrs.data.telephone : '—'}
-                                    </p>
-                                </ui:fragment>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
-                                    <h:inputText value="#{cc.attrs.data.telephone}" 
-                                                 styleClass="field-input" />
-                                </ui:fragment>
-                            </div>
-                            <div class="profile-field half">
-                                <label>Móvil</label>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
-                                    <p class="field-value">
-                                        #{not empty cc.attrs.data.mobile ? cc.attrs.data.mobile : '—'}
-                                    </p>
-                                </ui:fragment>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
-                                    <h:inputText value="#{cc.attrs.data.mobile}" 
-                                                 styleClass="field-input" />
-                                </ui:fragment>
-                            </div>
-                        </div>
-
-                        <!-- Dirección -->
+                        <!-- Teléfono -->
                         <div class="profile-field">
-                            <label>Dirección</label>
+                            <label>Teléfono</label>
                             <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
-                                <p class="field-value">#{cc.attrs.data.address}</p>
+                                <p class="field-value">
+                                    #{not empty cc.attrs.data.telephone ? cc.attrs.data.telephone : '—'}
+                                </p>
                             </ui:fragment>
                             <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
-                                <h:inputText value="#{cc.attrs.data.address}" 
-                                             styleClass="field-input" />
+                                <h:inputText value="#{cc.attrs.data.telephone}"
+                                             styleClass="field-input"
+                                             pt:placeholder="Teléfono fijo"/>
                             </ui:fragment>
                         </div>
+
+                        <!-- Móvil -->
+                        <div class="profile-field">
+                            <label>Móvil</label>
+                            <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
+                                <p class="field-value">
+                                    #{not empty cc.attrs.data.mobile ? cc.attrs.data.mobile : '—'}
+                                </p>
+                            </ui:fragment>
+                            <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
+                                <h:inputText value="#{cc.attrs.data.mobile}"
+                                             styleClass="field-input"
+                                             pt:placeholder="Celular"/>
+                            </ui:fragment>
+                        </div>
+
                     </div>
                 </div>
 
-                <!-- ═══════════════════════════════════════════════════ -->
-                <!-- SECCIÓN: Información Profesional (SOLO MÉDICOS)       -->
-                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- SECCIÓN: Información Profesional (SOLO MÉDICOS) -->
                 <ui:fragment rendered="#{cc.attrs.data.medic}">
                     <div class="profile-section">
                         <div class="section-header">
@@ -223,92 +247,100 @@
                             <h3>Información Profesional</h3>
                         </div>
 
-                        <div class="profile-field-group">
-                            <!-- Nº de Registro Profesional -->
-                            <div class="profile-field">
-                                <label>Nº de Colegiado / Registro Profesional</label>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
-                                    <p class="field-value highlight">
-                                        #{not empty cc.attrs.data.professionalId ? cc.attrs.data.professionalId : 'Pendiente de registro'}
-                                    </p>
-                                </ui:fragment>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
-                                    <h:inputText value="#{cc.attrs.data.professionalId}" 
-                                                 styleClass="field-input" />
-                                </ui:fragment>
-                            </div>
+                        <div class="professional-area">
+                            <div class="profile-field-grid">
 
-                            <!-- Especialidades -->
-                            <div class="profile-field">
-                                <label>Especialidades</label>
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
+                                <!-- Nº Registro -->
+                                <div class="profile-field">
+                                    <label>Nº de Colegiado / Registro</label>
+                                    <ui:fragment rendered="#{cc.attrs.mode eq 'VIEW'}">
+                                        <p class="field-value highlight">
+                                            #{not empty cc.attrs.data.professionalId
+                                              ? cc.attrs.data.professionalId
+                                              : 'Pendiente de registro'}
+                                        </p>
+                                    </ui:fragment>
+                                    <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
+                                        <h:inputText value="#{cc.attrs.data.professionalId}"
+                                                     styleClass="field-input"
+                                                     pt:placeholder="Ej: MSP-12345"/>
+                                    </ui:fragment>
+                                </div>
+
+                                <!-- Especialidades -->
+                                <div class="profile-field">
+                                    <label>Especialidades</label>
                                     <p class="field-value">#{cc.attrs.data.specialties}</p>
-                                </ui:fragment>
-                                <!-- En EDIT, normalmente se usa un componente más complejo (picklist) -->
-                                <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
-                                    <p:inputText value="#{cc.attrs.data.specialties}" 
-                                                 styleClass="field-input"
-                                                 disabled="true"
-                                                 title="Las especialidades se gestionan en la sección administrativa" />
-                                    <small class="field-hint">Gestionado por Administración</small>
-                                </ui:fragment>
+                                    <ui:fragment rendered="#{cc.attrs.mode eq 'EDIT'}">
+                                        <small class="field-hint">
+                                            <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;">info</span>
+                                            Gestionado por Administración
+                                        </small>
+                                    </ui:fragment>
+                                </div>
+
                             </div>
                         </div>
                     </div>
                 </ui:fragment>
 
-                <!-- ═══════════════════════════════════════════════════ -->
-                <!-- SECCIÓN: Auditoría (Opcional)                         -->
-                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- SECCIÓN: Auditoría (opcional) -->
                 <ui:fragment rendered="#{cc.attrs.showAudit}">
-                    <div class="profile-section profile-audit">
+                    <div class="profile-section">
                         <div class="section-header">
-                            <span class="material-symbols-outlined">info</span>
+                            <span class="material-symbols-outlined">manage_history</span>
                             <h3>Información del Sistema</h3>
                         </div>
 
-                        <div class="audit-info">
-                            <div class="audit-row">
-                                <span class="audit-label">Estado:</span>
-                                <span class="audit-value">
-                                    <span class="status-badge #{cc.attrs.data.isactive ? 'active' : 'inactive'}">
-                                        #{cc.attrs.data.isactive ? 'Activo' : 'Inactivo'}
-                                    </span>
-                                </span>
-                            </div>
-                            <div class="audit-row">
-                                <span class="audit-label">Creado:</span>
-                                <span class="audit-value">
-                                    <h:outputText value="#{cc.attrs.data.createdAt}">
-                                        <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm" />
-                                    </h:outputText>
-                                </span>
-                            </div>
-                            <ui:fragment rendered="#{cc.attrs.data.createdAt ne cc.attrs.data.updatedAt}">
+                        <div class="profile-audit">
+                            <div class="audit-info">
+
                                 <div class="audit-row">
-                                    <span class="audit-label">Última actualización:</span>
+                                    <span class="audit-label">Estado de cuenta</span>
                                     <span class="audit-value">
-                                        <h:outputText value="#{cc.attrs.data.updatedAt}">
-                                            <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm" />
+                                        <span class="status-badge #{cc.attrs.data.isactive ? 'active' : 'inactive'}">
+                                            #{cc.attrs.data.isactive ? '✓ Activo' : '✗ Inactivo'}
+                                        </span>
+                                    </span>
+                                </div>
+
+                                <div class="audit-row">
+                                    <span class="audit-label">Fecha de registro</span>
+                                    <span class="audit-value">
+                                        <h:outputText value="#{cc.attrs.data.createdAt}">
+                                            <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/>
                                         </h:outputText>
                                     </span>
                                 </div>
-                            </ui:fragment>
+
+                                <ui:fragment rendered="#{cc.attrs.data.createdAt ne cc.attrs.data.updatedAt}">
+                                    <div class="audit-row">
+                                        <span class="audit-label">Última actualización</span>
+                                        <span class="audit-value">
+                                            <h:outputText value="#{cc.attrs.data.updatedAt}">
+                                                <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/>
+                                            </h:outputText>
+                                        </span>
+                                    </div>
+                                </ui:fragment>
+
+                            </div>
                         </div>
                     </div>
                 </ui:fragment>
 
             </div><!-- /.profile-body -->
 
+            <!-- ── FOOTER ────────────────────────────────────────────── -->
             <div class="profile-footer">
                 <div class="profile-actions">
-                    <cc:renderFacet name="actions" />
+                    <cc:renderFacet name="actions"/>
                 </div>
             </div>
 
-            <cc:renderFacet name="footer" rendered="#{not empty cc.facets.footer}" />
+            <cc:renderFacet name="footer" rendered="#{not empty cc.facets.footer}"/>
 
-        </div><!-- /.profile-card -->      
+        </div><!-- /.profile-card -->
 
     </cc:implementation>
 

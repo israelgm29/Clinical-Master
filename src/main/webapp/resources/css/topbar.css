@@ -5,7 +5,7 @@
 .top-navbar {
     position: fixed;
     top: 0;
-    left: 0;
+    left: var(--sidebar-width); 
     right: 0;
     height: 60px;
     background: white;
@@ -16,6 +16,7 @@
     padding: 0 20px;
     z-index: 1000;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: left 0.3s ease; 
 }
 
 /* Ajuste para contenido principal */

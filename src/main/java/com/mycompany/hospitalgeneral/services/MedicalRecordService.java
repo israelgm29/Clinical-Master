@@ -240,6 +240,55 @@ public class MedicalRecordService {
         }
     }
 
+    /**
+     * Encuentra la última consulta de un paciente con un médico específico
+     */
+    public Medicalrecord findLastByPatientAndMedic(Integer patientId, Integer medicId) {
+        try {
+            return em.createQuery(
+                    "SELECT m FROM Medicalrecord m "
+                    + "WHERE m.patientid.id = :patientId AND m.medicid.id = :medicId "
+                    + "AND (m.deleted = false OR m.deleted IS NULL) "
+                    + "ORDER BY m.createdat DESC",
+                    Medicalrecord.class)
+                    .setParameter("patientId", patientId)
+                    .setParameter("medicId", medicId)
+                    .setMaxResults(1)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Cuenta consultas de un paciente con un médico después de una fecha
+     */
+    public long countByPatientMedicAndDateAfter(Integer patientId, Integer medicId, LocalDateTime date) {
+        return em.createQuery(
+                "SELECT COUNT(m) FROM Medicalrecord m "
+                + "WHERE m.patientid.id = :patientId AND m.medicid.id = :medicId "
+                + "AND m.createdat > :date AND m.deleted = false",
+                Long.class)
+                .setParameter("patientId", patientId)
+                .setParameter("medicId", medicId)
+                .setParameter("date", date)
+                .getSingleResult();
+    }
+
+    /**
+     * Todas las consultas de un médico (para obtener pacientes únicos)
+     */
+    public List<Medicalrecord> findByMedicId(Integer medicId) {
+        return em.createQuery(
+                "SELECT m FROM Medicalrecord m "
+                + "WHERE m.medicid.id = :medicId AND m.deleted = false "
+                + "ORDER BY m.createdat DESC",
+                Medicalrecord.class)
+                .setParameter("medicId", medicId)
+                .getResultList();
+    }
+
     // ==================== OPERACIONES CRUD ====================
     /**
      * Guarda o actualiza un MedicalRecord

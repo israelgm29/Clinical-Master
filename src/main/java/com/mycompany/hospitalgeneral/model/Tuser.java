@@ -22,7 +22,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -57,7 +56,7 @@ public class Tuser implements Serializable, DisplayUser, ProfileData {
     private Boolean deleted = false;
 
     @Column(name = "deletedat")
-    private Date deletedat;
+    private LocalDateTime deletedat;
 
     @Column(name = "deletedby")
     private Integer deletedby;
@@ -119,7 +118,7 @@ public class Tuser implements Serializable, DisplayUser, ProfileData {
     protected void onUpdate() {
         if (this.deleted != null && this.deleted) {
             // Si está marcado como eliminado, actualizar fecha de eliminación
-            this.deletedat = new Date();
+            this.deletedat = LocalDateTime.now();
         } else {
             // Actualización normal
             this.editedat = LocalDateTime.now();
@@ -243,11 +242,11 @@ public class Tuser implements Serializable, DisplayUser, ProfileData {
         this.deleted = deleted;
     }
 
-    public Date getDeletedat() {
+    public LocalDateTime getDeletedat() {
         return deletedat;
     }
 
-    public void setDeletedat(Date deletedat) {
+    public void setDeletedat(LocalDateTime deletedat) {
         this.deletedat = deletedat;
     }
 

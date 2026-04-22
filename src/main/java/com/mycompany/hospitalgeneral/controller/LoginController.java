@@ -68,19 +68,13 @@ public class LoginController {
             // 🔁 Redirección (REFACTORIZADA: Sin el prefijo /faces)
             String redirect = "?faces-redirect=true";
 
-            switch (role) {
-                case "Administración":
-                    return "/views/admin/dashboard.xhtml" + redirect;
-                case "Médico":
-                    return "/views/medic/dashboard.xhtml" + redirect;
-                case "Enfermería":
-                    return "/views/nurse/dashboard.xhtml" + redirect;
-                case "Analista":
-                    return "/views/analista/dashboard.xhtml" + redirect;
-                default:
-                    // Es preferible redirigir a una página de error o al login si el rol no existe
-                    return "/login.xhtml" + redirect;
-            }
+            return switch (role) {
+                case "Administración" -> "/views/admin/dashboard/dashboard.xhtml" + redirect;
+                case "Médico" -> "/views/medic/dashboard.xhtml" + redirect;
+                case "Enfermería" -> "/views/nurse/dashboard.xhtml" + redirect;
+                case "Analista" -> "/views/analista/dashboard.xhtml" + redirect;
+                default -> "/login.xhtml" + redirect;
+            }; // Es preferible redirigir a una página de error o al login si el rol no existe
 
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,

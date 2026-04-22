@@ -3,13 +3,80 @@
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:p="http://primefaces.org/ui"
                 xmlns:f="jakarta.faces.core"
-                template="/WEB-INF/templates/template.xhtml">
+                template="/WEB-INF/templates/admin-template.xhtml">
 
     <ui:define name="titulo">Gestión de Pacientes</ui:define>
 
-    <ui:define name="contenido">
+    <ui:define name="content">
         <h:form id="form">
             <p:growl id="messages" showDetail="true" />
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- KPI CARDS - Dashboard de Pacientes                                -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div class="kpi-grid" style="margin-bottom: 24px;">
+
+                <!-- KPI 1: Total Pacientes -->
+                <div class="kpi-card primary">
+                    <div class="kpi-icon">
+                        <i class="pi pi-users"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{patientController.totalPatients}</div>
+                        <div class="kpi-label">Total Pacientes</div>
+                        <div class="kpi-trend">
+                            <i class="pi pi-database"></i>
+                            Registros totales
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Pacientes Activos -->
+                <div class="kpi-card success">
+                    <div class="kpi-icon">
+                        <i class="pi pi-check-circle"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{patientController.activePatients}</div>
+                        <div class="kpi-label">Pacientes Activos</div>
+                        <div class="kpi-trend up">
+                            <i class="pi pi-arrow-up"></i>
+                            #{patientController.activePercentage}% del total
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Registrados Este Mes -->
+                <div class="kpi-card info">
+                    <div class="kpi-icon">
+                        <i class="pi pi-calendar-plus"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{patientController.patientsThisMonth}</div>
+                        <div class="kpi-label">Nuevos Este Mes</div>
+                        <div class="kpi-trend #{patientController.monthlyTrendClass}">
+                            <i class="pi pi-arrow-#{patientController.monthlyTrendIcon}"></i>
+                            #{patientController.monthlyTrendPercent}% vs mes anterior
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Pacientes Inactivos / Eliminados -->
+                <div class="kpi-card warning">
+                    <div class="kpi-icon">
+                        <i class="pi pi-user-minus"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{patientController.inactivePatients}</div>
+                        <div class="kpi-label">Inactivos / Eliminados</div>
+                        <div class="kpi-trend">
+                            <i class="pi pi-archive"></i>
+                            #{patientController.inactivePercentage}% del total
+                        </div>
+                    </div>
+                </div>
+
+            </div>
 
             <!-- Header con contador y botón nuevo -->
             <div class="flex-between mb-6">
@@ -24,55 +91,162 @@
                                  styleClass="ui-button-success" />
             </div>
 
-            <!-- Tabla de pacientes -->
             <div class="card">
-                <p:dataTable id="dt-patients" widgetVar="dtPatients" var="p" 
+                <p:dataTable id="dt-patients" 
+                             widgetVar="dtPatients" 
+                             var="p"
                              value="#{patientController.patients}"
-                             reflow="true" selectionMode="single" 
-                             rowKey="#{p.id}" paginator="true" rows="10" 
+                             rowKey="#{p.id}"
+                             paginator="true" 
+                             rows="10" 
                              paginatorPosition="bottom"
-                             sortMode="multiple">
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="10,15,20,50"
+                             emptyMessage="No se encontraron pacientes registrados"
+                             sortMode="multiple"
+                             style="font-size: 13px;">
 
-                    <p:column headerText="Cédula/DNI" sortBy="#{p.dni}" filterBy="#{p.dni}">
-                        <h:outputText value="#{p.dni}" />
+                    <!-- ✅ COLUMNA 1: ESTADO (Activo/Inactivo) -->
+                    <p:column headerText="Estado" style="width: 70px; text-align: center;">
+                        <span class="status-indicator-patient #{p.deleted ? 'inactive' : 'active'}"
+                              title="#{p.deleted ? 'Inactivo / Dado de baja' : 'Activo'}">
+                            <i class="pi pi-#{p.deleted ? 'times-circle' : 'check-circle'}"></i>
+                        </span>
                     </p:column>
 
-                    <p:column headerText="Paciente" sortBy="#{p.lastname}">
-                        <span class="font-semibold">#{p.lastname} #{p.firstname}</span>
+                    <!-- ✅ COLUMNA 2: IDENTIFICACIÓN (DNI/Pasaporte + HC) -->
+                    <p:column headerText="Identificación" sortBy="#{p.dni}" filterBy="#{p.dni}" style="min-width: 130px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <i class="pi pi-id-card" style="color: var(--text-muted); font-size: 14px;"></i>
+                                <span class="font-semibold">
+                                    #{empty p.dni ? (empty p.passport ? '—' : p.passport) : p.dni}
+                                </span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                                <i class="pi pi-folder" style="color: var(--text-muted); font-size: 12px;"></i>
+                                <span class="hc-badge" style="font-size: 11px;">#{p.hc}</span>
+                            </div>
+                        </div>
                     </p:column>
 
-                    <p:column headerText="H. Clínica" sortBy="#{p.hc}">
-                        <span class="hc-badge">#{p.hc}</span>
+                    <!-- ✅ COLUMNA 3: PACIENTE (Nombre + Edad) -->
+                    <p:column headerText="Paciente" sortBy="#{p.lastname}" filterBy="#{p.lastname}">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <!-- Avatar con iniciales -->
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; text-transform: uppercase; font-size: 14px;">
+                                #{p.firstname.substring(0,1)}#{p.lastname.substring(0,1)}
+                            </div>
+                            <div>
+                                <div class="font-semibold">#{p.lastname} #{p.firstname}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">
+                                    <i class="pi pi-calendar" style="font-size: 11px; margin-right: 4px;"></i>
+                                    #{patientController.calculateAge(p.birthday)} años
+                                    <span style="margin: 0 6px;">•</span>
+                                    <i class="pi pi-#{p.sex.name.toLowerCase().contains('masculino') ? 'mars' : 'venus'}" style="font-size: 11px;"></i>
+                                </div>
+                            </div>
+                        </div>
                     </p:column>
 
-                    <p:column headerText="Email">
-                        <h:outputText value="#{p.email}" />
+                    <!-- ✅ COLUMNA 4: CONTACTO (Email + Teléfono) -->
+                    <p:column headerText="Contacto" filterBy="#{p.email}">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <i class="pi pi-envelope" style="color: var(--text-muted); font-size: 12px;"></i>
+                                <span>#{empty p.email ? 'No registrado' : p.email}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                                <i class="pi pi-phone" style="color: var(--text-muted); font-size: 12px;"></i>
+                                <span style="font-size: 12px; color: var(--text-muted);">
+                                    #{empty p.mobile ? (empty p.telephone ? 'No registrado' : p.telephone) : p.mobile}
+                                </span>
+                            </div>
+                        </div>
                     </p:column>
 
-                    <p:column headerText="Acciones" exportable="false" style="width: 100px; text-align: center">
+                    <!-- ✅ COLUMNA 5: FECHA DE REGISTRO -->
+                    <p:column headerText="Registro" sortBy="#{p.createdat}" style="text-align: center; min-width: 100px;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <i class="pi pi-calendar-plus" style="color: var(--text-muted); font-size: 12px;"></i>
+                            <h:outputText value="#{p.createdat}">
+                                <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy" />
+                            </h:outputText>
+                        </div>
+                    </p:column>
+
+                    <!-- ✅ COLUMNA 6: REGISTRADO POR -->
+                    <p:column headerText="Registrado por" style="text-align: center; min-width: 120px;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="pi pi-user" style="color: var(--text-muted); font-size: 12px;"></i>
+                            <span>#{patientController.getCreatedByShortName(p)}</span>
+                        </div>
+                    </p:column>
+
+                    <!-- ✅ COLUMNA 7: ACCIONES (Variables según estado) -->
+                    <p:column headerText="Acciones" exportable="false" style="width: 120px; text-align: center">
                         <div style="display: flex; gap: 6px; justify-content: center;">
-                            <p:commandButton icon="pi pi-pencil" 
+
+                            <!-- Ver Expediente (siempre) -->
+                            <p:commandButton icon="pi pi-eye"
+                                             title="Ver Expediente"
+                                             update=":view-dialog:view-patient-content"
+                                             oncomplete="PF('viewPatientDialog').show()"
+                                             styleClass="ui-button-flat"
+                                             style="background: #e3f2fd; border-radius: 6px; padding: 6px 10px;"
+                                             process="@this">
+                                <f:setPropertyActionListener value="#{p}" target="#{patientController.selectedPatient}" />
+                            </p:commandButton>
+
+                            <!-- Editar (solo si está activo) -->
+                            <p:commandButton icon="pi pi-pencil"
+                                             title="Editar"
+                                             rendered="#{!p.deleted}"
                                              update=":dialogs:manage-patient-content"
                                              oncomplete="PF('managePatientDialog').show()"
-                                             styleClass="ui-button-flat" 
+                                             styleClass="ui-button-flat"
                                              style="background: #f0f0f0; border-radius: 6px; padding: 6px 10px;"
                                              process="@this">
                                 <f:setPropertyActionListener value="#{p}" target="#{patientController.newPatient}" />
                             </p:commandButton>
 
-                            <p:commandButton icon="pi pi-eye" 
-                                             title="Ver Expediente"
-                                             update=":view-dialog:view-patient-content"
-                                             oncomplete="PF('viewPatientDialog').show()"
-                                             styleClass="ui-button-info ui-button-flat" 
-                                             style="background: #e3f2fd; border-radius: 6px; padding: 6px 10px;"
+                            <!-- Reactivar (solo si está inactivo) -->
+                            <p:commandButton icon="pi pi-refresh"
+                                             title="Reactivar Paciente"
+                                             rendered="#{p.deleted}"
+                                             actionListener="#{patientController.reactivatePatient(p)}"
+                                             update="@form"
+                                             styleClass="ui-button-flat"
+                                             style="background: #fef3c7; color: #d97706; border-radius: 6px; padding: 6px 10px;"
                                              process="@this">
-                                <f:setPropertyActionListener value="#{p}" target="#{patientController.selectedPatient}" />
+                                <p:confirm header="Confirmación" 
+                                           message="¿Reactivar el expediente de #{p.firstname} #{p.lastname}?" />
                             </p:commandButton>
+
+                            <!-- Desactivar (solo si está activo) -->
+                            <p:commandButton icon="pi pi-ban"
+                                             title="Dar de Baja"
+                                             rendered="#{!p.deleted}"
+                                             actionListener="#{patientController.deactivatePatient(p)}"
+                                             update="@form"
+                                             styleClass="ui-button-flat"
+                                             style="background: #fee2e2; color: #dc2626; border-radius: 6px; padding: 6px 10px;"
+                                             process="@this">
+                                <p:confirm header="Confirmación" 
+                                           message="¿Dar de baja el expediente de #{p.firstname} #{p.lastname}? No se eliminará permanentemente." />
+                            </p:commandButton>
+
                         </div>
                     </p:column>
+
                 </p:dataTable>
             </div>
+
+            <!-- Diálogo de confirmación global -->
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="400">
+                <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+            </p:confirmDialog>
         </h:form>
 
 
@@ -247,84 +421,238 @@
         </h:form>
 
         <!-- Diálogo de visualización -->
-        <h:form id="view-dialog"> 
-            <p:dialog header="Expediente del Paciente" widgetVar="viewPatientDialog" 
-                      modal="true" showEffect="fade" responsive="true" width="700">
+        <!-- DIÁLOGO DE VISUALIZACIÓN CON AUDITORÍA -->
+        <h:form id="view-dialog">
+            <p:dialog header="Expediente del Paciente" 
+                      widgetVar="viewPatientDialog"
+                      modal="true" 
+                      showEffect="fade" 
+                      responsive="true" 
+                      width="750"
+                      resizable="false">
 
                 <p:outputPanel id="view-patient-content">
                     <h:panelGroup rendered="#{patientController.selectedPatient != null}">
-                        <!-- Header del paciente -->
-                        <div class="flex gap-3 mb-6 p-3" style="background: #f8f9fb; border-radius: 12px;">
-                            <div style="background: var(--primary); border-radius: 50%; padding: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                                <i class="pi pi-user" style="color: white; font-size: 20px;"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold" style="margin: 0;">#{patientController.selectedPatient.lastname} #{patientController.selectedPatient.firstname}</h3>
-                                <span class="hc-badge">HC: #{patientController.selectedPatient.hc}</span>
-                            </div>
-                        </div>
 
-                        <!-- Grid de 2 columnas -->
-                        <div class="form-grid form-grid-2 mb-4">
-                            <div>
-                                <h4 class="font-semibold text-primary mb-3">Identificación</h4>
-                                <div class="field">
-                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">DNI / Cédula</p:outputLabel>
-                                    <h:outputText value="#{empty patientController.selectedPatient.dni ? 'No registrado' : patientController.selectedPatient.dni}" class="font-semibold"/>
-                                </div>
-                                <div class="field">
-                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Pasaporte</p:outputLabel>
-                                    <h:outputText value="#{empty patientController.selectedPatient.passport ? 'N/A' : patientController.selectedPatient.passport}" class="font-semibold"/>
-                                </div>
-                                <div class="field">
-                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Fecha de Nacimiento</p:outputLabel>
-                                    <h:outputText value="#{patientController.selectedPatient.birthday}" class="font-semibold">
-                                        <f:convertDateTime type="localDate" pattern="dd 'de' MMMM, yyyy" locale="es"/>
-                                    </h:outputText>
-                                </div>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-primary mb-3">Contacto</h4>
-                                <div class="field">
-                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Correo Electrónico</p:outputLabel>
-                                    <h:outputText value="#{patientController.selectedPatient.email}" class="text-primary"/>
-                                </div>
-                                <div class="field">
-                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Teléfonos</p:outputLabel>
-                                    <div>Cel: <span class="font-semibold">#{patientController.selectedPatient.mobile}</span></div>
-                                    <div>Fijo: <span class="font-semibold">#{patientController.selectedPatient.telephone}</span></div>
-                                </div>
-                                <div class="field">
-                                    <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Dirección</p:outputLabel>
-                                    <h:outputText value="#{patientController.selectedPatient.address}" class="font-semibold"/>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- PESTAÑAS -->
+                        <p:tabView>
 
-                        <p:divider />
+                            <!-- ═══════════════════════════════════════════════════════ -->
+                            <!-- PESTAÑA 1: DATOS PERSONALES                               -->
+                            <!-- ═══════════════════════════════════════════════════════ -->
+                            <p:tab title="Datos Personales">
 
-                        <!-- Grid de 3 columnas para datos adicionales -->
-                        <div class="form-grid form-grid-3">
-                            <div class="text-center">
-                                <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Tipo de Sangre</p:outputLabel>
-                                <span class="blood-badge">#{patientController.selectedPatient.blootype != null ? patientController.selectedPatient.blootype.name : 'N/A'}</span>
-                            </div>
-                            <div class="text-center">
-                                <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Estado Civil</p:outputLabel>
-                                <span class="font-semibold">#{patientController.selectedPatient.civilstatus != null ? patientController.selectedPatient.civilstatus.name : 'N/A'}</span>
-                            </div>
-                            <div class="text-center">
-                                <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Ocupación</p:outputLabel>
-                                <span class="font-semibold">#{patientController.selectedPatient.ocupation}</span>
-                            </div>
-                        </div>
+                                <!-- Header del paciente -->
+                                <div class="flex gap-3 mb-6 p-3" style="background: #f8f9fb; border-radius: 12px;">
+                                    <div style="background: var(--primary); border-radius: 50%; padding: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="pi pi-user" style="color: white; font-size: 20px;"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold" style="margin: 0;">
+                                            #{patientController.selectedPatient.lastname} #{patientController.selectedPatient.firstname}
+                                        </h3>
+                                        <span class="hc-badge">HC: #{patientController.selectedPatient.hc}</span>
+                                        <!-- Estado del paciente -->
+                                        <span style="margin-left: 8px;">
+                                            <span class="status-badge #{patientController.selectedPatient.deleted ? 'inactive' : 'active'}">
+                                                #{patientController.selectedPatient.deleted ? 'INACTIVO' : 'ACTIVO'}
+                                            </span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Grid de 2 columnas -->
+                                <div class="form-grid form-grid-2 mb-4">
+                                    <div>
+                                        <h4 class="font-semibold text-primary mb-3">Identificación</h4>
+                                        <div class="field">
+                                            <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">DNI / Cédula</p:outputLabel>
+                                            <h:outputText value="#{empty patientController.selectedPatient.dni ? 'No registrado' : patientController.selectedPatient.dni}" 
+                                                          class="font-semibold"/>
+                                        </div>
+                                        <div class="field">
+                                            <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Pasaporte</p:outputLabel>
+                                            <h:outputText value="#{empty patientController.selectedPatient.passport ? 'N/A' : patientController.selectedPatient.passport}" 
+                                                          class="font-semibold"/>
+                                        </div>
+                                        <div class="field">
+                                            <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Fecha de Nacimiento</p:outputLabel>
+                                            <h:outputText value="#{patientController.selectedPatient.birthday}" class="font-semibold">
+                                                <f:convertDateTime type="localDate" pattern="dd 'de' MMMM, yyyy" locale="es"/>
+                                            </h:outputText>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-primary mb-3">Contacto</h4>
+                                        <div class="field">
+                                            <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Correo Electrónico</p:outputLabel>
+                                            <h:outputText value="#{empty patientController.selectedPatient.email ? 'No registrado' : patientController.selectedPatient.email}" 
+                                                          class="text-primary"/>
+                                        </div>
+                                        <div class="field">
+                                            <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Teléfonos</p:outputLabel>
+                                            <div>Cel: <span class="font-semibold">#{empty patientController.selectedPatient.mobile ? '—' : patientController.selectedPatient.mobile}</span></div>
+                                            <div>Fijo: <span class="font-semibold">#{empty patientController.selectedPatient.telephone ? '—' : patientController.selectedPatient.telephone}</span></div>
+                                        </div>
+                                        <div class="field">
+                                            <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Dirección</p:outputLabel>
+                                            <h:outputText value="#{empty patientController.selectedPatient.address ? 'No registrada' : patientController.selectedPatient.address}" 
+                                                          class="font-semibold"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p:divider />
+
+                                <!-- Grid de 3 columnas para datos adicionales -->
+                                <div class="form-grid form-grid-3">
+                                    <div class="text-center">
+                                        <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Tipo de Sangre</p:outputLabel>
+                                        <span class="blood-badge">#{patientController.selectedPatient.blootype != null ? patientController.selectedPatient.blootype.name : 'N/A'}</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Estado Civil</p:outputLabel>
+                                        <span class="font-semibold">#{patientController.selectedPatient.civilstatus != null ? patientController.selectedPatient.civilstatus.name : 'N/A'}</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <p:outputLabel style="display: block; font-size: 11px;" class="text-muted uppercase">Ocupación</p:outputLabel>
+                                        <span class="font-semibold">#{empty patientController.selectedPatient.ocupation ? 'No registrada' : patientController.selectedPatient.ocupation}</span>
+                                    </div>
+                                </div>
+
+                            </p:tab>
+
+                            <!-- ═══════════════════════════════════════════════════════ -->
+                            <!-- PESTAÑA 2: AUDITORÍA (REGISTRO DEL SISTEMA)               -->
+                            <!-- ═══════════════════════════════════════════════════════ -->
+                            <p:tab title="Registro del Sistema">
+                                <div style="padding: 16px 8px;">
+
+                                    <!-- Info de auditoría -->
+                                    <div style="background: #f0f9ff; border-radius: 8px; padding: 12px; margin-bottom: 20px; border-left: 4px solid var(--info);">
+                                        <span style="font-size: 13px; color: var(--text-muted);">
+                                            <i class="pi pi-info-circle" style="margin-right: 6px;"></i>
+                                            Información de creación y modificaciones del expediente
+                                        </span>
+                                    </div>
+
+                                    <!-- CREACIÓN -->
+                                    <div style="margin-bottom: 24px;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                                            <div style="background: var(--success); width: 4px; height: 20px; border-radius: 2px;"></div>
+                                            <h4 style="margin: 0;" class="text-primary font-bold">
+                                                <i class="pi pi-plus-circle" style="margin-right: 8px;"></i>
+                                                Creación del Expediente
+                                            </h4>
+                                        </div>
+
+                                        <div class="form-grid form-grid-2" style="background: #fafbfc; border-radius: 12px; padding: 16px;">
+                                            <div>
+                                                <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Fecha de Creación</p:outputLabel>
+                                                <span class="font-semibold">
+                                                    <h:outputText value="#{patientController.selectedPatient.createdat}">
+                                                        <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm:ss" />
+                                                    </h:outputText>
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Creado por</p:outputLabel>
+                                                <span class="font-semibold" style="color: var(--primary);">
+                                                    #{patientController.createdByName}
+                                                </span>
+                                                <br/>
+                                                <span style="font-size: 12px;" class="text-muted">
+                                                    #{patientController.createdByRole} | #{patientController.createdByEmail}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ÚLTIMA MODIFICACIÓN -->
+                                    <div style="margin-bottom: 24px;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                                            <div style="background: var(--warning); width: 4px; height: 20px; border-radius: 2px;"></div>
+                                            <h4 style="margin: 0;" class="text-primary font-bold">
+                                                <i class="pi pi-pencil" style="margin-right: 8px;"></i>
+                                                Última Modificación
+                                            </h4>
+                                        </div>
+
+                                        <div class="form-grid form-grid-2" style="background: #fafbfc; border-radius: 12px; padding: 16px;">
+                                            <div>
+                                                <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Fecha de Modificación</p:outputLabel>
+                                                <h:panelGroup rendered="#{patientController.selectedPatient.editedat != null}">
+                                                    <span class="font-semibold">
+                                                        <h:outputText value="#{patientController.selectedPatient.editedat}">
+                                                            <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm:ss" />
+                                                        </h:outputText>
+                                                    </span>
+                                                </h:panelGroup>
+                                                <h:panelGroup rendered="#{patientController.selectedPatient.editedat == null}">
+                                                    <span class="text-muted">— Sin modificaciones —</span>
+                                                </h:panelGroup>
+                                            </div>
+                                            <div>
+                                                <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Modificado por</p:outputLabel>
+                                                <h:panelGroup rendered="#{patientController.selectedPatient.editedby != null}">
+                                                    <span class="font-semibold" style="color: var(--primary);">
+                                                        #{patientController.editedByName}
+                                                    </span>
+                                                </h:panelGroup>
+                                                <h:panelGroup rendered="#{patientController.selectedPatient.editedby == null}">
+                                                    <span class="text-muted">—</span>
+                                                </h:panelGroup>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ELIMINACIÓN (solo si está eliminado) -->
+                                    <h:panelGroup rendered="#{patientController.selectedPatient.deleted}">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                                            <div style="background: var(--danger); width: 4px; height: 20px; border-radius: 2px;"></div>
+                                            <h4 style="margin: 0;" class="text-primary font-bold">
+                                                <i class="pi pi-trash" style="margin-right: 8px;"></i>
+                                                Registro de Eliminación
+                                            </h4>
+                                        </div>
+
+                                        <div class="form-grid form-grid-2" style="background: #fef2f2; border-radius: 12px; padding: 16px; border: 1px solid #fecaca;">
+                                            <div>
+                                                <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Fecha de Eliminación</p:outputLabel>
+                                                <span class="font-semibold" style="color: var(--danger);">
+                                                    <h:outputText value="#{patientController.selectedPatient.deletedat}">
+                                                        <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm:ss" />
+                                                    </h:outputText>
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <p:outputLabel style="display: block; font-size: 12px;" class="text-muted">Eliminado por</p:outputLabel>
+                                                <span class="font-semibold" style="color: var(--danger);">
+                                                    #{patientController.deletedByName}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </h:panelGroup>
+
+                                    <!-- Resumen de IDs (para debugging/admin) -->
+                                    <p:divider style="margin-top: 24px;" />
+                                    <div style="font-size: 11px; color: var(--text-muted); text-align: right;">
+                                        <span>ID Paciente: #{patientController.selectedPatient.id}</span>
+                                        <span style="margin-left: 16px;">ID Usuario Creador: #{patientController.selectedPatient.createdby}</span>
+                                    </div>
+
+                                </div>
+                            </p:tab>
+
+                        </p:tabView>
+
                     </h:panelGroup>
                 </p:outputPanel>
 
                 <f:facet name="footer">
                     <div style="text-align: right;">
-                        <p:commandButton value="Cerrar" icon="pi pi-times" 
-                                         onclick="PF('viewPatientDialog').hide()" 
+                        <p:commandButton value="Cerrar" icon="pi pi-times"
+                                         onclick="PF('viewPatientDialog').hide()"
                                          styleClass="ui-button-flat"/>
                     </div>
                 </f:facet>

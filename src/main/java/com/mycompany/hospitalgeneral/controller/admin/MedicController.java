@@ -3,6 +3,8 @@ package com.mycompany.hospitalgeneral.controller.admin;
 import com.mycompany.hospitalgeneral.model.Medic;
 import com.mycompany.hospitalgeneral.model.Tuser;
 import com.mycompany.hospitalgeneral.services.MedicService;
+import com.mycompany.hospitalgeneral.services.TuserService;
+import com.mycompany.hospitalgeneral.session.UserSession;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -10,6 +12,7 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.primefaces.PrimeFaces;
 
@@ -21,6 +24,12 @@ public class MedicController implements Serializable {
 
     @Inject
     private MedicService medicService;
+
+    @Inject
+    private TuserService tuserService;
+
+    @Inject
+    private UserSession userSession;  // ✅ AÑADIR ESTA INYECCIÓN
 
     private List<Medic> items;
     private Medic selectedMedic;
@@ -50,7 +59,6 @@ public class MedicController implements Serializable {
 
     /**
      * Prepara la edición de un médico existente
-     * @param selectedMedic
      */
     public void setSelectedMedic(Medic selectedMedic) {
         this.selectedMedic = selectedMedic;
@@ -118,21 +126,21 @@ public class MedicController implements Serializable {
 
             // Guardar médico
             medicService.save(newMedic, getCurrentUserId());
-            
+
             // Recargar la lista
             loadMedics();
-            
+
             // Limpiar formulario
             prepareNewMedic();
 
             // Mensaje de éxito
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", 
+                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito",
                             editMode ? "Médico actualizado correctamente" : "Médico registrado correctamente"));
 
             // Resetear el formulario del diálogo
             PrimeFaces.current().resetInputs(":dialogs:manage-medic-content");
-            
+
             // Cerrar diálogo y actualizar tabla
             PrimeFaces.current().executeScript("PF('manageMedicDialog').hide()");
             PrimeFaces.current().ajax().update("form:dt-medics", "form:messages");
@@ -164,52 +172,200 @@ public class MedicController implements Serializable {
     public void deleteMedic() {
         if (selectedMedic == null || selectedMedic.getId() == null) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", 
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia",
                             "No hay médico seleccionado"));
             return;
         }
 
         try {
             medicService.delete(selectedMedic.getId(), getCurrentUserId());
-            
+
             // Remover de la lista local
             items.remove(selectedMedic);
             selectedMedic = null;
-            
+
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Eliminado", 
+                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Eliminado",
                             "Médico retirado del sistema correctamente"));
-            
+
             PrimeFaces.current().ajax().update("form:dt-medics", "form:messages");
-            
+
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", 
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error",
                             "No se pudo eliminar: " + e.getMessage()));
         }
     }
 
     /**
-     * Obtiene el ID del usuario actual
-     * TODO: Implementar según tu sistema de autenticación
+     * Obtiene el ID del usuario actual desde la sesión
      */
     private Integer getCurrentUserId() {
-        // Por ahora retorna 1 (usuario admin)
-        // Debes implementar esto con tu sistema de sesión
-        FacesContext context = FacesContext.getCurrentInstance();
-        if (context != null) {
-            Tuser currentUser = (Tuser) context.getExternalContext().getSessionMap().get("currentUser");
-            if (currentUser != null) {
-                return currentUser.getId();
-            }
+        if (userSession != null && userSession.getUser() != null) {
+            return userSession.getUser().getId();
         }
-        return 1; // Default: usuario administrador
+        return 1; // Fallback: usuario administrador por defecto
+    }
+
+    /**
+     * Aprueba el registro de un médico
+     */
+    public void approveMedic(Medic medic) {
+        try {
+            Tuser user = medic.getUserid();
+            if (user == null) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Error", "El médico no tiene un usuario asociado"));
+                return;
+            }
+
+            user.setIsactive(true);
+            user.setEmailverified(true);
+            user.setEditedat(LocalDateTime.now());
+            user.setEditedby(getCurrentUserId());
+
+            tuserService.update(user);
+
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO,
+                            "Médico aprobado",
+                            medic.getFullName() + " ahora puede acceder al sistema"));
+
+            loadMedics();  // ✅ CORREGIDO: loadItems() → loadMedics()
+
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", "No se pudo aprobar: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Reactiva una cuenta inactiva
+     */
+    public void reactivateMedic(Medic medic) {
+        Tuser user = medic.getUserid();
+        if (user != null) {
+            user.setIsactive(true);
+            user.setEditedat(LocalDateTime.now());
+            user.setEditedby(getCurrentUserId());
+            tuserService.update(user);
+        }
+        loadMedics();  // ✅ CORREGIDO: loadItems() → loadMedics()
+    }
+
+    /**
+     * Desactiva una cuenta
+     */
+    public void deactivateMedic(Medic medic) {
+        Tuser user = medic.getUserid();
+        if (user != null) {
+            user.setIsactive(false);
+            user.setEditedat(LocalDateTime.now());
+            user.setEditedby(getCurrentUserId());
+            tuserService.update(user);
+        }
+        loadMedics();  // ✅ CORREGIDO: loadItems() → loadMedics()
+    }
+
+    // ==================== MÉTRICAS PARA KPI CARDS ====================
+    /**
+     * Total de médicos registrados (activos + inactivos)
+     */
+    public int getTotalMedics() {
+        if (items == null) {
+            return 0;
+        }
+        return items.size();
+    }
+
+    /**
+     * Médicos activos (userid.isactive = true)
+     */
+    public int getActiveMedics() {
+        if (items == null) {
+            return 0;
+        }
+        return (int) items.stream()
+                .filter(m -> m.getUserid() != null && m.getUserid().getIsactive())
+                .count();
+    }
+
+    /**
+     * Médicos inactivos
+     */
+    public int getInactiveMedics() {
+        if (items == null) {
+            return 0;
+        }
+        return (int) items.stream()
+                .filter(m -> m.getUserid() != null && !m.getUserid().getIsactive())
+                .count();
+    }
+
+    /**
+     * Porcentaje de médicos activos
+     */
+    public int getActivePercentage() {
+        int total = getTotalMedics();
+        if (total == 0) {
+            return 0;
+        }
+        return (getActiveMedics() * 100) / total;
+    }
+
+    /**
+     * Solicitudes pendientes de aprobación (emailverified = null/false y
+     * isactive = false)
+     */
+    public int getPendingApprovals() {
+        if (items == null) {
+            return 0;
+        }
+        return (int) items.stream()
+                .filter(m -> m.getUserid() != null
+                && !m.getUserid().getIsactive()
+                && (m.getUserid().getEmailverified() == null || !m.getUserid().getEmailverified()))
+                .count();
+    }
+
+    /**
+     * Total de especialidades distintas entre todos los médicos
+     */
+    public int getTotalSpecialties() {
+        if (items == null) {
+            return 0;
+        }
+
+        return (int) items.stream()
+                .filter(m -> m.getSpecialistList() != null)
+                .flatMap(m -> m.getSpecialistList().stream())
+                .filter(s -> s != null && s.getMedicalspecialtyid() != null)
+                .map(s -> s.getMedicalspecialtyid().getId())
+                .distinct()
+                .count();
+    }
+
+    /**
+     * Médicos registrados este mes
+     */
+    public int getMedicsThisMonth() {
+        if (items == null) {
+            return 0;
+        }
+        LocalDateTime startOfMonth = LocalDateTime.now()
+                .withDayOfMonth(1)
+                .withHour(0).withMinute(0).withSecond(0).withNano(0);
+
+        return (int) items.stream()
+                .filter(m -> m.getCreatedat() != null && m.getCreatedat().isAfter(startOfMonth))
+                .count();
     }
 
     // ============================================
-    // Getters y Setters (igual que PatientController)
+    // Getters y Setters
     // ============================================
-    
     public List<Medic> getItems() {
         return items;
     }
@@ -245,7 +401,9 @@ public class MedicController implements Serializable {
      * Obtiene el nombre completo del médico para la vista
      */
     public String getFullName(Medic medic) {
-        if (medic == null) return "";
+        if (medic == null) {
+            return "";
+        }
         return medic.getLastname() + " " + medic.getFirstname();
     }
 }

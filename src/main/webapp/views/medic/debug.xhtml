@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Debug - Mis Pacientes</title>
+</h:head>
+
+<h:body>
+    <h:form>
+        <p:messages showDetail="true"/>
+        
+        <p:panel header="Debug Info">
+            <pre style="background: #f5f5f5; padding: 20px; border-radius: 8px; white-space: pre-wrap;">
+#{medicPatientsDebugController.debugInfo}
+            </pre>
+        </p:panel>
+
+        <p:panel header="Registros encontrados">
+            <p:dataTable value="#{medicPatientsDebugController.allRecords}" var="r" rows="5" paginator="true">
+                <p:column headerText="ID">#{r.id}</p:column>
+                <p:column headerText="Patient">
+                    #{r.patientid != null ? r.patientid.firstname : 'NULL'} 
+                    #{r.patientid != null ? r.patientid.lastname : ''}
+                </p:column>
+                <p:column headerText="Created">#{r.createdat}</p:column>
+                <p:column headerText="Done">#{r.done}</p:column>
+            </p:dataTable>
+        </p:panel>
+
+        <p:panel header="Pacientes únicos">
+            <p:dataList value="#{medicPatientsDebugController.uniquePatients}" var="p" rows="10">
+                #{p.hc} - #{p.firstname} #{p.lastname}
+            </p:dataList>
+        </p:panel>
+
+        <p:commandButton value="Recargar Debug" 
+                         action="#{medicPatientsDebugController.debug()}"
+                         update="@form"/>
+    </h:form>
+</h:body>
+</html>
