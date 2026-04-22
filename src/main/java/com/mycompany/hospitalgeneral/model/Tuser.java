@@ -22,10 +22,10 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 @Entity
+
 @Table(name = "tuser")
 @NamedQueries({
     @NamedQuery(name = "Tuser.findAll", query = "SELECT t FROM Tuser t WHERE t.deleted = false OR t.deleted IS NULL"),
@@ -56,7 +56,7 @@ public class Tuser implements Serializable, DisplayUser, ProfileData {
     private Boolean deleted = false;
 
     @Column(name = "deletedat")
-    private Date deletedat;
+    private LocalDateTime deletedat;
 
     @Column(name = "deletedby")
     private Integer deletedby;
@@ -94,6 +94,9 @@ public class Tuser implements Serializable, DisplayUser, ProfileData {
     @Column(name = "passresettoken")
     private String passresettoken;
 
+    @Column(name = "verificationtoken_expiration")
+    private LocalDateTime verificationTokenExpiration;
+
     // --- RELACIONES ---
     @JoinColumn(name = "profileid", referencedColumnName = "id")
     @ManyToOne(optional = false)
@@ -111,13 +114,16 @@ public class Tuser implements Serializable, DisplayUser, ProfileData {
     protected void onCreate() {
         this.createdat = LocalDateTime.now();
         this.deleted = false;
+        // Nota: createdby debe setearse desde el Controller/Service
     }
 
     @PreUpdate
     protected void onUpdate() {
         if (this.deleted != null && this.deleted) {
-            this.deletedat = new Date();
+            // Si está marcado como eliminado, actualizar fecha de eliminación
+            this.deletedat = LocalDateTime.now();
         } else {
+            // Actualización normal
             this.editedat = LocalDateTime.now();
         }
     }
@@ -239,11 +245,11 @@ public class Tuser implements Serializable, DisplayUser, ProfileData {
         this.deleted = deleted;
     }
 
-    public Date getDeletedat() {
+    public LocalDateTime getDeletedat() {
         return deletedat;
     }
 
-    public void setDeletedat(Date deletedat) {
+    public void setDeletedat(LocalDateTime deletedat) {
         this.deletedat = deletedat;
     }
 
@@ -278,29 +284,44 @@ public class Tuser implements Serializable, DisplayUser, ProfileData {
     public void setMedic(Medic medic) {
         this.medic = medic;
     }
+    
+    
 
-    // --- IMPLEMENTACIÓN DisplayUser ---
+    @Override
+    public int hashCode() {
+        return (id != null ? id.hashCode() : 0);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof Tuser)) {
+            return false;
+        }
+        Tuser other = (Tuser) object;
+        return (this.id != null || other.id == null) && (this.id == null || this.id.equals(other.id));
+    }
+
+    @Override
+    public String toString() {
+        return "Tuser[ id=" + id + ", email=" + email + " ]";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return this.profileid.getFirstname() + this.profileid.getLastname();
+    }
+
     @Override
     public String getRoleName() {
         return this.roleid.getName();
     }
 
-    // ✅ FIX #4: espacio entre nombre y apellido
-    @Override
-    public String getDisplayName() {
-        if (this.profileid == null) {
-            return getEmail();
-        }
-        return this.profileid.getFirstname() + " " + this.profileid.getLastname();
-    }
-
-    // --- IMPLEMENTACIÓN ProfileData ---
     @Override
     public String getFullName() {
         if (this.profileid != null) {
             return this.profileid.getFirstname() + " " + this.profileid.getLastname();
         }
-        return "Usuario sin Perfil";
+        return "Usuario sin Perfil"; // O un valor por defecto
     }
 
     @Override
@@ -406,19 +427,22 @@ public class Tuser implements Serializable, DisplayUser, ProfileData {
 
     @Override
     public String getProfessionalId() {
-        return isMedic() ? this.medic.getRegprofessional() : null;
+        if (isMedic() && this.medic != null) {
+            return this.medic.getRegprofessional();
+        }
+        return null;
     }
 
     @Override
     public void setProfessionalId(String professionalId) {
-        if (isMedic()) {
+        if (isMedic() && this.medic != null) {
             this.medic.setRegprofessional(professionalId);
         }
     }
 
     @Override
     public List<String> getSpecialties() {
-        if (isMedic()) {
+        if (isMedic() && this.medic != null) {
             String specialties = this.medic.getSpecialtiesNames();
             if (specialties != null && !specialties.isEmpty()) {
                 return Arrays.asList(specialties.split(",\\s*"));
@@ -441,24 +465,24 @@ public class Tuser implements Serializable, DisplayUser, ProfileData {
             return this.profileid.getEditedat();
         }
         return this.createdat;
+
     }
 
     @Override
-    public int hashCode() {
-        return (id != null ? id.hashCode() : 0);
+    public String getInitials() {
+        return ProfileData.super.getInitials();
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (!(object instanceof Tuser)) {
-            return false;
-        }
-        Tuser other = (Tuser) object;
-        return (this.id != null || other.id == null) && (this.id == null || this.id.equals(other.id));
+    public boolean hasProfileImage() {
+        return ProfileData.super.hasProfileImage();
     }
 
-    @Override
-    public String toString() {
-        return "Tuser[ id=" + id + ", email=" + email + " ]";
+    public LocalDateTime getVerificationTokenExpiration() {
+        return verificationTokenExpiration;
+    }
+
+    public void setVerificationTokenExpiration(LocalDateTime verificationTokenExpiration) {
+        this.verificationTokenExpiration = verificationTokenExpiration;
     }
 }
