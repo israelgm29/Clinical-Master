@@ -1,154 +1,438 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:ui="jakarta.faces.facelets"
       xmlns:h="jakarta.faces.html"
       xmlns:f="jakarta.faces.core"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:pt="jakarta.faces.passthrough">
 
-    <ui:composition template="/template.xhtml">
+    <ui:composition template="/WEB-INF/templates/admin-template.xhtml">
 
+        <ui:define name="title">Gestión de Usuarios</ui:define>
+        <ui:define name="page-title">Gestión de Usuarios</ui:define>
 
-        <ui:define name="title">
-            <h:outputText value="#{bundle.ListTuserTitle}"></h:outputText>
+        <ui:define name="header-actions">
+            <h:form>
+                <p:commandButton value="Nuevo Usuario"
+                                 icon="pi pi-plus"
+                                 action="#{userManagementController.prepareCreate()}"
+                                 update=":userForm"
+                                 oncomplete="PF('userDialog').show()"
+                                 styleClass="ui-button-primary"/>
+            </h:form>
         </ui:define>
 
-        <ui:define name="body">
-            <h:form id="TuserListForm">
-                <p:panel header="#{bundle.ListTuserTitle}">
-                    <p:dataTable id="datalist" value="#{tuserController.items}" var="item"
-                                 selectionMode="single" selection="#{tuserController.selected}"
-                                 paginator="true"
-                                 rowKey="#{item.id}"
-                                 rows="10"
-                                 rowsPerPageTemplate="10,20,30,40,50"
-                                 >
+        <ui:define name="content">
+            <h:form id="mainForm">
+                <p:growl id="messages" showDetail="true" life="5000"/>
 
-                        <p:ajax event="rowSelect"   update="createButton viewButton editButton deleteButton"/>
-                        <p:ajax event="rowUnselect" update="createButton viewButton editButton deleteButton"/>
+                <!-- ═══════════════════════════════════════════
+                     BUSCADOR
+                     ═══════════════════════════════════════════ -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div style="display:flex; gap:12px; align-items:flex-end;">
+                        <div style="flex:1;">
+                            <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px;">
+                                Buscar por nombre, apellido o email
+                            </label>
+                            <p:inputText value="#{userManagementController.searchQuery}"
+                                         placeholder="Ej: Juan Pérez o medico@hospital.com"
+                                         style="width:100%;"/>
+                        </div>
+                        <p:commandButton value="Buscar"
+                                         icon="pi pi-search"
+                                         action="#{userManagementController.loadUsers()}"
+                                         update="userTable messages"
+                                         styleClass="ui-button-primary"/>
+                        <p:commandButton icon="pi pi-times"
+                                         title="Limpiar"
+                                         action="#{userManagementController.clearSearch()}"
+                                         update="userTable messages"
+                                         styleClass="ui-button-secondary"
+                                         rendered="#{not empty userManagementController.searchQuery}"/>
+                    </div>
+                </div>
 
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_createdat}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.createdat}">
-                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
-                            </h:outputText>
+                <!-- ═══════════════════════════════════════════
+                     TABLA DE USUARIOS
+                     ═══════════════════════════════════════════ -->
+                <div class="card">
+                    <p:dataTable id="userTable"
+                                 value="#{userManagementController.users}"
+                                 var="u"
+                                 emptyMessage="No se encontraron usuarios"
+                                 paginator="true" rows="10"
+                                 paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                                 styleClass="ui-datatable">
+
+                        <!-- Avatar + Nombre -->
+                        <p:column headerText="Usuario" style="min-width:220px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div style="width:38px; height:38px; border-radius:50%;
+                                     background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
+                                     display:flex; align-items:center; justify-content:center;
+                                     color:white; font-weight:700; font-size:14px; flex-shrink:0;">
+                                    #{u.initials}
+                                </div>
+                                <div>
+                                    <div style="font-weight:600; color:var(--text);">#{u.fullName}</div>
+                                    <small style="color:var(--text-muted);">#{u.email}</small>
+                                </div>
+                            </div>
                         </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_createdby}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.createdby}"/>
+
+                        <!-- Rol -->
+                        <p:column headerText="Rol" style="width:130px;">
+                            <span style="background:rgba(11,60,93,0.1); color:var(--primary);
+                                  padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600;">
+                                #{u.roleName}
+                            </span>
                         </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_editedat}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.editedat}">
-                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
-                            </h:outputText>
+
+                        <!-- Estado -->
+                        <p:column headerText="Estado" style="width:110px; text-align:center;">
+                            <span class="status-badge #{u.isactive ? 'active' : 'inactive'}">
+                                #{u.isactive ? '✓ Activo' : '✗ Inactivo'}
+                            </span>
                         </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_editedby}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.editedby}"/>
+
+                        <!-- Email verificado -->
+                        <p:column headerText="Email" style="width:100px; text-align:center;">
+                            <h:panelGroup rendered="#{u.emailverified}">
+                                <span title="Verificado" style="color:var(--success);">
+                                    <i class="pi pi-check-circle"/>
+                                </span>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{not u.emailverified}">
+                                <span title="Sin verificar" style="color:var(--warning);">
+                                    <i class="pi pi-exclamation-circle"/>
+                                </span>
+                            </h:panelGroup>
                         </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_deleted}"/>
-                            </f:facet>
-                            <p:selectBooleanCheckbox value="#{item.deleted}" disabled="true"/>
+
+                        <!-- Acciones -->
+                        <p:column headerText="Acciones" style="width:300px; text-align:center;">
+                            <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+
+                                <!-- Ver detalle -->
+                                <p:commandButton icon="pi pi-eye"
+                                                 title="Ver detalle"
+                                                 action="#{userManagementController.prepareDetail(u)}"
+                                                 update=":detailForm"
+                                                 oncomplete="PF('detailDialog').show()"
+                                                 styleClass="ui-button-info ui-button-rounded ui-button-sm"/>
+
+                                <!-- Editar -->
+                                <p:commandButton icon="pi pi-pencil"
+                                                 title="Editar"
+                                                 action="#{userManagementController.prepareEdit(u)}"
+                                                 update=":userForm"
+                                                 oncomplete="PF('userDialog').show()"
+                                                 styleClass="ui-button-warning ui-button-rounded ui-button-sm"/>
+
+                                <!-- Activar / Desactivar -->
+                                <p:commandButton icon="#{u.isactive ? 'pi pi-ban' : 'pi pi-check'}"
+                                                 title="#{u.isactive ? 'Desactivar' : 'Activar'}"
+                                                 action="#{userManagementController.toggleActive(u)}"
+                                                 update="userTable messages"
+                                                 styleClass="#{u.isactive ? 'ui-button-secondary' : 'ui-button-success'} ui-button-rounded ui-button-sm">
+                                    <p:confirm header="Confirmar"
+                                               message="¿Está seguro de #{u.isactive ? 'desactivar' : 'activar'} a #{u.fullName}?"
+                                               icon="pi pi-exclamation-triangle"/>
+                                </p:commandButton>
+
+                                <!-- Eliminar -->
+                                <p:commandButton icon="pi pi-trash"
+                                                 title="Eliminar"
+                                                 action="#{userManagementController.deleteUser(u)}"
+                                                 update="userTable messages"
+                                                 styleClass="ui-button-danger ui-button-rounded ui-button-sm">
+                                    <p:confirm header="Confirmar eliminación"
+                                               message="¿Eliminar a #{u.fullName}? Esta acción no se puede deshacer."
+                                               icon="pi pi-exclamation-triangle"/>
+                                </p:commandButton>
+
+                                <p:commandButton icon="pi pi-envelope"
+                                                 title="Enviar verificación"
+                                                 action="#{userManagementController.sendVerificationEmail(u)}"
+                                                 update=":mainForm:messages"
+                                                 rendered="#{not u.emailverified}"
+                                                 styleClass="ui-button-rounded ui-button-info ui-button-flat">
+                                </p:commandButton>
+
+                                <p:commandButton icon="pi pi-key"
+                                                 title="Resetear contraseña"
+                                                 action="#{userManagementController.resetPassword(u)}"
+                                                 update=":mainForm:messages"
+                                                 styleClass="ui-button-rounded ui-button-warning ui-button-flat">
+                                    <p:confirm header="Confirmar Reset" 
+                                               message="¿Enviar nueva clave a #{u.email}?" 
+                                               icon="pi pi-exclamation-triangle" />
+                                </p:commandButton>
+
+                            </div>
                         </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_deletedat}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.deletedat}">
-                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
-                            </h:outputText>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_deletedby}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.deletedby}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_id}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.id}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_email}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.email}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_password}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.password}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_isactive}"/>
-                            </f:facet>
-                            <p:selectBooleanCheckbox value="#{item.isactive}" disabled="true"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_emailverified}"/>
-                            </f:facet>
-                            <p:selectBooleanCheckbox value="#{item.emailverified}" disabled="true"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_verificationtoken}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.verificationtoken}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_passresettoken}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.passresettoken}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_profileid}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.profileid}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_roleid}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.roleid}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListTuserTitle_medic}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.medic}"/>
-                        </p:column>
-                        <f:facet name="footer">
-                            <p:commandButton id="createButton" icon="ui-icon-plus"   value="#{bundle.Create}" actionListener="#{tuserController.prepareCreate}" update=":TuserCreateForm" oncomplete="PF('TuserCreateDialog').show()"/>
-                            <p:commandButton id="viewButton"   icon="ui-icon-search" value="#{bundle.View}" update=":TuserViewForm" oncomplete="PF('TuserViewDialog').show()" disabled="#{empty tuserController.selected}"/>
-                            <p:commandButton id="editButton"   icon="ui-icon-pencil" value="#{bundle.Edit}" update=":TuserEditForm" oncomplete="PF('TuserEditDialog').show()" disabled="#{empty tuserController.selected}"/>
-                            <p:commandButton id="deleteButton" icon="ui-icon-trash"  value="#{bundle.Delete}" actionListener="#{tuserController.destroy}" update=":growl,datalist" disabled="#{empty tuserController.selected}"/>
-                        </f:facet>
+
                     </p:dataTable>
-                </p:panel>
+                </div>
+
+                <!-- Confirmaciones globales -->
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Sí, confirmar"
+                                     type="button"
+                                     styleClass="ui-confirmdialog-yes ui-button-danger"/>
+                    <p:commandButton value="Cancelar"
+                                     type="button"
+                                     styleClass="ui-confirmdialog-no ui-button-secondary"
+                                     icon="pi pi-times"/>
+                </p:confirmDialog>
+
             </h:form>
 
-            <ui:include src="Create.xhtml"/>
-            <ui:include src="Edit.xhtml"/>
-            <ui:include src="View.xhtml"/>
+            <!-- ═══════════════════════════════════════════
+                 MODAL: CREAR / EDITAR USUARIO
+                 ═══════════════════════════════════════════ -->
+            <h:form id="userForm">
+                <p:growl id="formMessages" showDetail="true" life="5000"/>
+
+                <p:dialog header="#{userManagementController.creatingNew ? 'Nuevo Usuario' : 'Editar Usuario'}"
+                          widgetVar="userDialog"
+                          modal="true" responsive="true"
+                          width="620" closable="true"
+                          closeOnEscape="true">
+
+                    <p:outputPanel id="userFormPanel">
+                        <h:panelGroup rendered="#{userManagementController.editingUser != null}">
+
+                            <!-- ── SECCIÓN: Datos de Acceso ──────────── -->
+                            <div style="margin-bottom:20px;">
+                                <div class="section-header" style="margin-bottom:14px;">
+                                    <span class="material-symbols-outlined">lock</span>
+                                    <h3>Datos de Acceso</h3>
+                                </div>
+                                <div class="form-grid form-grid-2">
+                                    <div class="field">
+                                        <label>Email *</label>
+                                        <h:inputText value="#{userManagementController.editingUser.email}"
+                                                     styleClass="field-input"
+                                                     required="true"
+                                                     pt:placeholder="correo@hospital.com"/>
+                                    </div>
+                                    <div class="field">
+                                        <label>Rol *</label>
+                                        <p:selectOneMenu value="#{userManagementController.selectedRole}"
+                                                         converter="roleConverter"
+                                                         style="width:100%;"
+                                                         required="true">
+                                            <p:ajax event="change"
+                                                    listener="#{userManagementController.onRoleChange()}"
+                                                    update="medicSection"/>
+                                            <f:selectItem itemLabel="Seleccione un rol" itemValue="#{null}" noSelectionOption="true"/>
+                                            <f:selectItems value="#{userManagementController.roles}"
+                                                           var="role"
+                                                           itemLabel="#{role.name}"
+                                                           itemValue="#{role}"/>
+                                        </p:selectOneMenu>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── SECCIÓN: Datos Personales ─────────── -->
+                            <div style="margin-bottom:20px;">
+                                <div class="section-header" style="margin-bottom:14px;">
+                                    <span class="material-symbols-outlined">person</span>
+                                    <h3>Datos Personales</h3>
+                                </div>
+                                <div class="form-grid form-grid-2">
+                                    <div class="field">
+                                        <label>Nombre *</label>
+                                        <h:inputText value="#{userManagementController.editingProfile.firstname}"
+                                                     styleClass="field-input"
+                                                     required="true"
+                                                     pt:placeholder="Nombre"/>
+                                    </div>
+                                    <div class="field">
+                                        <label>Apellido *</label>
+                                        <h:inputText value="#{userManagementController.editingProfile.lastname}"
+                                                     styleClass="field-input"
+                                                     required="true"
+                                                     pt:placeholder="Apellido"/>
+                                    </div>
+                                    <div class="field">
+                                        <label>DNI / Cédula</label>
+                                        <h:inputText value="#{userManagementController.editingProfile.dni}"
+                                                     styleClass="field-input"
+                                                     pt:placeholder="Ej: 0954123456"/>
+                                    </div>
+                                    <div class="field">
+                                        <label>Móvil</label>
+                                        <h:inputText value="#{userManagementController.editingProfile.mobile}"
+                                                     styleClass="field-input"
+                                                     pt:placeholder="Ej: 0991234567"/>
+                                    </div>
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Dirección</label>
+                                        <h:inputText value="#{userManagementController.editingProfile.address}"
+                                                     styleClass="field-input"
+                                                     pt:placeholder="Dirección"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── SECCIÓN: Datos Médico (condicional) ── -->
+                            <p:outputPanel id="medicSection">
+                                <h:panelGroup rendered="#{userManagementController.showMedicFields}">
+                                    <div style="background:var(--primary-blue-light, #e0f2fe);
+                                         border:1px solid #bae6fd;
+                                         border-radius:10px; padding:16px 20px; margin-bottom:12px;">
+                                        <div class="section-header" style="margin-bottom:14px;">
+                                            <span class="material-symbols-outlined">stethoscope</span>
+                                            <h3>Datos Profesionales</h3>
+                                        </div>
+                                        <div class="form-grid form-grid-2">
+                                            <div class="field">
+                                                <label>Nº Registro Profesional</label>
+                                                <h:inputText value="#{userManagementController.editingMedic.regprofessional}"
+                                                             styleClass="field-input"
+                                                             pt:placeholder="Ej: MSP-12345"/>
+                                            </div>
+                                            <div class="field">
+                                                <label>Email profesional</label>
+                                                <h:inputText value="#{userManagementController.editingMedic.email}"
+                                                             styleClass="field-input"
+                                                             pt:placeholder="dr@hospital.com"/>
+                                            </div>
+                                        </div>
+                                        <small style="color:var(--muted-slate,#64748b);">
+                                            <i class="pi pi-info-circle"/> Las especialidades se asignan desde la sección de Médicos.
+                                        </small>
+                                    </div>
+                                </h:panelGroup>
+                            </p:outputPanel>
+
+                        </h:panelGroup>
+                    </p:outputPanel>
+
+                    <f:facet name="footer">
+                        <p:commandButton value="Cancelar"
+                                         onclick="PF('userDialog').hide()"
+                                         styleClass="ui-button-secondary"
+                                         immediate="true"/>
+
+                        <p:commandButton value="Crear Usuario"
+                                         icon="pi pi-user-plus"
+                                         action="#{userManagementController.saveNewUser()}"
+                                         rendered="#{userManagementController.creatingNew}"
+                                         update=":mainForm:userTable :userForm:formMessages"
+                                         oncomplete="if (!args.validationFailed) PF('userDialog').hide()"
+                                         styleClass="ui-button-success"/>
+
+                        <p:commandButton value="Guardar Cambios"
+                                         icon="pi pi-save"
+                                         action="#{userManagementController.saveEdit()}"
+                                         rendered="#{not userManagementController.creatingNew}"
+                                         update=":mainForm:userTable :userForm:formMessages"
+                                         oncomplete="if (!args.validationFailed) PF('userDialog').hide()"
+                                         styleClass="ui-button-primary"/>
+                    </f:facet>
+                </p:dialog>
+            </h:form>
+
+            <!-- ═══════════════════════════════════════════
+                 MODAL: DETALLE DE USUARIO
+                 ═══════════════════════════════════════════ -->
+            <h:form id="detailForm">
+                <p:dialog header="Detalle de Usuario"
+                          widgetVar="detailDialog"
+                          modal="true" responsive="true"
+                          width="700" closable="true">
+
+                    <p:outputPanel id="detailPanel">
+                        <h:panelGroup rendered="#{userManagementController.selectedUser != null}">
+
+                            <!-- Reutiliza el composite component profile -->
+                            <!-- Descomentar cuando el componente esté en /resources/components/ -->
+                            <!--
+                            <comp:profile data="#{userManagementController.selectedUser}"
+                                          mode="VIEW"
+                                          showAudit="true"
+                                          avatarSize="md"/>
+                            -->
+
+                            <!-- Vista inline mientras se integra el composite -->
+                            <div style="padding:16px;">
+                                <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;
+                                     padding-bottom:16px; border-bottom:1px solid var(--border);">
+                                    <div style="width:56px; height:56px; border-radius:50%;
+                                         background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
+                                         display:flex; align-items:center; justify-content:center;
+                                         color:white; font-weight:700; font-size:20px;">
+                                        #{userManagementController.selectedUser.initials}
+                                    </div>
+                                    <div>
+                                        <div style="font-size:1.2rem; font-weight:700;">
+                                            #{userManagementController.selectedUser.fullName}
+                                        </div>
+                                        <div style="color:var(--text-muted); font-size:13px;">
+                                            #{userManagementController.selectedUser.email}
+                                        </div>
+                                        <span style="background:rgba(11,60,93,0.1); color:var(--primary);
+                                              padding:2px 10px; border-radius:10px; font-size:12px; font-weight:600;">
+                                            #{userManagementController.selectedUser.roleName}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid form-grid-2" style="gap:14px;">
+                                    <div>
+                                        <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted);">DNI</label>
+                                        <p style="margin:0; padding:4px 0;">#{not empty userManagementController.selectedUser.dni ? userManagementController.selectedUser.dni : '—'}</p>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Móvil</label>
+                                        <p style="margin:0; padding:4px 0;">#{not empty userManagementController.selectedUser.mobile ? userManagementController.selectedUser.mobile : '—'}</p>
+                                    </div>
+                                    <div style="grid-column:span 2;">
+                                        <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Dirección</label>
+                                        <p style="margin:0; padding:4px 0;">#{not empty userManagementController.selectedUser.address ? userManagementController.selectedUser.address : '—'}</p>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Estado</label>
+                                        <p style="margin:0; padding:4px 0;">
+                                            <span class="status-badge #{userManagementController.selectedUser.isactive ? 'active' : 'inactive'}">
+                                                #{userManagementController.selectedUser.isactive ? '✓ Activo' : '✗ Inactivo'}
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Email verificado</label>
+                                        <p style="margin:0; padding:4px 0;">
+                                            #{userManagementController.selectedUser.emailverified ? '✓ Sí' : '✗ Pendiente'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Registrado</label>
+                                        <p style="margin:0; padding:4px 0;">
+                                            <h:outputText value="#{userManagementController.selectedUser.createdAt}">
+                                                <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/>
+                                            </h:outputText>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </h:panelGroup>
+                    </p:outputPanel>
+
+                    <f:facet name="footer">
+                        <p:commandButton value="Cerrar"
+                                         onclick="PF('detailDialog').hide()"
+                                         styleClass="ui-button-secondary"
+                                         immediate="true"/>
+                    </f:facet>
+                </p:dialog>
+            </h:form>
+
         </ui:define>
     </ui:composition>
-
 </html>

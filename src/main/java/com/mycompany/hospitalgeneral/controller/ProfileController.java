@@ -4,11 +4,11 @@ import com.mycompany.hospitalgeneral.model.Tuser;
 import com.mycompany.hospitalgeneral.services.TuserService;
 import com.mycompany.hospitalgeneral.services.interfaces.ProfileData;
 import com.mycompany.hospitalgeneral.session.UserSession;
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.faces.view.ViewScoped;
+import jakarta.inject.Named;
+import jakarta.inject.Inject;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,14 +19,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
-/**
- * Controlador para la gestión del perfil de usuario. Maneja tanto la vista como
- * la edición del perfil.
- *
- * @author jhonatan
- */
 @Named
-@RequestScoped
+@ViewScoped
 public class ProfileController implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -52,13 +46,9 @@ public class ProfileController implements Serializable {
     private String modeFromUrl;
 
     // ==================== MÉTODOS DE ACCIÓN ====================
-    /**
-     * Activa el modo edición. Crea una copia de trabajo del usuario en sesión.
-     */
     public void enableEditMode() {
         Tuser currentUser = session.getUser();
         if (currentUser != null) {
-            // Usamos el mismo objeto; JPA se encargará del merge
             this.editingUser = currentUser;
             this.editMode = true;
         } else {
@@ -66,26 +56,17 @@ public class ProfileController implements Serializable {
         }
     }
 
-    /**
-     * Cancela la edición y vuelve al modo vista.
-     */
     public void cancelEdit() {
         this.editingUser = null;
         this.editMode = false;
         this.uploadedAvatar = null;
 
-        // Refrescar usuario de la base de datos para descartar cambios no guardados
         if (session.getUser() != null) {
             Tuser refreshed = tuserService.findById(session.getUser().getId());
             session.setUser(refreshed);
         }
     }
 
-    /**
-     * Guarda los cambios del perfil.
-     *
-     * @return null para permanecer en la misma página
-     */
     public String saveProfile() {
         try {
             if (editingUser == null) {
@@ -93,21 +74,15 @@ public class ProfileController implements Serializable {
                 return null;
             }
 
-            // Validaciones básicas
             if (!validateProfileData(editingUser)) {
                 return null;
             }
 
-            // Persistir cambios
             Tuser saved = tuserService.update(editingUser);
-
-            // Actualizar el objeto en sesión
             session.setUser(saved);
 
-            addInfoMessage("Perfil actualizado",
-                    "Los cambios se guardaron correctamente");
+            addInfoMessage("Perfil actualizado", "Los cambios se guardaron correctamente");
 
-            // Salir del modo edición
             cancelEdit();
 
         } catch (Exception e) {
@@ -118,47 +93,38 @@ public class ProfileController implements Serializable {
         return null;
     }
 
-    /**
-     * Procesa la subida del avatar.
-     *
-     * public void uploadAvatar() { try { if (uploadedAvatar == null ||
-     * uploadedAvatar.getSize() <= 0) {
-     * addWarningMessage("Seleccione una imagen válida");
-     * return;
-     * }
-     *
-     * // Validar tamaño
-     * if (uploadedAvatar.getSize() > MAX_FILE_SIZE) { addErrorMessage("La
-     * imagen excede los 2MB permitidos"); return; }
-     *
-     * // Validar tipo de contenido real String mimeType =
-     * validateImageContent(uploadedAvatar); if (mimeType == null) {
-     * addErrorMessage("El archivo no es una imagen válida (JPG o PNG)");
-     * return; }
-     *
-     * // Guardar archivo String savedPath = saveAvatarFile(uploadedAvatar,
-     * mimeType);
-     *
-     * // Actualizar la URL en el usuario en edición if (editingUser != null) {
-     * editingUser.setImageUrl(savedPath); }
-     *
-     * addInfoMessage("Avatar actualizado", "La imagen se cargó correctamente");
-     *
-     * } catch (Exception e) { addErrorMessage("Error al subir la imagen: " +
-     * e.getMessage()); e.printStackTrace(); } }
-    *
-     */
-    /**
-     * Navega a la página de cambio de contraseña.
-     */
     public String goToChangePassword() {
         return "/views/shared/change-password.xhtml?faces-redirect=true";
     }
 
-    // ==================== MÉTODOS PRIVADOS DE VALIDACIÓN ====================
-    /**
-     * Valida los datos del perfil antes de guardar.
-     */
+    // ==================== TEMPLATE DINÁMICO ====================
+    public String loadTemplate() {
+        Tuser user = session.getUser();
+
+        if (user == null || user.getRoleName() == null) {
+            return "/WEB-INF/templates/admin-template.xhtml";
+        }
+
+        String roleName = user.getRoleName();
+        System.out.println(roleName);
+
+        if (roleName == null) {
+            return "/WEB-INF/templates/admin-template.xhtml";
+        }
+
+        switch (roleName) {
+            case "Médico":
+                return "/WEB-INF/templates/medic-template.xhtml";
+            case "Enfermería":
+                return "/WEB-INF/templates/nurse-template.xhtml";
+            case "Administrador":
+                return "/WEB-INF/templates/admin-template.xhtml";
+            default:
+                return "/WEB-INF/templates/admin-template.xhtml";
+        }
+    }
+
+    // ==================== VALIDACIONES ====================
     private boolean validateProfileData(Tuser user) {
         ProfileData data = user;
 
@@ -177,7 +143,6 @@ public class ProfileController implements Serializable {
             return false;
         }
 
-        // Validar formato de email
         String email = data.getEmail().trim();
         if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             addErrorMessage("El formato del correo electrónico no es válido");
@@ -187,60 +152,33 @@ public class ProfileController implements Serializable {
         return true;
     }
 
-    /**
-     * Valida que el archivo subido sea realmente una imagen.
-     *
-     * @return MIME type si es válido, null si no lo es.
-     *
-     * private String validateImageContent(Part part) { try (InputStream input =
-     * part.getInputStream()) {
-     *
-     * String mimeType = tika.detect(input);
-     *
-     * if ("image/jpeg".equals(mimeType) || "image/png".equals(mimeType)) {
-     * return mimeType; } } catch (IOException e) { e.printStackTrace(); }
-     * return null; }
-     *
-     */
-    /**
-     * Guarda el archivo de avatar en el sistema de archivos.
-     */
+    // ==================== FILE UPLOAD ====================
     private String saveAvatarFile(Part part, String mimeType) throws IOException {
-        // Crear directorio si no existe
         Path uploadPath = Paths.get(UPLOAD_DIR);
+
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
 
-        // Generar nombre único
         String extension = "image/jpeg".equals(mimeType) ? ".jpg" : ".png";
-        String fileName = "avatar_" + UUID.randomUUID().toString() + extension;
+        String fileName = "avatar_" + UUID.randomUUID() + extension;
         Path filePath = uploadPath.resolve(fileName);
 
-        // Guardar archivo
         try (InputStream input = part.getInputStream()) {
             Files.copy(input, filePath, StandardCopyOption.REPLACE_EXISTING);
         }
 
-        // Retornar ruta relativa para acceso web
         return "/uploads/avatars/" + fileName;
     }
 
+    // ==================== URL ====================
     public void initializeFromUrl() {
         if ("EDIT".equals(modeFromUrl)) {
             enableEditMode();
         }
     }
 
-    public String getModeFromUrl() {
-        return modeFromUrl;
-    }
-
-    public void setModeFromUrl(String modeFromUrl) {
-        this.modeFromUrl = modeFromUrl;
-    }
-
-    // ==================== MÉTODOS AUXILIARES PARA MENSAJES ====================
+    // ==================== MENSAJES ====================
     private void addInfoMessage(String summary, String detail) {
         facesContext.addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, summary, detail));
@@ -279,5 +217,13 @@ public class ProfileController implements Serializable {
 
     public void setUploadedAvatar(Part uploadedAvatar) {
         this.uploadedAvatar = uploadedAvatar;
+    }
+
+    public String getModeFromUrl() {
+        return modeFromUrl;
+    }
+
+    public void setModeFromUrl(String modeFromUrl) {
+        this.modeFromUrl = modeFromUrl;
     }
 }

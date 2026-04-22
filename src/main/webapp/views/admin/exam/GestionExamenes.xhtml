@@ -3,11 +3,11 @@
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:p="http://primefaces.org/ui"
                 xmlns:f="jakarta.faces.core"
-                template="/WEB-INF/templates/template.xhtml">
+                template="/WEB-INF/templates/admin-template.xhtml">
 
-    <ui:define name="titulo">Catálogo - Exámenes</ui:define>
+    <ui:define name="page-title">Catálogo - Exámenes</ui:define>
 
-    <ui:define name="contenido">
+    <ui:define name="content">
 
         <style>
             .exam-grid {
@@ -21,43 +21,201 @@
                     grid-template-columns: 1fr;
                 }
             }
+
+            .exam-master-detail {
+                display: grid;
+                grid-template-columns: 300px 1fr;
+                gap: 24px;
+            }
+
+            @media (max-width: 992px) {
+                .exam-master-detail {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            /* Lista de tipos de examen (estilo botones) */
+            .examtype-list {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .examtype-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 16px;
+                background: var(--bg-card);
+                border: 1px solid var(--border-light);
+                border-radius: 10px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .examtype-item:hover {
+                background: var(--primary);
+                border-color: var(--primary);
+            }
+
+            .examtype-item:hover .examtype-name,
+            .examtype-item:hover .examtype-count,
+            .examtype-item:hover i {
+                color: white !important;
+            }
+
+            .examtype-item.active {
+                background: var(--primary);
+                border-color: var(--primary);
+                box-shadow: 0 4px 12px rgba(11, 60, 93, 0.15);
+            }
+
+            .examtype-item.active .examtype-name,
+            .examtype-item.active .examtype-count,
+            .examtype-item.active i {
+                color: white !important;
+            }
+
+            .examtype-name {
+                font-weight: 600;
+                color: var(--text);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .examtype-count {
+                background: rgba(0,0,0,0.05);
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--text-muted);
+            }
+
+            .examtype-item.active .examtype-count,
+            .examtype-item:hover .examtype-count {
+                background: rgba(255,255,255,0.2);
+            }
         </style>
         <h:form id="form">
             <p:growl id="messages" showDetail="true" />
 
-            <!-- Header -->
-            <div class="flex-between mb-4">
-                <div>
-                    <h2 class="text-primary font-bold m-0">Catálogo de Exámenes</h2>
-                    <div class="text-muted" style="font-size: 14px;">
-                        Seleccione un tipo para ver sus exámenes
+
+
+
+            <!-- KPI CARDS - Dashboard de Exámenes                                 -->
+            <div class="kpi-grid" style="margin-bottom: 24px;">
+
+                <!-- KPI 1: Total Tipos de Examen -->
+                <div class="kpi-card primary">
+                    <div class="kpi-icon">
+                        <i class="pi pi-folder-open"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{examController.totalExamtypes}</div>
+                        <div class="kpi-label">Tipos de Examen</div>
+                        <div class="kpi-trend">
+                            <i class="pi pi-tags"></i>
+                            Categorías disponibles
+                        </div>
                     </div>
                 </div>
-            </div>
 
+                <!-- KPI 2: Total Exámenes -->
+                <div class="kpi-card success">
+                    <div class="kpi-icon">
+                        <i class="pi pi-file"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{examController.totalExams}</div>
+                        <div class="kpi-label">Total Exámenes</div>
+                        <div class="kpi-trend">
+                            <i class="pi pi-database"></i>
+                            Registrados en el sistema
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Exámenes por Tipo (Promedio) -->
+                <div class="kpi-card info">
+                    <div class="kpi-icon">
+                        <i class="pi pi-chart-bar"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{examController.averageExamsPerType}</div>
+                        <div class="kpi-label">Promedio por Tipo</div>
+                        <div class="kpi-trend">
+                            <i class="pi pi-calculator"></i>
+                            Exámenes / categoría
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Tipo más Popular -->
+                <div class="kpi-card warning">
+                    <div class="kpi-icon">
+                        <i class="pi pi-star"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value" style="font-size: 1.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            #{examController.mostPopularExamtype}
+                        </div>
+                        <div class="kpi-label">Tipo más Popular</div>
+                        <div class="kpi-trend">
+                            <i class="pi pi-trophy"></i>
+                            #{examController.mostPopularCount} exámenes
+                        </div>
+                    </div>
+                </div>
+
+            </div>
             <!-- MASTER-DETAIL LAYOUT -->
             <div class="exam-grid">
 
                 <!-- 🎯 PANEL IZQUIERDO: Tipos de Examen -->
-                <div class="col-12 md:col-3 lg:col-3">
-                    <div class="card shadow-sm h-full">
-                        <div class="flex align-items-center gap-2 mb-3 p-3 surface-ground border-round">
-                            <i class="pi pi-folder-open text-primary text-xl"></i>
-                            <span class="font-bold text-primary">Tipos de Examen</span>
+                <div>
+                    <div class="card" style="padding: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                            <div style="background: var(--primary); width: 4px; height: 20px; border-radius: 2px;"></div>
+                            <h3 style="margin: 0; font-size: 1rem; font-weight: 600; color: var(--text);">
+                                <i class="pi pi-folder-open" style="margin-right: 8px; color: var(--primary);"></i>
+                                Tipos de Examen
+                            </h3>
                         </div>
 
-                        
-                        <p:selectOneButton value="#{examController.filterExamtypeId}" 
-                                           styleClass="examtype-button-list"
-                                           unselectable="false">
-                            <f:selectItems value="#{examController.examtypes}" 
-                                           var="et" 
-                                           itemLabel="#{et.name} (#{et.examCollection.size()})" 
-                                           itemValue="#{et.id}"/>
-                            <p:ajax event="change" 
-                                    listener="#{examController.onExamtypeChange}" 
-                                    update=":form:panel-exams :form:header-exams"/>
-                        </p:selectOneButton>
+                        <div class="examtype-list">
+                            <ui:repeat value="#{examController.examtypes}" var="et">
+                                <p:commandLink actionListener="#{examController.selectExamtype(et)}"
+                                               update=":form:panel-exams :form:header-exams"
+                                               process="@this"
+                                               styleClass="examtype-item-link">
+
+                                    <div class="examtype-item #{examController.filterExamtypeId eq et.id ? 'active' : ''}">
+                                        <span class="examtype-name">
+                                            <i class="pi pi-folder"></i>
+                                            #{et.name}
+                                        </span>
+                                        <span class="examtype-count">
+                                            #{et.examCollection.size()}
+                                        </span>
+                                    </div>
+
+                                </p:commandLink>
+                            </ui:repeat>
+                        </div>
+
+                        <!-- Empty state para tipos -->
+                        <ui:fragment rendered="#{empty examController.examtypes}">
+                            <div class="text-center p-4 text-muted">
+                                <i class="pi pi-folder-open text-3xl mb-2"></i>
+                                <p>No hay tipos de examen</p>
+                                <p:button value="Crear Tipos" 
+                                          icon="pi pi-plus" 
+                                          outcome="/views/admin/examtype/GestionTiposExamenes.xhtml?faces-redirect=true"
+                                          styleClass="ui-button-sm ui-button-primary" />
+                            </div>
+                        </ui:fragment>
                     </div>
                 </div>
 

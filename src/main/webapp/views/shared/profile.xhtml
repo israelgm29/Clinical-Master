@@ -9,9 +9,11 @@
         <f:viewAction action="#{profileController.initializeFromUrl}" />
     </f:metadata>
 
-    <ui:composition template="/WEB-INF/templates/medic-template.xhtml">
+    <ui:composition template="#{profileController.loadTemplate()}">
+         <ui:define name="page-title">Perfil</ui:define>
 
         <ui:define name="content">
+        
             <clinical:profile data="#{userSession.user}" 
                               mode="#{empty profileController.modeFromUrl ? 'VIEW' : profileController.modeFromUrl}"
                               showAudit="true" />

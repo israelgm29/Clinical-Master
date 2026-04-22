@@ -42,7 +42,7 @@ public class MedicMenuBean implements Serializable {
                 DefaultMenuItem.builder()
                         .value("Mis Pacientes")
                         .icon("pi pi-list")
-                        .outcome("/views/medic/dashboard.xhtml" + redirect)
+                        .outcome("/views/medic/my-patients.xhtml" + redirect)
                         .build()
         );
 

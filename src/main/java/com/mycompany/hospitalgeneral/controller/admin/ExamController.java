@@ -125,6 +125,71 @@ public class ExamController implements Serializable {
         }
     }
 
+    // ==================== MÉTRICAS PARA KPI CARDS ====================
+    /**
+     * Total de tipos de examen
+     */
+    public int getTotalExamtypes() {
+        return examtypes != null ? examtypes.size() : 0;
+    }
+
+    /**
+     * Total de exámenes en todos los tipos
+     */
+    public int getTotalExams() {
+        if (examtypes == null) {
+            return 0;
+        }
+        return examtypes.stream()
+                .mapToInt(et -> et.getExamCollection() != null ? et.getExamCollection().size() : 0)
+                .sum();
+    }
+
+    /**
+     * Promedio de exámenes por tipo
+     */
+    public double getAverageExamsPerType() {
+        int totalTypes = getTotalExamtypes();
+        if (totalTypes == 0) {
+            return 0;
+        }
+
+        int totalExams = getTotalExams();
+        return Math.round((double) totalExams / totalTypes * 10) / 10.0;
+    }
+
+    /**
+     * Nombre del tipo de examen más popular
+     */
+    public String getMostPopularExamtype() {
+        if (examtypes == null || examtypes.isEmpty()) {
+            return "—";
+        }
+
+        return examtypes.stream()
+                .max((et1, et2) -> {
+                    int size1 = et1.getExamCollection() != null ? et1.getExamCollection().size() : 0;
+                    int size2 = et2.getExamCollection() != null ? et2.getExamCollection().size() : 0;
+                    return Integer.compare(size1, size2);
+                })
+                .map(et -> et.getName())
+                .orElse("—");
+    }
+
+    /**
+     * Cantidad de exámenes del tipo más popular
+     */
+    public int getMostPopularCount() {
+        if (examtypes == null || examtypes.isEmpty()) {
+            return 0;
+        }
+
+        return examtypes.stream()
+                .mapToInt(et -> et.getExamCollection() != null ? et.getExamCollection().size() : 0)
+                .max()
+                .orElse(0);
+    }
+
     // Getters y Setters
     public List<Exam> getItems() {
         return items;

@@ -1,0 +1,561 @@
+/* 
+    Created on : 19 abr 2026, 18:47:17
+    Author     : jhonatan Montenegro
+*/
+/* ============================================
+   HOSPITAL GENERAL - SISTEMA CLÍNICO
+   medic.css — Sidebar médico, PanelMenu y Dashboard
+   Requiere: base.css
+   ============================================ */
+
+/* ── Layout médico ──────────────────────────── */
+.medic-layout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg);
+}
+
+/* ── Sidebar médico (colapsable) ────────────── */
+.medic-sidebar-wrapper {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+}
+
+.sidebar-toggle-btn {
+    position: absolute;
+    left: calc(var(--sidebar-width) - 18px);
+    top: 24px;
+    z-index: 101;
+    width: 36px;
+    height: 36px;
+    border-radius: 50% !important;
+    background: var(--primary) !important;
+    border: 2px solid white !important;
+    box-shadow: var(--shadow-md);
+    transition: left 0.3s ease;
+    padding: 0 !important;
+}
+
+.sidebar-toggle-btn .ui-button-icon {
+    font-size: 16px !important;
+}
+
+/* Fix layout pro – posición fija */
+.medic-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    z-index: 1000;
+    background: linear-gradient(165deg, var(--primary) 0%, #0a2e4a 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.medic-sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+/* Botón flotante de colapso (fix layout pro) */
+.sidebar-toggle-btn {
+    position: fixed;
+    top: 20px;
+    left: 220px;
+    z-index: 1100;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: left 0.3s ease;
+}
+
+.medic-sidebar.collapsed ~ .sidebar-toggle-btn {
+    left: 60px;
+}
+
+/* ── Header interno ─────────────────────────── */
+.medic-sidebar .sidebar-header {
+    padding: 24px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    transition: padding 0.3s;
+    background: transparent;
+}
+
+.medic-sidebar.collapsed .sidebar-header {
+    padding: 24px 0;
+    justify-content: center;
+}
+
+.medic-sidebar .header-text { transition: opacity 0.2s; }
+
+.medic-sidebar.collapsed .header-text { display: none; }
+
+.medic-sidebar .logo {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.medic-sidebar .subtitle {
+    font-size: 11px;
+    opacity: 0.75;
+}
+
+/* ── Contenido principal médico ─────────────── */
+.medic-main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    padding: 24px 32px;
+    transition: margin-left 0.3s ease;
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+.medic-sidebar.collapsed ~ .medic-main-content {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* ── PanelMenu ──────────────────────────────── */
+.medic-panelmenu {
+    flex: 1;
+    padding: 16px 8px;
+    background: transparent !important;
+    border: none !important;
+}
+
+.medic-panelmenu .ui-panelmenu {
+    background: transparent;
+}
+
+.medic-panelmenu .ui-panelmenu-header {
+    background: transparent !important;
+    border: none !important;
+    margin: 2px 0;
+}
+
+.medic-panelmenu .ui-panelmenu-header a {
+    color: rgba(255,255,255,0.9) !important;
+    padding: 12px 16px !important;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.medic-panelmenu .ui-panelmenu-header a:hover {
+    background: rgba(255,255,255,0.1) !important;
+}
+
+.medic-panelmenu .ui-panelmenu-header.ui-state-active a {
+    background: rgba(42,157,143,0.2) !important;
+    color: white !important;
+}
+
+.medic-panelmenu .ui-panelmenu-content {
+    background: rgba(0,0,0,0.15) !important;
+    border: none !important;
+    margin-left: 8px;
+    border-radius: 6px;
+}
+
+.medic-panelmenu .ui-menuitem-link {
+    color: rgba(255,255,255,0.85) !important;
+    padding: 8px 16px !important;
+    border-radius: 6px;
+}
+
+.medic-panelmenu .ui-menuitem-link:hover {
+    background: rgba(255,255,255,0.08) !important;
+}
+
+/* ── Collapse PanelMenu ─────────────────────── */
+.medic-sidebar.collapsed .ui-panelmenu .ui-menuitem-text,
+.medic-sidebar.collapsed .ui-panelmenu .ui-panelmenu-icon {
+    display: none;
+}
+
+.medic-sidebar.collapsed .ui-panelmenu .ui-menuitem-link {
+    justify-content: center;
+    padding: 12px 0 !important;
+}
+
+.medic-sidebar.collapsed .ui-panelmenu-header > a {
+    pointer-events: none !important;
+}
+
+.medic-sidebar.collapsed .ui-panelmenu-header {
+    display: none !important;
+}
+
+/* Ocultar texto y flechas al colapsar */
+.medic-sidebar.collapsed .ui-menuitem-text      { display: none !important; }
+.medic-sidebar.collapsed .ui-panelmenu-header-label { display: none !important; }
+.medic-sidebar.collapsed .ui-panelmenu-icon     { display: none !important; }
+
+/* Centrar iconos al colapsar */
+.medic-sidebar.collapsed .ui-menuitem-link {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 14px 0 !important;
+}
+
+.medic-sidebar.collapsed .ui-panelmenu-header > a {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 12px 0 !important;
+}
+
+.medic-sidebar.collapsed .ui-panelmenu-content {
+    display: block !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+
+.medic-sidebar.collapsed .ui-menuitem-icon,
+.medic-sidebar.collapsed .ui-panelmenu-icon-left {
+    font-size: 20px !important;
+}
+
+/* ── Footer del sidebar médico ──────────────── */
+.medic-sidebar .sidebar-footer {
+    padding: 20px 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    background: transparent;
+}
+
+.medic-sidebar.collapsed .sidebar-footer .ui-button-text {
+    display: none;
+}
+
+.medic-sidebar.collapsed .sidebar-footer .ui-button {
+    justify-content: center;
+    padding: 10px !important;
+}
+
+/* ── Dashboard médico ───────────────────────── */
+.medic-dashboard .stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.medic-dashboard .stat-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.medic-dashboard .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.medic-dashboard .stat-card.waiting { border-left: 4px solid var(--warning); }
+.medic-dashboard .stat-card.pending { border-left: 4px solid var(--primary); }
+.medic-dashboard .stat-card.today   { border-left: 4px solid var(--accent); }
+
+.medic-dashboard .stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.medic-dashboard .stat-card.waiting .stat-icon {
+    background: rgba(244, 162, 97, 0.15);
+    color: var(--warning);
+}
+
+.medic-dashboard .stat-card.pending .stat-icon {
+    background: rgba(11, 60, 93, 0.1);
+    color: var(--primary);
+}
+
+.medic-dashboard .stat-card.today .stat-icon {
+    background: rgba(42, 157, 143, 0.15);
+    color: var(--accent);
+}
+
+.medic-dashboard .stat-icon .material-symbols-outlined { font-size: 28px; }
+
+.medic-dashboard .stat-info h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text);
+    line-height: 1;
+}
+
+.medic-dashboard .stat-info p {
+    margin: 4px 0 0 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* ── Secciones del dashboard ────────────────── */
+.medic-dashboard .dashboard-section {
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.medic-dashboard .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fb 100%);
+}
+
+.medic-dashboard .section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+.medic-dashboard .section-title .material-symbols-outlined {
+    color: var(--primary);
+    font-size: 22px;
+}
+
+.medic-dashboard .section-badge {
+    background: var(--primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.medic-dashboard .section-badge.waiting { background: var(--warning); }
+.medic-dashboard .section-badge.today   { background: var(--accent); }
+
+.medic-dashboard .section-content { padding: 20px; }
+
+/* ── Tarjetas de pacientes ──────────────────── */
+.medic-dashboard .patient-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+}
+
+.medic-dashboard .patient-card {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid var(--border-light);
+    transition: all 0.25s ease;
+}
+
+.medic-dashboard .patient-card:hover {
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-md);
+}
+
+.medic-dashboard .patient-card.waiting { border-left: 3px solid var(--warning); }
+.medic-dashboard .patient-card.pending { border-left: 3px solid var(--success); }
+
+.medic-dashboard .patient-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.medic-dashboard .patient-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.medic-dashboard .patient-avatar.waiting {
+    background: linear-gradient(135deg, var(--warning) 0%, #e07b3a 100%);
+}
+
+.medic-dashboard .patient-info h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.medic-dashboard .patient-info .hc-number {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.medic-dashboard .patient-status { margin-left: auto; }
+
+.medic-dashboard .status-badge {
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.medic-dashboard .status-badge.waiting   { background: rgba(244, 162, 97, 0.15); color: #c76a2a; }
+.medic-dashboard .status-badge.pending   { background: rgba(42, 157, 143, 0.15);  color: var(--accent-dark); }
+.medic-dashboard .status-badge.completed { background: rgba(11, 60, 93, 0.1);     color: var(--primary); }
+.medic-dashboard .status-badge.canceled  { background: rgba(214, 40, 40, 0.1);    color: var(--danger); }
+
+/* ── Signos vitales preview ─────────────────── */
+.medic-dashboard .vitals-preview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+    padding: 12px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+}
+
+.medic-dashboard .vital-item { text-align: center; }
+
+.medic-dashboard .vital-item .label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.medic-dashboard .vital-item .value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* Indicadores de estado de vitales */
+.vital-normal  { color: #27ae60; font-weight: 600; }
+.vital-warning { color: #f39c12; font-weight: 600; }
+.vital-danger  {
+    color: #e74c3c;
+    font-weight: 600;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.6; }
+}
+
+/* ── Acciones del paciente ──────────────────── */
+.medic-dashboard .patient-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.medic-dashboard .patient-actions .ui-button {
+    flex: 1;
+    font-size: 0.8rem !important;
+}
+
+/* ── Tabla de consultas ─────────────────────── */
+.medic-dashboard .consultation-table   { margin: -20px; }
+
+.medic-dashboard .consultation-table .ui-datatable         { border: none; box-shadow: none; }
+.medic-dashboard .consultation-table .ui-datatable-header  { display: none; }
+
+.medic-dashboard .consultation-table .ui-datatable-data > tr {
+    transition: background 0.2s ease;
+}
+
+.medic-dashboard .consultation-table .ui-datatable-data > tr:hover {
+    background: var(--bg) !important;
+}
+
+/* ── Empty state ────────────────────────────── */
+.medic-dashboard .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+}
+
+.medic-dashboard .empty-state .material-symbols-outlined {
+    font-size: 56px;
+    color: var(--border);
+    margin-bottom: 16px;
+}
+
+.medic-dashboard .empty-state h4 {
+    margin: 0 0 8px 0;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.medic-dashboard .empty-state p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* ── Responsive médico ──────────────────────── */
+@media (max-width: 768px) {
+    .medic-layout { flex-direction: column; }
+
+    .medic-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    .medic-sidebar.collapsed { width: 100%; }
+
+    .medic-sidebar-wrapper { width: 100%; }
+
+    .sidebar-toggle-btn { display: none; }
+
+    .medic-main-content { padding: 16px; }
+
+    .medic-dashboard .stats-container    { grid-template-columns: 1fr; }
+    .medic-dashboard .patient-grid       { grid-template-columns: 1fr; }
+    .medic-dashboard .vitals-preview     { grid-template-columns: repeat(2, 1fr); }
+
+    .medic-dashboard .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

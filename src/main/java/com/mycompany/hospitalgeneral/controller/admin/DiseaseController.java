@@ -84,7 +84,7 @@ public class DiseaseController implements Serializable {
     public void prepareEdit(Disease disease) {
         this.selected = disease;
         this.editMode = true;
-         System.out.println(editMode);
+        System.out.println(editMode);
     }
 
     public void save() {
@@ -130,6 +130,37 @@ public class DiseaseController implements Serializable {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
         }
+    }
+
+    /**
+     * Total de enfermedades en el catálogo
+     * @return 
+     */
+    public int getTotalDiseases() {
+        return items != null ? items.size() : 0;
+    }
+
+    /**
+     * Total de tipos de enfermedades
+     * @return 
+     */
+    public int getTotalTypes() {
+        return diseasetypes != null ? diseasetypes.size() : 0;
+    }
+
+    /**
+     * Categorías CIE-10 únicas (primera letra del código)
+     * @return 
+     */
+    public int getCieCategories() {
+        if (items == null) {
+            return 0;
+        }
+        return (int) items.stream()
+                .filter(d -> d.getCode() != null && !d.getCode().isEmpty())
+                .map(d -> d.getCode().substring(0, 1).toUpperCase())
+                .distinct()
+                .count();
     }
 
     // Getters y Setters

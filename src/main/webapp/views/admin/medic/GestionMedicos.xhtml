@@ -3,13 +3,80 @@
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:p="http://primefaces.org/ui"
                 xmlns:f="jakarta.faces.core"
-                template="/WEB-INF/templates/template.xhtml">
+                template="/WEB-INF/templates/admin-template.xhtml">
 
     <ui:define name="titulo">Gestión de Personal Médico</ui:define>
 
-    <ui:define name="contenido">
+    <ui:define name="content">
         <h:form id="form">
             <p:growl id="messages" showDetail="true" />
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- KPI CARDS - Dashboard de Médicos                                  -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div class="kpi-grid" style="margin-bottom: 24px;">
+
+                <!-- KPI 1: Total Médicos -->
+                <div class="kpi-card primary">
+                    <div class="kpi-icon">
+                        <i class="pi pi-users"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{medicController.totalMedics}</div>
+                        <div class="kpi-label">Total Médicos</div>
+                        <div class="kpi-trend">
+                            <i class="pi pi-database"></i>
+                            Registrados en el sistema
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Médicos Activos -->
+                <div class="kpi-card success">
+                    <div class="kpi-icon">
+                        <i class="pi pi-check-circle"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{medicController.activeMedics}</div>
+                        <div class="kpi-label">Médicos Activos</div>
+                        <div class="kpi-trend up">
+                            <i class="pi pi-user-plus"></i>
+                            #{medicController.activePercentage}% del total
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Pendientes de Aprobación -->
+                <div class="kpi-card warning">
+                    <div class="kpi-icon">
+                        <i class="pi pi-clock"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{medicController.pendingApprovals}</div>
+                        <div class="kpi-label">Pendientes de Aprobación</div>
+                        <div class="kpi-trend #{medicController.pendingApprovals > 0 ? 'up' : ''}">
+                            <i class="pi pi-#{medicController.pendingApprovals > 0 ? 'exclamation-triangle' : 'check'}"></i>
+                            #{medicController.pendingApprovals > 0 ? 'Requieren atención' : 'Todo al día'}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Especialidades -->
+                <div class="kpi-card info">
+                    <div class="kpi-icon">
+                        <i class="pi pi-tags"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{medicController.totalSpecialties}</div>
+                        <div class="kpi-label">Especialidades</div>
+                        <div class="kpi-trend">
+                            <i class="pi pi-briefcase"></i>
+                            Cobertura médica
+                        </div>
+                    </div>
+                </div>
+
+            </div>
 
             <div class="flex-between mb-6">
                 <div>
@@ -27,36 +94,86 @@
             </div>
 
             <div class="card">
-                <p:dataTable id="dt-medics" widgetVar="dtMedics" var="m"
+                <p:dataTable id="dt-medics" 
+                             widgetVar="dtMedics" 
+                             var="m"
                              value="#{medicController.items}"
-                             reflow="true" rowKey="#{m.id}"
-                             paginator="true" rows="10" paginatorPosition="bottom"
-                             emptyMessage="No se encontraron médicos registrados">
+                             rowKey="#{m.id}"
+                             paginator="true" 
+                             rows="10" 
+                             paginatorPosition="bottom"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="10,15,20,50"
+                             emptyMessage="No se encontraron médicos registrados"
+                             sortMode="multiple"
+                             style="font-size: 13px;">
 
-                    <p:column headerText="Identificación" sortBy="#{m.dni}" filterBy="#{m.dni}">
-                        <h:outputText value="#{m.dni}" />
-                    </p:column>
-
-                    <p:column headerText="Especialista" sortBy="#{m.lastname}" filterBy="#{m.lastname}">
-                        <span class="font-semibold">#{m.lastname} #{m.firstname}</span><br/>
-                        <span class="text-muted" style="font-size: 12px;">#{m.specialtiesNames}</span>
-                    </p:column>
-
-                    <p:column headerText="Reg. Profesional" style="text-align: center;">
-                        <span class="hc-badge" style="background: #e8f5e9; color: var(--accent-dark);">
-                            #{m.regprofessional}
+                    <!-- ✅ COLUMNA 1: ESTADO (Activo/Pendiente/Inactivo) -->
+                    <p:column headerText="Estado" style="width: 80px; text-align: center;">
+                        <span class="status-indicator-medic #{m.userid.isactive ? 'active' : (m.userid.emailverified == null ? 'pending' : 'inactive')}"
+                              title="#{m.userid.isactive ? 'Activo' : (m.userid.emailverified == null ? 'Pendiente de verificación' : 'Inactivo')}">
+                            <i class="pi pi-#{m.userid.isactive ? 'check-circle' : (m.userid.emailverified == null ? 'clock' : 'times-circle')}"></i>
                         </span>
                     </p:column>
 
-                    <p:column headerText="Contacto">
-                        <h:outputText value="#{m.email}" />
+                    <!-- ✅ COLUMNA 2: MÉDICO (Nombre + Email) -->
+                    <p:column headerText="Médico" sortBy="#{m.lastname}" filterBy="#{m.lastname}">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <!-- Avatar con iniciales -->
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; text-transform: uppercase; font-size: 14px;">
+                                #{m.firstname.substring(0,1)}#{m.lastname.substring(0,1)}
+                            </div>
+                            <div>
+                                <div class="font-semibold">#{m.lastname} #{m.firstname}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">
+                                    <i class="pi pi-envelope" style="font-size: 11px; margin-right: 4px;"></i>
+                                    #{m.email}
+                                </div>
+                            </div>
+                        </div>
                     </p:column>
 
-                    <!-- ✅ Botones idénticos a GestionPacientes: style inline -->
-                    <p:column headerText="Acciones" exportable="false" style="width: 100px; text-align: center">
+                    <!-- ✅ COLUMNA 3: ESPECIALIDAD -->
+                    <p:column headerText="Especialidad" sortBy="#{m.specialtiesNames}">
+                        <span class="specialty-tag">
+                            <i class="pi pi-tag" style="font-size: 11px; margin-right: 4px;"></i>
+                            #{empty m.specialtiesNames ? 'General' : m.specialtiesNames}
+                        </span>
+                    </p:column>
+
+                    <!-- ✅ COLUMNA 4: ROL -->
+                    <p:column headerText="Rol" style="text-align: center;">
+                        <span class="role-badge #{m.userid.roleid.name.toLowerCase()}">
+                            #{m.userid.roleid.name}
+                        </span>
+                    </p:column>
+
+                    <!-- ✅ COLUMNA 5: FECHA DE REGISTRO -->
+                    <p:column headerText="Registro" sortBy="#{m.createdat}" style="text-align: center;">
+                        <h:outputText value="#{m.createdat}">
+                            <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy" />
+                        </h:outputText>
+                    </p:column>
+
+                    <!-- ✅ COLUMNA 7: ACCIONES (Variables según estado) -->
+                    <p:column headerText="Acciones" exportable="false" style="width: 120px; text-align: center">
                         <div style="display: flex; gap: 6px; justify-content: center;">
+
+                            <!-- Ver Perfil (siempre) -->
+                            <p:commandButton icon="pi pi-eye"
+                                             title="Ver Perfil"
+                                             update=":view-dialog:view-medic-content"
+                                             oncomplete="PF('viewMedicDialog').show()"
+                                             styleClass="ui-button-flat"
+                                             style="background: #e3f2fd; border-radius: 6px; padding: 6px 10px;"
+                                             process="@this">
+                                <f:setPropertyActionListener value="#{m}" target="#{medicController.selectedMedic}" />
+                            </p:commandButton>
+
+                            <!-- Editar (solo si está activo) -->
                             <p:commandButton icon="pi pi-pencil"
                                              title="Editar"
+                                             rendered="#{m.userid.isactive}"
                                              update=":dialogs:manage-medic-content"
                                              oncomplete="PF('manageMedicDialog').show()"
                                              styleClass="ui-button-flat"
@@ -65,20 +182,53 @@
                                 <f:setPropertyActionListener value="#{m}" target="#{medicController.selectedMedic}" />
                             </p:commandButton>
 
-                            <p:commandButton icon="pi pi-id-card"
-                                             title="Ver Perfil"
-                                             update=":view-dialog:view-medic-content"
-                                             oncomplete="PF('viewMedicDialog').show()"
-                                             styleClass="ui-button-info ui-button-flat"
-                                             style="background: #e3f2fd; border-radius: 6px; padding: 6px 10px;"
+                            <!-- Aprobar (solo pendientes) -->
+                            <p:commandButton icon="pi pi-check"
+                                             title="Aprobar Registro"
+                                             rendered="#{!m.userid.isactive and m.userid.emailverified == null}"
+                                             actionListener="#{medicController.approveMedic(m)}"
+                                             update="@form"
+                                             styleClass="ui-button-flat"
+                                             style="background: #dcfce7; color: #15803d; border-radius: 6px; padding: 6px 10px;"
                                              process="@this">
-                                <f:setPropertyActionListener value="#{m}" target="#{medicController.selectedMedic}" />
+                                <p:confirm header="Confirmación" 
+                                           message="¿Aprobar a #{m.firstname} #{m.lastname} como médico del sistema?" />
                             </p:commandButton>
+
+                            <!-- Activar/Reactivar (inactivos) -->
+                            <p:commandButton icon="pi pi-refresh"
+                                             title="Reactivar Cuenta"
+                                             rendered="#{!m.userid.isactive and m.userid.emailverified != null}"
+                                             actionListener="#{medicController.reactivateMedic(m)}"
+                                             update="@form"
+                                             styleClass="ui-button-flat"
+                                             style="background: #fef3c7; color: #d97706; border-radius: 6px; padding: 6px 10px;"
+                                             process="@this" />
+
+                            <!-- Desactivar (activos) -->
+                            <p:commandButton icon="pi pi-ban"
+                                             title="Desactivar Cuenta"
+                                             rendered="#{m.userid.isactive}"
+                                             actionListener="#{medicController.deactivateMedic(m)}"
+                                             update="@form"
+                                             styleClass="ui-button-flat"
+                                             style="background: #fee2e2; color: #dc2626; border-radius: 6px; padding: 6px 10px;"
+                                             process="@this">
+                                <p:confirm header="Confirmación" 
+                                           message="¿Desactivar la cuenta de #{m.firstname} #{m.lastname}? No podrá acceder al sistema." />
+                            </p:commandButton>
+
                         </div>
                     </p:column>
 
                 </p:dataTable>
             </div>
+
+            <!-- Diálogo de confirmación global -->
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="400">
+                <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+            </p:confirmDialog>
         </h:form>
 
 

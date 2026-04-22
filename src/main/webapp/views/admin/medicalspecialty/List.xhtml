@@ -1,112 +1,257 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:ui="jakarta.faces.facelets"
-      xmlns:h="jakarta.faces.html"
-      xmlns:f="jakarta.faces.core"
-      xmlns:p="http://primefaces.org/ui">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/admin-template.xhtml">
 
-    <ui:composition template="/template.xhtml">
+    <ui:define name="page-title">Asignar Especialidades</ui:define>
 
+    <ui:define name="content">
 
-        <ui:define name="title">
-            <h:outputText value="#{bundle.ListMedicalspecialtyTitle}"></h:outputText>
-        </ui:define>
+        <style>
+            .assignment-layout {
+                display: grid;
+                grid-template-columns: 350px 1fr;
+                gap: 24px;
+            }
 
-        <ui:define name="body">
-            <h:form id="MedicalspecialtyListForm">
-                <p:panel header="#{bundle.ListMedicalspecialtyTitle}">
-                    <p:dataTable id="datalist" value="#{medicalspecialtyController.items}" var="item"
-                                 selectionMode="single" selection="#{medicalspecialtyController.selected}"
-                                 paginator="true"
-                                 rowKey="#{item.id}"
-                                 rows="10"
-                                 rowsPerPageTemplate="10,20,30,40,50"
-                                 >
+            @media (max-width: 992px) {
+                .assignment-layout {
+                    grid-template-columns: 1fr;
+                }
+            }
 
-                        <p:ajax event="rowSelect"   update="createButton viewButton editButton deleteButton"/>
-                        <p:ajax event="rowUnselect" update="createButton viewButton editButton deleteButton"/>
+            .medic-item {
+                padding: 14px 16px;
+                border-radius: 10px;
+                cursor: pointer;
+                transition: all 0.2s;
+                border: 1px solid var(--border-light);
+                margin-bottom: 6px;
+            }
 
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListMedicalspecialtyTitle_createdat}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.createdat}">
-                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
-                            </h:outputText>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListMedicalspecialtyTitle_createdby}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.createdby}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListMedicalspecialtyTitle_editedat}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.editedat}">
-                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
-                            </h:outputText>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListMedicalspecialtyTitle_editedby}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.editedby}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListMedicalspecialtyTitle_deleted}"/>
-                            </f:facet>
-                            <p:selectBooleanCheckbox value="#{item.deleted}" disabled="true"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListMedicalspecialtyTitle_deletedat}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.deletedat}">
-                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
-                            </h:outputText>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListMedicalspecialtyTitle_deletedby}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.deletedby}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListMedicalspecialtyTitle_id}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.id}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListMedicalspecialtyTitle_name}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.name}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListMedicalspecialtyTitle_description}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.description}"/>
-                        </p:column>
-                        <f:facet name="footer">
-                            <p:commandButton id="createButton" icon="ui-icon-plus"   value="#{bundle.Create}" actionListener="#{medicalspecialtyController.prepareCreate}" update=":MedicalspecialtyCreateForm" oncomplete="PF('MedicalspecialtyCreateDialog').show()"/>
-                            <p:commandButton id="viewButton"   icon="ui-icon-search" value="#{bundle.View}" update=":MedicalspecialtyViewForm" oncomplete="PF('MedicalspecialtyViewDialog').show()" disabled="#{empty medicalspecialtyController.selected}"/>
-                            <p:commandButton id="editButton"   icon="ui-icon-pencil" value="#{bundle.Edit}" update=":MedicalspecialtyEditForm" oncomplete="PF('MedicalspecialtyEditDialog').show()" disabled="#{empty medicalspecialtyController.selected}"/>
-                            <p:commandButton id="deleteButton" icon="ui-icon-trash"  value="#{bundle.Delete}" actionListener="#{medicalspecialtyController.destroy}" update=":growl,datalist" disabled="#{empty medicalspecialtyController.selected}"/>
-                        </f:facet>
-                    </p:dataTable>
-                </p:panel>
-            </h:form>
+            .medic-item:hover {
+                background: var(--bg);
+                border-color: var(--primary);
+            }
 
-            <ui:include src="Create.xhtml"/>
-            <ui:include src="Edit.xhtml"/>
-            <ui:include src="View.xhtml"/>
-        </ui:define>
-    </ui:composition>
+            .medic-item.selected {
+                background: var(--primary);
+                border-color: var(--primary);
+            }
 
-</html>
+            .medic-item.selected .medic-name,
+            .medic-item.selected .medic-info {
+                color: white !important;
+            }
+
+            .specialty-tag {
+                display: inline-block;
+                background: var(--primary);
+                color: white;
+                padding: 6px 14px;
+                border-radius: 30px;
+                font-size: 0.85rem;
+                font-weight: 500;
+                margin: 4px;
+            }
+
+            .specialty-tag i {
+                margin-left: 8px;
+                cursor: pointer;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+            }
+
+            .specialty-tag i:hover {
+                opacity: 1;
+            }
+
+            .available-specialty {
+                display: inline-block;
+                background: #e0f2fe;
+                color: #0369a1;
+                padding: 6px 14px;
+                border-radius: 30px;
+                font-size: 0.85rem;
+                font-weight: 500;
+                margin: 4px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .available-specialty:hover {
+                background: var(--primary);
+                color: white;
+            }
+        </style>
+
+        <h:form id="form">
+            <p:growl id="messages" showDetail="true" />
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- HEADER                                                            -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div class="flex-between mb-4" style="align-items: flex-end; border-bottom: 2px solid var(--border-light); padding-bottom: 16px;">
+                <div>
+                    <h2 style="margin: 0 0 4px 0; font-size: 1.6rem; font-weight: 700; color: var(--text);">
+                        <i class="pi pi-user-md" style="margin-right: 12px; color: var(--primary);"></i>
+                        Asignar Especialidades a Médicos
+                    </h2>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem;">
+                        <i class="pi pi-info-circle" style="margin-right: 6px;"></i>
+                        Seleccione un médico y asigne sus especialidades
+                    </p>
+                </div>
+                <p:button value="Gestionar Especialidades" 
+                          icon="pi pi-stethoscope" 
+                          outcome="/views/admin/specialist/List.xhtml?faces-redirect=true"
+                          styleClass="ui-button-secondary" />
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- MASTER-DETAIL LAYOUT                                             -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div class="assignment-layout">
+
+                <!-- PANEL IZQUIERDO: Lista de Médicos -->
+                <div>
+                    <div class="card" style="padding: 16px;">
+                        <h3 style="margin: 0 0 16px; font-size: 1rem; font-weight: 600;">
+                            <i class="pi pi-users" style="margin-right: 8px;"></i>
+                            Médicos (#{specialistAssignmentController.totalMedics})  
+                        </h3>
+
+                        <!-- Búsqueda -->
+                        <div class="p-inputgroup" style="margin-bottom: 16px;">
+                            <span class="p-inputgroup-addon"><i class="pi pi-search"></i></span>
+                            <p:inputText value="#{specialistAssignmentController.searchTerm}" 
+                                         placeholder="Buscar médico..."
+                                         style="width: 100%;">
+                                <p:ajax event="keyup" 
+                                        listener="#{specialistAssignmentController.searchMedics}"
+                                        update=":form:medics-list"
+                                        delay="300"/>
+                            </p:inputText>
+                        </div>
+
+                        <!-- Lista de médicos -->
+                        <p:outputPanel id="medics-list" style="max-height: 500px; overflow-y: auto;">
+                            <ui:repeat value="#{specialistAssignmentController.medics}" var="medic">
+                                <p:commandLink actionListener="#{specialistAssignmentController.onMedicSelect(medic)}"
+                                               update=":form:assignment-panel"
+                                               process="@this">
+
+                                    <div class="medic-item #{specialistAssignmentController.selectedMedic != null and specialistAssignmentController.selectedMedic.id eq medic.id ? 'selected' : ''}">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                                #{specialistAssignmentController.medicInitials(medic)}
+                                            </div>
+                                            <div>
+                                                <div class="medic-name" style="font-weight: 600;">Dr(a). #{medic.lastname} #{medic.firstname}</div>
+                                                <div class="medic-info" style="font-size: 12px; color: var(--text-muted);">
+                                                    #{medic.email}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </p:commandLink>
+                            </ui:repeat>
+
+                            <h:panelGroup rendered="#{empty specialistAssignmentController.medics}">
+                                <p class="text-muted text-center p-4">No hay médicos registrados</p>
+                            </h:panelGroup>
+                        </p:outputPanel>
+                    </div>
+                </div>
+
+                <!-- PANEL DERECHO: Asignación de Especialidades -->
+                <div>
+                    <p:outputPanel id="assignment-panel">
+                        <h:panelGroup rendered="#{specialistAssignmentController.selectedMedic != null}">
+
+                            <!-- Info del médico -->
+                            <div class="card" style="padding: 20px; margin-bottom: 20px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 600;">
+                                        #{specialistAssignmentController.selectedMedic.firstname.substring(0,1)}#{specialistAssignmentController.selectedMedic.lastname.substring(0,1)}
+                                    </div>
+                                    <div>
+                                        <h3 style="margin: 0 0 4px; font-size: 1.2rem; font-weight: 700;">
+                                            Dr(a). #{specialistAssignmentController.selectedMedic.lastname} #{specialistAssignmentController.selectedMedic.firstname}
+                                        </h3>
+                                        <div style="color: var(--text-muted);">
+                                            <i class="pi pi-envelope"></i> #{specialistAssignmentController.selectedMedic.email}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Especialidades Asignadas -->
+                            <div class="card" style="padding: 20px; margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 16px;">
+                                    <i class="pi pi-check-circle" style="color: var(--success); margin-right: 8px;"></i>
+                                    Especialidades Asignadas (#{specialistAssignmentController.totalAssigned})
+                                </h4>
+
+                                <div style="min-height: 60px;">
+                                    <ui:repeat value="#{specialistAssignmentController.specialtyPickList.target}" var="s">
+                                        <span class="specialty-tag">
+                                            #{s.name}
+                                        </span>
+                                    </ui:repeat>
+
+                                    <h:panelGroup rendered="#{specialistAssignmentController.specialtyPickList == null or empty specialistAssignmentController.specialtyPickList.target}">
+                                        <p class="text-muted">No tiene especialidades asignadas</p>
+                                    </h:panelGroup>
+                                </div>
+                            </div>
+
+                            <!-- Especialidades Disponibles -->
+
+                            <div class="card" style="padding: 20px;">
+                                <h4 style="margin: 0 0 16px;">
+                                    <i class="pi pi-plus-circle" style="color: var(--primary); margin-right: 8px;"></i>
+                                    Especialidades Disponibles para Asignar
+                                </h4>
+
+                                <p:pickList value="#{specialistAssignmentController.specialtyPickList}" 
+                                            var="s"
+                                            itemLabel="#{s.name}" 
+                                            itemValue="#{s}"
+                                            converter="medicalspecialtyConverter"
+                                            styleClass="specialty-picklist"
+                                            responsive="true"
+                                            showSourceFilter="true"
+                                            showTargetFilter="true"
+                                            filterMatchMode="contains">
+                                    <f:facet name="sourceCaption">Disponibles</f:facet>
+                                    <f:facet name="targetCaption">Asignadas</f:facet>
+                                </p:pickList>
+
+                                <div style="margin-top: 20px; text-align: right;">
+                                    <p:commandButton value="Guardar Asignaciones" 
+                                                     icon="pi pi-save"
+                                                     actionListener="#{specialistAssignmentController.assignSpecialties}"
+                                                     update=":form:assignment-panel :form:messages"
+                                                     styleClass="ui-button-success" />
+                                </div>
+                            </div>
+
+                        </h:panelGroup>
+
+                        <!-- Estado: Sin médico seleccionado -->
+                        <h:panelGroup rendered="#{specialistAssignmentController.selectedMedic == null}">
+                            <div class="card" style="padding: 60px 40px; text-align: center;">
+                                <i class="pi pi-arrow-left text-4xl mb-3" style="color: var(--primary);"></i>
+                                <h4>Seleccione un médico</h4>
+                                <p class="text-muted">Haga clic en un médico de la lista izquierda para gestionar sus especialidades</p>
+                            </div>
+                        </h:panelGroup>
+                    </p:outputPanel>
+                </div>
+            </div>
+        </h:form>
+    </ui:define>
+</ui:composition>

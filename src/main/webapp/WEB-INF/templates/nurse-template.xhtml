@@ -7,7 +7,7 @@
 
     <h:head>
         <meta charset="UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" lang="es"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <title>
             <ui:insert name="title">Enfermería - Hospital General</ui:insert>
         </title>
@@ -19,24 +19,33 @@
               href="https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css"/>
 
         <!-- CSS Global -->
-        <h:outputStylesheet library="css" name="jsfcrud.css"/>
+        <h:outputStylesheet library="css" name="base.css"/>
+        <h:outputStylesheet library="css" name="medic.css"/>
         <h:outputStylesheet library="css" name="topbar.css"/>
+        <h:outputStylesheet library="css" name="profile.css"/>
         <ui:insert name="head"/>
     </h:head>
 
     <h:body>
         <div class="medic-layout">
-            <nav:navbar sidebarId="medicNavbar" showNotifications="true" user="#{userSession.displayProfile}"/>
+
+            <!--
+                CORRECCIÓN: user="#{userSession.user}" en lugar de displayProfile
+                sidebarId="sidebar" debe coincidir con el id del aside en nurse-sidebar.xhtml
+            -->
+            <nav:navbar sidebarId="sidebar"
+                        showNotifications="true"
+                        user="#{userSession.user}"/>
 
             <!-- SIDEBAR -->
             <ui:include src="/WEB-INF/sidebars/nurse-sidebar.xhtml"/>
 
-            <!-- BOTÓN FLOAT -->
-            <button class="sidebar-toggle-btn" onclick="toggleSidebar()">
-                <i class="pi pi-bars"></i>
+                <!-- Botón colapsar -->
+            <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Colapsar menú">
+                <i class="pi pi-id-card"></i>
             </button>
 
-            <!-- CONTENIDO -->
+            <!-- CONTENIDO PRINCIPAL -->
             <main class="medic-main-content" id="mainContent">
 
                 <!-- HEADER -->
@@ -44,25 +53,29 @@
                     <h1 class="page-title">
                         <ui:insert name="page-title">Dashboard Enfermería</ui:insert>
                     </h1>
-
                     <div class="header-actions">
                         <ui:insert name="header-actions"/>
                     </div>
                 </header>
 
-                <!-- MENSAJES -->
-                <p:growl id="messages" showDetail="true" life="4000"/>
+                <!-- MENSAJES GLOBALES -->
+                <p:growl id="globalMessages" showDetail="true" life="4000"/>
 
-                <!-- CONTENIDO -->
+                <!-- CONTENIDO DE LA PÁGINA -->
                 <div class="content-body fade-in">
                     <ui:insert name="content"/>
                 </div>
+
             </main>
         </div>
 
-        <!-- SCRIPTS -->
+        <!-- SCRIPTS DE LA PÁGINA -->
         <ui:insert name="scripts"/>
 
+        <!--
+            toggleSidebar() — función única aquí.
+            El navbar.xhtml ya NO debe definir su propia toggleSidebar.
+        -->
         <script>
             function toggleSidebar() {
                 const sidebar = document.getElementById('sidebar');
@@ -73,14 +86,13 @@
 
                 if (sidebar.classList.contains('collapsed')) {
                     main.style.marginLeft = '72px';
-                    btn.classList.remove('pi-bars');
-                    btn.classList.add('pi-chevron-right');
+                    btn.classList.replace('pi-bars', 'pi-chevron-right');
                 } else {
                     main.style.marginLeft = '240px';
-                    btn.classList.remove('pi-chevron-right');
-                    btn.classList.add('pi-bars');
+                    btn.classList.replace('pi-chevron-right', 'pi-bars');
                 }
             }
         </script>
+
     </h:body>
 </html>

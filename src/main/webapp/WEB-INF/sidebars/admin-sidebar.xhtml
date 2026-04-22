@@ -1,0 +1,111 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="jakarta.tags.core"
+                xmlns:pt="jakarta.faces.passthrough">
+
+    <h:form prependId="false" id="sidebarForm" style="margin-top: 0.75rem;">
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar collapsed" id="sidebar">
+
+            <!-- HEADER -->
+            <div class="sidebar-header">
+                <span class="material-symbols-outlined">admin_panel_settings</span>
+
+                <div class="header-text">
+                    <div class="logo">#{userSession.displayProfile.displayName}</div>
+                    <div class="subtitle">Administrador</div>
+                </div>
+
+
+            </div>
+
+            <p:panelMenu styleClass="admin-panelmenu">
+                <p:menuitem value="Dashboard"
+                            icon="pi-th-large"
+                            outcome="/views/admin/dashboard/dashboard.xhtml"
+                            title="Dashboard"/>
+
+                <!-- DASHBOARD -->
+                <c:forEach items="#{adminMenuBean.dashboard}" var="item">
+                    <p:menuitem 
+                        value="#{item.label}"
+                        icon="#{item.icon}"
+                        outcome="#{item.outcome}"
+                        title="#{item.tooltip}" />
+                </c:forEach>
+
+                <!-- GESTIÓN PRINCIPAL -->
+                <p:submenu label="Gestión Principal" icon="pi pi-sitemap">
+                    <c:forEach items="#{adminMenuBean.gestionPrincipal}" var="item">
+                        <p:menuitem 
+                            value="#{item.label}"
+                            icon="#{item.icon}"
+                            outcome="#{item.outcome}"
+                            title="#{item.tooltip}" />
+                    </c:forEach>
+                </p:submenu>
+
+                <!-- CATÁLOGOS MÉDICOS -->
+                <p:submenu label="Catálogos Médicos" icon="pi pi-book">
+                    <c:forEach items="#{adminMenuBean.catalogos}" var="item">
+                        <p:menuitem 
+                            value="#{item.label}"
+                            icon="#{item.icon}"
+                            outcome="#{item.outcome}"
+                            title="#{item.tooltip}" />
+                    </c:forEach>
+                </p:submenu>
+
+                <!-- CONFIGURACIÓN -->
+                <p:submenu label="Configuración" icon="pi pi-cog">
+                    <c:forEach items="#{adminMenuBean.configuracion}" var="item">
+                        <p:menuitem 
+                            value="#{item.label}"
+                            icon="#{item.icon}"
+                            outcome="#{item.outcome}"
+                            pt:data-pr-tooltip="#{item.tooltip}" />
+                    </c:forEach>
+                </p:submenu>
+
+            </p:panelMenu>
+
+            <!-- FOOTER ADMIN -->
+            <div class="sidebar-footer">
+                <div class="footer-content">
+                    <div class="tech-stack">
+                        <div class="tech-item">
+                            <span class="material-symbols-outlined">terminal</span>
+                            <span>#{appInfo.jakartaVersion}</span>
+                        </div>
+                        <div class="tech-item">
+                            <span class="material-symbols-outlined">auto_awesome</span>
+                            <span>#{appInfo.primeFacesVersion}</span>
+                        </div>
+                    </div>
+                    <div class="system-info-footer">
+                        <div class="tech-item">
+                            <span class="material-symbols-outlined">deployed_code</span>
+                            <span>Java #{appInfo.javaVersion}</span>
+                        </div>
+                    </div>
+                    <div class="copyright">
+                        <small>© #{sidebarInfo.year} Hospital General</small>
+                        <br/>
+                        <small>Todos los derechos reservados</small>
+                    </div>
+                </div>
+
+                <!-- Logout -->
+
+                <p:commandButton icon="pi pi-sign-out"
+                                 value="Cerrar sesión"
+                                 action="#{loginController.logout}"
+                                 styleClass="ui-button-secondary ui-button-sm"
+                                 style="width: 100%;"/>
+            </div>
+        </aside>
+    </h:form>
+
+</ui:composition>

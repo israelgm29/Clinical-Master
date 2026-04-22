@@ -1,112 +1,261 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:ui="jakarta.faces.facelets"
-      xmlns:h="jakarta.faces.html"
-      xmlns:f="jakarta.faces.core"
-      xmlns:p="http://primefaces.org/ui">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core"
+                template="/WEB-INF/templates/admin-template.xhtml">
 
-    <ui:composition template="/template.xhtml">
+    <ui:define name="page-title">Especialidades Médicas</ui:define>
 
+    <ui:define name="content">
 
-        <ui:define name="title">
-            <h:outputText value="#{bundle.ListSpecialistTitle}"></h:outputText>
-        </ui:define>
+        <style>
+            .specialty-card {
+                background: var(--bg-card);
+                border-radius: 16px;
+                padding: 20px;
+                border: 1px solid var(--border-light);
+                transition: all 0.2s ease;
+            }
+            .specialty-card:hover {
+                box-shadow: var(--shadow-md);
+                border-color: var(--primary);
+            }
+            .specialty-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: rgba(11, 60, 93, 0.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--primary);
+                font-size: 24px;
+            }
+            .medic-count-badge {
+                background: #e0f2fe;
+                color: #0369a1;
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+        </style>
 
-        <ui:define name="body">
-            <h:form id="SpecialistListForm">
-                <p:panel header="#{bundle.ListSpecialistTitle}">
-                    <p:dataTable id="datalist" value="#{specialistController.items}" var="item"
-                                 selectionMode="single" selection="#{specialistController.selected}"
-                                 paginator="true"
-                                 rowKey="#{item.id}"
-                                 rows="10"
-                                 rowsPerPageTemplate="10,20,30,40,50"
-                                 >
+        <h:form id="form">
+            <p:growl id="messages" showDetail="true" />
 
-                        <p:ajax event="rowSelect"   update="createButton viewButton editButton deleteButton"/>
-                        <p:ajax event="rowUnselect" update="createButton viewButton editButton deleteButton"/>
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- HEADER CON BOTONES DE NAVEGACIÓN                                  -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div class="flex-between mb-4" style="align-items: flex-end; border-bottom: 2px solid var(--border-light); padding-bottom: 16px;">
+                <div>
+                    <h2 style="margin: 0 0 4px 0; font-size: 1.6rem; font-weight: 700; color: var(--text);">
+                        <i class="pi pi-stethoscope" style="margin-right: 12px; color: var(--primary);"></i>
+                        Especialidades Médicas
+                    </h2>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem;">
+                        <i class="pi pi-info-circle" style="margin-right: 6px;"></i>
+                        Catálogo de especialidades para asignar a médicos
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <!-- ✅ BOTÓN DE NAVEGACIÓN A LIST.XHTML -->
+                    <p:button value="Ver Listado" 
+                              icon="pi pi-list" 
+                              outcome="/views/admin/medicalspecialty/List.xhtml?faces-redirect=true"
+                              styleClass="ui-button-secondary" />
 
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListSpecialistTitle_createdat}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.createdat}">
-                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
-                            </h:outputText>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListSpecialistTitle_createdby}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.createdby}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListSpecialistTitle_editedat}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.editedat}">
-                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
-                            </h:outputText>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListSpecialistTitle_editedby}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.editedby}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListSpecialistTitle_deleted}"/>
-                            </f:facet>
-                            <p:selectBooleanCheckbox value="#{item.deleted}" disabled="true"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListSpecialistTitle_deletedat}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.deletedat}">
-                                <f:convertDateTime pattern="MM/dd/yyyy HH:mm:ss" />
-                            </h:outputText>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListSpecialistTitle_deletedby}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.deletedby}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListSpecialistTitle_id}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.id}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListSpecialistTitle_medicid}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.medicid}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">
-                                <h:outputText value="#{bundle.ListSpecialistTitle_medicalspecialtyid}"/>
-                            </f:facet>
-                            <h:outputText value="#{item.medicalspecialtyid}"/>
-                        </p:column>
-                        <f:facet name="footer">
-                            <p:commandButton id="createButton" icon="ui-icon-plus"   value="#{bundle.Create}" actionListener="#{specialistController.prepareCreate}" update=":SpecialistCreateForm" oncomplete="PF('SpecialistCreateDialog').show()"/>
-                            <p:commandButton id="viewButton"   icon="ui-icon-search" value="#{bundle.View}" update=":SpecialistViewForm" oncomplete="PF('SpecialistViewDialog').show()" disabled="#{empty specialistController.selected}"/>
-                            <p:commandButton id="editButton"   icon="ui-icon-pencil" value="#{bundle.Edit}" update=":SpecialistEditForm" oncomplete="PF('SpecialistEditDialog').show()" disabled="#{empty specialistController.selected}"/>
-                            <p:commandButton id="deleteButton" icon="ui-icon-trash"  value="#{bundle.Delete}" actionListener="#{specialistController.destroy}" update=":growl,datalist" disabled="#{empty specialistController.selected}"/>
-                        </f:facet>
-                    </p:dataTable>
-                </p:panel>
-            </h:form>
+                    <p:commandButton value="Nueva Especialidad" 
+                                     icon="pi pi-plus" 
+                                     actionListener="#{medicalspecialtyController.prepareNew}"
+                                     update=":dialogs:manage-content" 
+                                     oncomplete="PF('manageDialog').show()"
+                                     styleClass="ui-button-success" />
+                </div>
+            </div>
 
-            <ui:include src="Create.xhtml"/>
-            <ui:include src="Edit.xhtml"/>
-            <ui:include src="View.xhtml"/>
-        </ui:define>
-    </ui:composition>
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- KPI CARDS                                                         -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div class="kpi-grid" style="margin-bottom: 24px;">
 
-</html>
+                <div class="kpi-card primary">
+                    <div class="kpi-icon"><i class="pi pi-tags"></i></div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{medicalspecialtyController.totalItems}</div>
+                        <div class="kpi-label">Total Especialidades</div>
+                        <div class="kpi-trend"><i class="pi pi-database"></i> Catálogo completo</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card success">
+                    <div class="kpi-icon"><i class="pi pi-users"></i></div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">#{medicalspecialtyController.totalMedicsAssociated}</div>
+                        <div class="kpi-label">Médicos Asociados</div>
+                        <div class="kpi-trend"><i class="pi pi-user"></i> Total de asignaciones</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card info">
+                    <div class="kpi-icon"><i class="pi pi-chart-bar"></i></div>
+                    <div class="kpi-content">
+                        <div class="kpi-value">
+                            #{medicalspecialtyController.totalItems > 0 ? (medicalspecialtyController.totalMedicsAssociated / medicalspecialtyController.totalItems) : 0}
+                        </div>
+                        <div class="kpi-label">Promedio por Especialidad</div>
+                        <div class="kpi-trend"><i class="pi pi-calculator"></i> Médicos / especialidad</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- BARRA DE BÚSQUEDA                                                -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div class="flex-between mb-4">
+                <div class="p-inputgroup" style="max-width: 400px;">
+                    <span class="p-inputgroup-addon"><i class="pi pi-search"></i></span>
+                    <p:inputText value="#{medicalspecialtyController.searchTerm}" 
+                                 placeholder="Buscar especialidad..."
+                                 style="width: 100%;">
+                        <p:ajax event="keyup" 
+                                listener="#{medicalspecialtyController.search}"
+                                update=":form:specialties-grid"
+                                delay="300"/>
+                    </p:inputText>
+                </div>
+                <p:commandButton value="Limpiar" 
+                                 icon="pi pi-filter-slash"
+                                 actionListener="#{medicalspecialtyController.clearSearch}"
+                                 update=":form:specialties-grid"
+                                 styleClass="ui-button-secondary ui-button-sm"
+                                 rendered="#{not empty medicalspecialtyController.searchTerm}"/>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- GRID DE ESPECIALIDADES                                           -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <p:outputPanel id="specialties-grid">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+
+                    <ui:repeat value="#{medicalspecialtyController.items}" var="s">
+                        <div class="specialty-card">
+                            <div style="display: flex; gap: 14px; margin-bottom: 16px;">
+                                <div class="specialty-icon">
+                                    <i class="pi pi-stethoscope"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <h3 style="margin: 0 0 4px; font-size: 1.1rem; font-weight: 700; color: var(--text);">
+                                        #{s.name}
+                                    </h3>
+                                    <span class="medic-count-badge">
+                                        <i class="pi pi-user-md" style="margin-right: 4px;"></i>
+                                        #{s.specialistCollection != null ? s.specialistCollection.size() : 0} médicos
+                                    </span>
+                                </div>
+                            </div>
+
+                            <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9rem; min-height: 40px;">
+                                #{empty s.description ? 'Sin descripción' : (s.description.length() > 80 ? s.description.substring(0, 80).concat('...') : s.description)}
+                            </p>
+
+                            <div style="display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid var(--border-light); padding-top: 14px;">
+                                <p:commandButton icon="pi pi-pencil" 
+                                                 title="Editar"
+                                                 actionListener="#{medicalspecialtyController.prepareEdit(s)}"
+                                                 update=":dialogs:manage-content"
+                                                 oncomplete="PF('manageDialog').show()"
+                                                 styleClass="ui-button-outlined ui-button-secondary"
+                                                 process="@this"/>
+                                <p:commandButton icon="pi pi-trash" 
+                                                 title="Eliminar"
+                                                 actionListener="#{medicalspecialtyController.delete(s)}"
+                                                 update=":form:specialties-grid :form:messages"
+                                                 styleClass="ui-button-outlined ui-button-danger"
+                                                 process="@this">
+                                    <p:confirm header="Confirmar" message="¿Eliminar '#{s.name}'?" />
+                                </p:commandButton>
+                            </div>
+                        </div>
+                    </ui:repeat>
+
+                </div>
+
+                <h:panelGroup rendered="#{empty medicalspecialtyController.items}">
+                    <div class="text-center p-6 text-muted">
+                        <i class="pi pi-inbox text-4xl mb-3"></i>
+                        <h4>No hay especialidades registradas</h4>
+                        <p>Cree la primera especialidad médica</p>
+                    </div>
+                </h:panelGroup>
+            </p:outputPanel>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="400">
+                <p:commandButton value="Sí, eliminar" type="button" styleClass="ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="Cancelar" type="button" styleClass="ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- DIÁLOGO DE GESTIÓN                                               -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <h:form id="dialogs">
+            <p:dialog header="#{medicalspecialtyController.editMode ? '✏️ Editar Especialidad' : '🆕 Nueva Especialidad'}" 
+                      widgetVar="manageDialog" 
+                      modal="true" 
+                      width="500" 
+                      resizable="false"
+                      showEffect="fade">
+
+                <p:outputPanel id="manage-content" class="ui-fluid">
+                    <p:outputPanel rendered="#{not empty medicalspecialtyController.newSpecialty}">
+
+                        <div class="field">
+                            <p:outputLabel for="name" styleClass="font-semibold">
+                                Nombre <span style="color: var(--danger);">*</span>
+                            </p:outputLabel>
+                            <p:inputText id="name" 
+                                         value="#{medicalspecialtyController.newSpecialty.name}" 
+                                         required="true"
+                                         maxlength="75"
+                                         placeholder="Ej: Cardiología, Pediatría..."
+                                         style="width: 100%;" />
+                        </div>
+
+                        <div class="field">
+                            <p:outputLabel for="description" styleClass="font-semibold">
+                                Descripción
+                            </p:outputLabel>
+                            <p:inputTextarea id="description" 
+                                             value="#{medicalspecialtyController.newSpecialty.description}" 
+                                             rows="3"
+                                             maxlength="150"
+                                             placeholder="Descripción de la especialidad..."
+                                             autoResize="true"
+                                             style="width: 100%;" />
+                        </div>
+
+                    </p:outputPanel>
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <p:commandButton value="Cancelar" 
+                                         icon="pi pi-times"
+                                         onclick="PF('manageDialog').hide()" 
+                                         styleClass="ui-button-secondary" />
+                        <p:commandButton value="#{medicalspecialtyController.editMode ? 'Actualizar' : 'Guardar'}" 
+                                         icon="pi pi-save"
+                                         actionListener="#{medicalspecialtyController.save}"
+                                         update="manage-content :form:specialties-grid :form:messages"
+                                         process="manage-content @this"
+                                         oncomplete="if (!args.validationFailed) PF('manageDialog').hide()"
+                                         styleClass="ui-button-success" />
+                    </div>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+    </ui:define>
+</ui:composition>
