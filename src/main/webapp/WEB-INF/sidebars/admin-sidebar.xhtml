@@ -20,12 +20,13 @@
 
 
             </div>
+            <h:link outcome="/views/admin/dashboard/dashboard.xhtml"
+                    styleClass="ui-menuitem-link dashboard-direct">
+                <i class="pi pi-th-large ui-menuitem-icon"></i>
+                <span class="ui-menuitem-text">Dashboard</span>
+            </h:link>
 
             <p:panelMenu styleClass="admin-panelmenu">
-                <p:menuitem value="Dashboard"
-                            icon="pi-th-large"
-                            outcome="/views/admin/dashboard/dashboard.xhtml"
-                            title="Dashboard"/>
 
                 <!-- DASHBOARD -->
                 <c:forEach items="#{adminMenuBean.dashboard}" var="item">
@@ -65,7 +66,7 @@
                             value="#{item.label}"
                             icon="#{item.icon}"
                             outcome="#{item.outcome}"
-                            pt:data-pr-tooltip="#{item.tooltip}" />
+                            title="#{item.tooltip}" />
                     </c:forEach>
                 </p:submenu>
 
@@ -74,22 +75,6 @@
             <!-- FOOTER ADMIN -->
             <div class="sidebar-footer">
                 <div class="footer-content">
-                    <div class="tech-stack">
-                        <div class="tech-item">
-                            <span class="material-symbols-outlined">terminal</span>
-                            <span>#{appInfo.jakartaVersion}</span>
-                        </div>
-                        <div class="tech-item">
-                            <span class="material-symbols-outlined">auto_awesome</span>
-                            <span>#{appInfo.primeFacesVersion}</span>
-                        </div>
-                    </div>
-                    <div class="system-info-footer">
-                        <div class="tech-item">
-                            <span class="material-symbols-outlined">deployed_code</span>
-                            <span>Java #{appInfo.javaVersion}</span>
-                        </div>
-                    </div>
                     <div class="copyright">
                         <small>© #{sidebarInfo.year} Hospital General</small>
                         <br/>

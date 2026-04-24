@@ -20,7 +20,8 @@
               href="https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css"/>
 
         <!-- CSS -->
-        <h:outputStylesheet library="css" name="jsfcrud.css"/>
+        <h:outputStylesheet library="css" name="base.css"/>
+        <h:outputStylesheet library="css" name="medic.css"/>
         <h:outputStylesheet library="css" name="topbar.css"/>
         <h:outputStylesheet library="css" name="profile.css"/>
         
@@ -88,11 +89,7 @@
                     btn.classList.add('pi-bars');
                 }
             }
-            document.addEventListener("DOMContentLoaded", function () {
-                document.querySelectorAll('.ui-menuitem-link').forEach(el => {
-                    el.setAttribute("title", el.innerText.trim());
-                });
-            });
+         
         </script>
 
     </h:body>

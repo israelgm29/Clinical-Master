@@ -43,7 +43,10 @@ public class AdminMenuBean implements Serializable {
                         "Información del Hospital"),
                 new MenuItemModel("Médicos", "pi pi-users",
                         "/views/admin/medic/GestionMedicos.xhtml" + redirect,
-                        "Gestión de Médicos")
+                        "Gestión de Médicos"),
+                new MenuItemModel("Asignacion de Especialidades", "pi pi-wave-pulse",
+                        "/views/admin/medicalspecialty/GestionAsignacionEspecialidades.xhtml" + redirect,
+                        "Asignacion de especialidades medicas")
         );
 
         // === CATÁLOGOS MÉDICOS ===
@@ -70,9 +73,15 @@ public class AdminMenuBean implements Serializable {
                 new MenuItemModel("Permisos", "pi pi-shield",
                         "/views/admin/permission/GestionPermisos.xhtml" + redirect,
                         "Gestión de Seguridad"),
-                new MenuItemModel("Módulos", "pi pi-th",
+                new MenuItemModel("Módulos", "pi pi-address-book",
                         "/views/admin/module/GestionModulos.xhtml" + redirect,
-                        "Módulos Instalados")
+                        "Módulos Instalados"),
+                new MenuItemModel("Usuarios", "pi pi-user-edit",
+                        "/views/admin/module/GestionModulos.xhtml" + redirect,
+                        "Usuarios del sistema"),
+                new MenuItemModel("Especialidades Medicas", "pi pi-briefcase",
+                        "/views/admin/specialist/GestionEspecialidades.xhtml" + redirect,
+                        "Especialidades Medicas")
         );
     }
 
