@@ -48,6 +48,7 @@ public class LoginController {
 
             // Validar contraseña
             if (!BCrypt.checkpw(password, user.getPassword())) {
+                System.out.println(password);
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_ERROR,
                                 "Error", "Usuario o contraseña incorrectos"));

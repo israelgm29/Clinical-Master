@@ -130,14 +130,14 @@ public class PatientHistoryController implements Serializable {
         }
     }
 
-    public boolean isAllergies() {
+    public boolean isAllergiesA() {
         return antecedent != null
                 && antecedent.getAllergy() != null
                 && !antecedent.getAllergy().trim().isEmpty();
     }
 
     public List<String> getAllergies() {
-        if (!isAllergies()) {
+        if (!isAllergiesA()) {
             return List.of();
         }
         return Arrays.stream(antecedent.getAllergy().split("[,;]"))
@@ -146,7 +146,7 @@ public class PatientHistoryController implements Serializable {
                 .collect(Collectors.toList());
     }
 
-    public boolean isChronicConditions() {
+    public boolean isChronicConditionsA() {
         return !getChronicConditions().isEmpty();
     }
 

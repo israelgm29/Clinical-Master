@@ -77,7 +77,7 @@ public class AdminMenuBean implements Serializable {
                         "/views/admin/module/GestionModulos.xhtml" + redirect,
                         "Módulos Instalados"),
                 new MenuItemModel("Usuarios", "pi pi-user-edit",
-                        "/views/admin/module/GestionModulos.xhtml" + redirect,
+                        "/views/admin/tuser/GestionUsuarios.xhtml" + redirect,
                         "Usuarios del sistema"),
                 new MenuItemModel("Especialidades Medicas", "pi pi-briefcase",
                         "/views/admin/specialist/GestionEspecialidades.xhtml" + redirect,

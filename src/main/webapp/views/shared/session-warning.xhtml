@@ -1,0 +1,182 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:f="jakarta.faces.core">
+
+    <style>
+        /* ── Dialog de advertencia de sesión ── */
+        .session-warn-dialog .ui-dialog-titlebar {
+            background: linear-gradient(135deg, #f97316, #ea580c) !important;
+            color: #fff !important;
+            border-radius: 14px 14px 0 0 !important;
+            padding: 16px 20px !important;
+        }
+        .session-warn-dialog .ui-dialog-titlebar .ui-dialog-title {
+            font-weight: 700 !important;
+            font-size: .95rem !important;
+        }
+        .session-warn-dialog .ui-dialog-titlebar-close { display: none !important; }
+        .session-warn-dialog .ui-dialog-content { padding: 28px 24px 8px !important; }
+        .session-warn-dialog .ui-dialog-footer {
+            padding: 12px 24px 20px !important;
+            border-top: 1px solid rgba(0,0,0,.06) !important;
+            display: flex !important;
+            gap: 10px !important;
+        }
+
+        .sw-body {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .sw-icon {
+            width: 46px; height: 46px;
+            border-radius: 12px;
+            background: rgba(249,115,22,.1);
+            border: 1.5px solid rgba(249,115,22,.25);
+            display: flex; align-items: center; justify-content: center;
+            color: #f97316; font-size: 20px; flex-shrink: 0;
+        }
+        .sw-title {
+            font-size: .95rem; font-weight: 700;
+            color: var(--text); margin-bottom: 6px;
+        }
+        .sw-desc {
+            font-size: .85rem; color: var(--text-muted); line-height: 1.55;
+        }
+        .sw-countdown-row {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 14px; padding: 10px 14px;
+            background: #fff7ed; border-radius: 10px;
+            border: 1px solid rgba(249,115,22,.2);
+            font-size: .83rem; color: #9a3412;
+        }
+        .sw-countdown-row i { color: #f97316; }
+        #sw-seconds {
+            font-weight: 800; font-size: 1.1rem;
+            color: #ea580c; min-width: 24px; text-align: center;
+        }
+    </style>
+
+    <!-- ══ idleMonitor: detecta inactividad del usuario ══════════════
+         timeout  = tiempo de inactividad antes de mostrar el aviso (ms)
+         onidle   = qué hacer cuando el usuario está inactivo
+         onactive = qué hacer cuando el usuario vuelve a interactuar   -->
+    <p:idleMonitor timeout="40000"
+                   onidle="onSessionIdle()"
+                   onactive="onSessionActive()"/>
+
+    <!-- ══ Dialog de advertencia ════════════════════════════════════ -->
+    <p:dialog widgetVar="sessionWarningDialog"
+              modal="true"
+              responsive="true"
+              width="420"
+              resizable="false"
+              closable="false"
+              showEffect="fade"
+              hideEffect="fade"
+              styleClass="session-warn-dialog"
+              header="Aviso de seguridad">
+
+        <div class="sw-body">
+            <div class="sw-icon">
+                <i class="pi pi-clock"/>
+            </div>
+            <div>
+                <div class="sw-title">Tu sesión está a punto de expirar</div>
+                <div class="sw-desc">
+                    Por seguridad, tu sesión se cerrará automáticamente
+                    por inactividad. ¿Deseas continuar trabajando?
+                </div>
+                <div class="sw-countdown-row">
+                    <i class="pi pi-hourglass"/>
+                    La sesión cerrará en
+                    <span id="sw-seconds">20</span>
+                    segundos
+                </div>
+            </div>
+        </div>
+
+        <f:facet name="footer">
+            <!-- Cerrar sesión manualmente -->
+            <h:form style="flex:1;">
+                <p:commandButton value="Cerrar sesión"
+                                 icon="pi pi-sign-out"
+                                 action="#{loginController.logout}"
+                                 styleClass="ui-button-secondary"
+                                 style="width:100%;"/>
+            </h:form>
+            <!-- Renovar sesión -->
+            <p:commandButton value="Continuar sesión"
+                             icon="pi pi-refresh"
+                             type="button"
+                             styleClass="ui-button-success"
+                             style="flex:1;"
+                             onclick="renewSession()"/>
+        </f:facet>
+
+    </p:dialog>
+
+    <!-- ══ Keep-alive: ping al servidor para renovar la sesión ══════ -->
+    <h:form id="keepAliveForm">
+        <p:remoteCommand name="keepAliveCommand"
+                         actionListener="#{sessionKeepAlive.ping}"
+                         process="@none"
+                         update="@none"/>
+    </h:form>
+
+    <script>
+        //<![CDATA[
+        var swCountdownTimer = null;
+        // Segundos del countdown — debe ser menor que el timeout del idleMonitor
+        var SW_WARNING_SECONDS = 20;
+
+        /**
+         * Se dispara cuando p:idleMonitor detecta inactividad.
+         * Muestra el dialog e inicia el countdown.
+         */
+        function onSessionIdle() {
+            var seconds = SW_WARNING_SECONDS;
+            document.getElementById('sw-seconds').textContent = seconds;
+            PF('sessionWarningDialog').show();
+
+            swCountdownTimer = setInterval(function () {
+                seconds--;
+                var el = document.getElementById('sw-seconds');
+                if (el) el.textContent = seconds;
+
+                if (seconds <= 0) {
+                    clearInterval(swCountdownTimer);
+                    window.location.replace(
+                        '#{request.contextPath}/views/errors/session-expired.xhtml'
+                    );
+                }
+            }, 1000);
+        }
+
+        /**
+         * Se dispara cuando p:idleMonitor detecta que el usuario
+         * volvió a interactuar (movió el mouse, tecleó, etc.)
+         * Solo cancela el dialog — NO renueva la sesión en el servidor.
+         * Para renovarla, el usuario debe pulsar "Continuar sesión".
+         */
+        function onSessionActive() {
+            clearInterval(swCountdownTimer);
+            PF('sessionWarningDialog').hide();
+        }
+
+        /**
+         * Llamado por el botón "Continuar sesión".
+         * Hace ping al servidor para renovar la sesión HTTP
+         * y cierra el dialog.
+         */
+        function renewSession() {
+            keepAliveCommand();
+            clearInterval(swCountdownTimer);
+            PF('sessionWarningDialog').hide();
+        }
+        //]]>
+    </script>
+
+</ui:composition>

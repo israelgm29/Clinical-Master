@@ -11,7 +11,7 @@ public class ReportContext implements Serializable {
 
     private ReportResult currentReport;
 
-    public boolean hasReport() {
+    public boolean isReport() {
         return currentReport != null;
     }
 

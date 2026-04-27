@@ -1,0 +1,409 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces"
+                xmlns:f="jakarta.faces.core">
+
+    <!--
+        ╔══════════════════════════════════════════════════════════════╗
+        ║  NOTIFICATIONS FRAGMENT                                      ║
+        ║  Incluir en cada template DENTRO del h:form del navbar:     ║
+        ║  <ui:include src="/WEB-INF/includes/notifications.xhtml"/>   ║
+        ║                                                              ║
+        ║  Requiere que el navbar tenga el id="notifBadge"            ║
+        ║  y el dropdown con id="notifDropdown"                       ║
+        ╚══════════════════════════════════════════════════════════════╝
+
+        El canal WebSocket se determina por el rol del usuario:
+        - admin  → /ws/notifications/admin/{userId}
+        - medic  → /ws/notifications/medic/{userId}
+        - nurse  → /ws/notifications/nurse/{userId}
+    -->
+
+    <style>
+        /* ── Badge del navbar ── */
+        .notif-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            background: var(--danger, #dc2626);
+            color: #fff;
+            font-size: .65rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            border: 2px solid var(--bg-card);
+            animation: badgePop .3s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes badgePop {
+            from {
+                transform: scale(0);
+            }
+            to   {
+                transform: scale(1);
+            }
+        }
+
+        /* ── Dropdown de notificaciones ── */
+        .notif-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 360px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.12);
+            overflow: hidden;
+            z-index: 9999;
+            display: none;
+        }
+        .notif-dropdown.show {
+            display: block;
+            animation: dropIn .2s ease;
+        }
+        @keyframes dropIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to   {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── Header del dropdown ── */
+        .notif-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-light);
+            background: linear-gradient(135deg, rgba(11,60,93,.04) 0%, transparent 100%);
+        }
+        .notif-header-title {
+            font-weight: 700;
+            font-size: .9rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .notif-header-title i {
+            color: var(--primary);
+        }
+        .notif-mark-all {
+            font-size: .75rem;
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+            background: none;
+            border: none;
+            padding: 0;
+            text-decoration: underline;
+        }
+        .notif-mark-all:hover {
+            opacity: .7;
+        }
+
+        /* ── Lista de notificaciones ── */
+        .notif-list {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .notif-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .notif-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .notif-list::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 2px;
+        }
+
+        /* ── Item de notificación ── */
+        .notif-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .notif-item:last-child {
+            border-bottom: none;
+        }
+        .notif-item:hover {
+            background: rgba(11,60,93,.03);
+        }
+        .notif-item.unread {
+            background: rgba(11,60,93,.04);
+        }
+        .notif-item.unread:hover {
+            background: rgba(11,60,93,.07);
+        }
+
+        .notif-item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .notif-item-icon.info    {
+            background: rgba(59,130,246,.1);
+            color: #3b82f6;
+        }
+        .notif-item-icon.success {
+            background: rgba(22,163,74,.1);
+            color: #16a34a;
+        }
+        .notif-item-icon.warn    {
+            background: rgba(245,158,11,.1);
+            color: #f59e0b;
+        }
+        .notif-item-icon.error   {
+            background: rgba(220,38,38,.1);
+            color: #dc2626;
+        }
+
+        .notif-item-body {
+            flex: 1;
+            min-width: 0;
+        }
+        .notif-item-title {
+            font-size: .83rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .notif-item-msg {
+            font-size: .78rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .notif-item-time {
+            font-size: .7rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-style: italic;
+        }
+        .notif-unread-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--primary);
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        /* ── Empty state ── */
+        .notif-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 36px 24px;
+            gap: 8px;
+            color: var(--text-muted);
+        }
+        .notif-empty i {
+            font-size: 2rem;
+            opacity: .25;
+        }
+        .notif-empty p {
+            margin: 0;
+            font-size: .82rem;
+        }
+    </style>
+
+<!-- ══ WebSocket universal ═══════════════════════════════════════ -->
+<f:websocket channel="notifications_#{userSession.user.id}"
+             onmessage="onNotificationReceived"
+             onclose="onNotificationClose"
+             connected="true"/>
+
+    <!-- ══ Panel que se actualiza con cada notificación ════════════ -->
+    <h:form id="notifForm">
+        <p:outputPanel id="notifPanel" layout="block" style="position:relative;">
+
+            <!-- Botón del navbar con badge -->
+            <div style="position:relative; display:inline-block;">
+                <button type="button"
+                        class="nav-btn"
+                        onclick="toggleNotifDropdown(event)">
+                    <i class="pi pi-bell"/>
+                    <p:outputPanel rendered="#{notificationController.hasUnread}"
+                                   layout="block"
+                                   styleClass="notif-badge">
+                        #{notificationController.unreadCount > 9
+                          ? '9+' : notificationController.unreadCount}
+                    </p:outputPanel>
+                </button>
+
+                <!-- Dropdown -->
+                <div class="notif-dropdown" id="notifDropdown">
+
+                    <!-- Header -->
+                    <div class="notif-header">
+                        <span class="notif-header-title">
+                            <i class="pi pi-bell"/>
+                            Notificaciones
+                            <p:outputPanel rendered="#{notificationController.hasUnread}"
+                                           layout="inline">
+                                <span class="notif-badge" style="position:static;">
+                                    #{notificationController.unreadCount}
+                                </span>
+                            </p:outputPanel>
+                        </span>
+                        <p:commandButton value="Marcar leídas"
+                                         styleClass="notif-mark-all"
+                                         actionListener="#{notificationController.markAllRead}"
+                                         update=":notifForm:notifPanel"
+                                         process="@this"
+                                         rendered="#{notificationController.hasUnread}"/>
+                    </div>
+
+                    <!-- Lista -->
+                    <div class="notif-list">
+                        <p:outputPanel rendered="#{not empty notificationController.notifications}">
+                            <ui:repeat value="#{notificationController.notifications}" var="n">
+                                <div class="notif-item #{n.isread ? '' : 'unread'}">
+                                    <div class="notif-item-icon info">
+                                        <i class="#{n.icon}"/>
+                                    </div>
+                                    <div class="notif-item-body">
+                                        <div class="notif-item-title">#{n.title}</div>
+                                        <div class="notif-item-msg">#{n.message}</div>
+                                        <div class="notif-item-time">
+                                            <h:outputText value="#{n.createdat}">
+                                                <f:convertDateTime type="localDateTime"
+                                                                   pattern="dd/MM/yyyy HH:mm"/>
+                                            </h:outputText>
+                                        </div>
+                                    </div>
+                                    <p:outputPanel rendered="#{not n.isread}"
+                                                   layout="block"
+                                                   styleClass="notif-unread-dot"/>
+                                </div>
+                            </ui:repeat>
+                        </p:outputPanel>
+
+                        <!-- Empty state -->
+                        <p:outputPanel rendered="#{empty notificationController.notifications}">
+                            <div class="notif-empty">
+                                <i class="pi pi-bell-slash"/>
+                                <p>No tienes notificaciones</p>
+                            </div>
+                        </p:outputPanel>
+                    </div>
+
+                </div><!-- /.notif-dropdown -->
+            </div>
+
+        </p:outputPanel>
+    </h:form>
+
+    <script>
+        //<![CDATA[
+        /**
+         * Se dispara cuando p:socket recibe un mensaje del servidor.
+         * El panel ya se actualizó vía Ajax (update=":notifPanel").
+         * Aquí mostramos un toast adicional para llamar la atención.
+         */
+        function onNotificationReceived(msg) {
+            try {
+                var data = JSON.parse(msg);
+                showNotifToast(data);
+            } catch (e) {
+                console.warn('Error al parsear notificación WebSocket:', e);
+            }
+        }
+
+        /**
+         * Toast flotante que aparece en la esquina superior derecha.
+         */
+        function showNotifToast(data) {
+            var toast = document.createElement('div');
+            toast.style.cssText = [
+                'position:fixed', 'top:80px', 'right:20px', 'z-index:99999',
+                'background:#fff', 'border:1px solid #e2e8f0',
+                'border-left:4px solid #0b3c5d',
+                'border-radius:12px', 'padding:14px 18px',
+                'box-shadow:0 8px 24px rgba(0,0,0,.12)',
+                'display:flex', 'align-items:flex-start', 'gap:12px',
+                'max-width:320px', 'animation:toastIn .3s ease',
+                'font-family:inherit'
+            ].join(';');
+
+            toast.innerHTML =
+                    '<i class="' + (data.icon || 'pi pi-bell') + '" ' +
+                    'style="color:#0b3c5d;font-size:18px;margin-top:2px;flex-shrink:0;"></i>' +
+                    '<div>' +
+                    '<div style="font-weight:700;font-size:.85rem;color:#0f172a;margin-bottom:4px;">'
+                    + (data.title || '') + '</div>' +
+                    '<div style="font-size:.78rem;color:#64748b;line-height:1.4;">'
+                    + (data.message || '') + '</div>' +
+                    '</div>';
+
+            document.body.appendChild(toast);
+
+            // Auto-remover después de 5 segundos
+            setTimeout(function () {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity .3s';
+                setTimeout(function () {
+                    toast.remove();
+                }, 300);
+            }, 5000);
+        }
+
+        /**
+         * Abre/cierra el dropdown de notificaciones.
+         */
+        function toggleNotifDropdown(e) {
+            e.stopPropagation();
+            var dropdown = document.getElementById('notifDropdown');
+            if (dropdown)
+                dropdown.classList.toggle('show');
+        }
+
+        // Cerrar al hacer clic fuera
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('#notifDropdown') &&
+                    !e.target.closest('.nav-btn')) {
+                var d = document.getElementById('notifDropdown');
+                if (d)
+                    d.classList.remove('show');
+            }
+        });
+
+        // Estilos del toast
+        if (!document.getElementById('notif-toast-style')) {
+            var style = document.createElement('style');
+            style.id = 'notif-toast-style';
+            style.textContent = '@keyframes toastIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }';
+            document.head.appendChild(style);
+        }
+        //]]>
+    </script>
+
+</ui:composition>

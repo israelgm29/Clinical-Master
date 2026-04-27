@@ -5,6 +5,7 @@ import com.mycompany.hospitalgeneral.model.Profile;
 import com.mycompany.hospitalgeneral.model.Role;
 import com.mycompany.hospitalgeneral.model.Tuser;
 import com.mycompany.hospitalgeneral.services.MedicService;
+import com.mycompany.hospitalgeneral.services.NotificationService;
 import com.mycompany.hospitalgeneral.services.ProfileService;
 import com.mycompany.hospitalgeneral.services.RoleService;
 import com.mycompany.hospitalgeneral.services.TuserService;
@@ -19,12 +20,8 @@ import jakarta.inject.Named;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * Controller para el módulo de Gestión de Usuarios (Admin). Maneja: listar,
- * crear, editar, activar/desactivar, eliminar, enviar confirmación de email y
- * resetear contraseña.
- */
 @Named
 @ViewScoped
 public class UserManagementController implements Serializable {
@@ -41,6 +38,10 @@ public class UserManagementController implements Serializable {
     @Inject
     private MedicService medicService;
 
+    // ── ✅ Nuevo: servicio de notificaciones ──────────────────────────
+    @Inject
+    private NotificationService notificationService;
+
     // ── Session ───────────────────────────────────────────────────────
     @Inject
     private UserSession userSession;
@@ -49,13 +50,13 @@ public class UserManagementController implements Serializable {
     private List<Tuser> users;
     private List<Role> roles;
 
-    // ── Filtro de búsqueda ────────────────────────────────────────────
+    // ── Filtro ────────────────────────────────────────────────────────
     private String searchQuery;
 
     // ── Usuario en edición / creación ─────────────────────────────────
     private Tuser editingUser;
     private Profile editingProfile;
-    private Medic editingMedic;        // solo si el rol seleccionado es Médico
+    private Medic editingMedic;
     private Role selectedRole;
     private boolean creatingNew = false;
 
@@ -63,7 +64,6 @@ public class UserManagementController implements Serializable {
     private Tuser selectedUser;
 
     // ── Flag de formulario dinámico ───────────────────────────────────
-    // Se actualiza al cambiar el rol en el select del modal
     private boolean showMedicFields = false;
 
     // ─────────────────────────────────────────────────────────────────
@@ -118,7 +118,7 @@ public class UserManagementController implements Serializable {
             // 2. Configurar y guardar Tuser
             editingUser.setProfileid(editingProfile);
             editingUser.setRoleid(selectedRole);
-            editingUser.setIsactive(false);     // inactivo hasta confirmar email
+            editingUser.setIsactive(false);
             editingUser.setEmailverified(false);
             tuserService.create(editingUser, adminId);
 
@@ -128,7 +128,7 @@ public class UserManagementController implements Serializable {
                 medicService.save(editingMedic, adminId);
             }
 
-            // 4. Enviar email de confirmación automáticamente
+            // 4. Enviar email de confirmación
             tuserService.sendVerificationEmail(editingUser);
 
             addInfo("Usuario creado. Se envió email de confirmación a " + editingUser.getEmail());
@@ -149,7 +149,6 @@ public class UserManagementController implements Serializable {
         selectedRole = editingUser.getRoleid();
         showMedicFields = isMedicRole(selectedRole);
 
-        // Cargar datos de médico si aplica
         if (showMedicFields && editingUser.getMedic() != null) {
             editingMedic = editingUser.getMedic();
         } else {
@@ -193,6 +192,19 @@ public class UserManagementController implements Serializable {
             boolean nuevoEstado = !user.getIsactive();
             tuserService.setActive(user.getId(), nuevoEstado, getCurrentUserId());
 
+            // ✅ Notificar a admins solo cuando se ACTIVA una cuenta
+            if (nuevoEstado) {
+                // ✅ Notificar a todos los admins que se reseteó la contraseña
+                List<Tuser> admins = tuserService.findAll()
+                        .stream()
+                        .filter((Tuser adm) -> adm.getRoleid().getName().contains("Administración"))
+                        .collect(Collectors.toList());
+                notificationService.notifyAdminsAccountActivated(
+                        admins,
+                        user.getFullName()
+                );
+            }
+
             addInfo(user.getFullName() + (nuevoEstado ? " activado" : " desactivado"));
             loadUsers();
 
@@ -232,15 +244,28 @@ public class UserManagementController implements Serializable {
     // ─────────────────────────────────────────────────────────────────
     public void resetPassword(Tuser user) {
         try {
-            String tempPassword = tuserService.resetPasswordAndNotify(user);
+            tuserService.resetPasswordAndNotify(user);
+
+            // ✅ Notificar a todos los admins que se reseteó la contraseña
+            List<Tuser> admins = tuserService.findAll()
+                    .stream()
+                    .filter((Tuser adm) -> adm.getRoleid().getName().contains("Administración"))
+                    .collect(Collectors.toList());
+
+            notificationService.notifyAdminsPasswordChanged(
+                    admins,
+                    user.getFullName()
+            );
+
             addInfo("Contraseña reseteada. Email enviado a " + user.getEmail());
+
         } catch (Exception e) {
             addError("Error al resetear contraseña: " + e.getMessage());
         }
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // CAMBIO DE ROL — actualiza los campos dinámicos del formulario
+    // CAMBIO DE ROL
     // ─────────────────────────────────────────────────────────────────
     public void onRoleChange() {
         showMedicFields = isMedicRole(selectedRole);

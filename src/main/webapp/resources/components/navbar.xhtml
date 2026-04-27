@@ -3,36 +3,36 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="jakarta.faces.html"
       xmlns:ui="jakarta.faces.facelets"
-      xmlns:p="primefaces"
+      xmlns:p="http://primefaces.org/ui"
       xmlns:cc="jakarta.faces.composite"
       xmlns:f="jakarta.faces.core">
 
-    <!-- ═══════════════════════════════════════════
-         INTERFACE: declara los atributos del componente
-         ═══════════════════════════════════════════ -->
     <cc:interface>
-        <cc:attribute name="user" 
-                      type="com.mycompany.hospitalgeneral.services.interfaces.DisplayUser" 
+        <cc:attribute name="user"
+                      type="com.mycompany.hospitalgeneral.services.interfaces.DisplayUser"
                       required="true"
                       shortDescription="Objeto de usuario que implementa DisplayUser"/>
-
-        <cc:attribute name="showNotifications" 
-                      type="java.lang.Boolean" 
-                      default="true" 
+        <cc:attribute name="showNotifications"
+                      type="java.lang.Boolean"
+                      default="true"
                       required="false"/>
-
-        <cc:attribute name="sidebarId" 
-                      type="java.lang.String" 
-                      default="sidebar" 
+        <cc:attribute name="sidebarId"
+                      type="java.lang.String"
+                      default="sidebar"
                       required="false"/>
     </cc:interface>
 
-    <!-- ═══════════════════════════════════════════
-         IMPLEMENTATION: el markup real del componente
-         ═══════════════════════════════════════════ -->
     <cc:implementation>
 
         <header class="top-navbar">
+
+            <!-- Izquierda: Toggle sidebar -->
+            <div class="navbar-left">
+                <button type="button" class="sidebar-toggle"
+                        onclick="toggleSidebar('#{cc.attrs.sidebarId}')">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
 
             <!-- Centro: Brand -->
             <div class="navbar-brand">
@@ -45,76 +45,159 @@
             <!-- Derecha -->
             <div class="navbar-right">
 
-                <!-- Notificaciones (condicional) -->
+                <!-- ══ NOTIFICACIONES ════════════════════════════════ -->
                 <ui:fragment rendered="#{cc.attrs.showNotifications}">
-                    <div class="nav-item dropdown">
-                        <button class="nav-btn" onclick="toggleNotifications()">
-                            <span class="material-symbols-outlined">notifications</span>
-                            <span class="badge" id="notifCount">3</span>
-                        </button>
-                        <div class="dropdown-menu notifications-menu" id="notificationsMenu">
-                            <div class="dropdown-header">
-                                <span>Notificaciones</span>
-                                <a href="#">Marcar todo leído</a>
-                            </div>
-                            <div class="notification-item unread">
-                                <span class="material-symbols-outlined">assignment_late</span>
-                                <div>
-                                    <p>Nuevo paciente en espera</p>
-                                    <small>Hace 5 minutos</small>
+
+                    <!-- Form para Ajax de notificaciones -->
+                    <h:form id="notifForm" prependId="false">
+
+                        <!-- RemoteCommand: recarga el panel al recibir push -->
+                        <p:remoteCommand name="refreshNotifPanel"
+                                         actionListener="#{notificationController.refreshNotifications}"
+                                         update="notifPanel"
+                                         process="@none"/>
+
+                        <p:outputPanel id="notifPanel" layout="inline">
+                            <div class="nav-item dropdown notif-dropdown-wrap">
+
+                                <!-- Botón con badge dinámico -->
+                                <button type="button"
+                                        class="nav-btn"
+                                        onclick="toggleNotifications(event)">
+                                    <span class="material-symbols-outlined">notifications</span>
+                                    <ui:fragment rendered="#{notificationController.hasUnread}">
+                                        <span class="notif-badge">
+                                            #{notificationController.unreadCount > 9
+                                              ? '9+' : notificationController.unreadCount}
+                                        </span>
+                                    </ui:fragment>
+                                </button>
+
+                                <!-- Dropdown dinámico -->
+                                <div class="dropdown-menu notifications-menu" id="notificationsMenu">
+
+                                    <!-- Header -->
+                                    <div class="dropdown-header">
+                                        <span>
+                                            Notificaciones
+                                            <ui:fragment rendered="#{notificationController.hasUnread}">
+                                                <span class="notif-count-label">
+                                                    #{notificationController.unreadCount} nuevas
+                                                </span>
+                                            </ui:fragment>
+                                        </span>
+                                        <p:commandLink value="Marcar leídas"
+                                                       styleClass="notif-mark-all"
+                                                       actionListener="#{notificationController.markAllRead}"
+                                                       update="notifPanel"
+                                                       process="@this"
+                                                       rendered="#{notificationController.hasUnread}"/>
+                                    </div>
+
+                                    <!-- Lista de notificaciones -->
+                                    <div class="notif-list">
+                                        <ui:fragment rendered="#{not empty notificationController.notifications}">
+                                            <ui:repeat value="#{notificationController.notifications}"
+                                                       var="n" varStatus="vs">
+                                                <div class="notification-item #{n.isread ? '' : 'unread'}">
+                                                    <span class="material-symbols-outlined notif-icon">
+                                                        #{n.type eq 'PATIENT_ASSIGNED'      ? 'person_add'
+                                                          : n.type eq 'ACCOUNT_ACTIVATED'   ? 'verified_user'
+                                                          : n.type eq 'PASSWORD_CHANGED'    ? 'lock_reset'
+                                                          : n.type eq 'CONSULTATION_STATUS' ? 'medical_services'
+                                                          : 'notifications'}
+                                                    </span>
+                                                    <div class="notif-body">
+                                                        <p class="notif-title">#{n.title}</p>
+                                                        <p class="notif-msg">#{n.message}</p>
+                                                        <small class="notif-time">
+                                                            <h:outputText value="#{n.createdat}">
+                                                                <f:convertDateTime
+                                                                    type="localDateTime"
+                                                                    pattern="dd/MM HH:mm"/>
+                                                            </h:outputText>
+                                                        </small>
+                                                    </div>
+                                                    <ui:fragment rendered="#{not n.isread}">
+                                                        <span class="notif-dot"/>
+                                                    </ui:fragment>
+                                                </div>
+                                            </ui:repeat>
+                                        </ui:fragment>
+
+                                        <!-- Empty state -->
+                                        <ui:fragment rendered="#{empty notificationController.notifications}">
+                                            <div class="notif-empty">
+                                                <span class="material-symbols-outlined">
+                                                    notifications_off
+                                                </span>
+                                                <p>Sin notificaciones</p>
+                                            </div>
+                                        </ui:fragment>
+                                    </div>
+
                                 </div>
                             </div>
-                            <div class="notification-item">
-                                <span class="material-symbols-outlined">lab_profile</span>
-                                <div>
-                                    <p>Resultado de laboratorio listo</p>
-                                    <small>Hace 1 hora</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        </p:outputPanel>
+
+                    </h:form>
+
+                    <!-- ══ f:websocket — canal por rol y userId ════════
+                         El canal se determina automáticamente:
+                         - Médico    → medicChannel
+                         - Admin     → adminChannel
+                         - Enfermería → nurseChannel
+                         connected="#{cc.attrs.showNotifications}" asegura
+                         que solo se conecta si el navbar lo habilita.     -->
+                    <f:websocket channel="#{userSession.user.roleid.name eq 'Médico'
+                                            ? 'medicChannel'
+                                            : userSession.user.roleid.name eq 'Administrador'
+                                            ? 'adminChannel'
+                                            : 'nurseChannel'}"
+                                 user="#{userSession.user.id}"
+                                 onmessage="onNotificationReceived"
+                                 onclose="onNotificationClose"
+                                 connected="#{cc.attrs.showNotifications}"/>
+
                 </ui:fragment>
 
-                <!-- Usuario -->
+                <!-- ══ USUARIO ════════════════════════════════════════ -->
                 <div class="nav-item dropdown user-dropdown">
-                    <button class="nav-btn user-btn" onclick="toggleUserMenu()">
+                    <button class="nav-btn user-btn" onclick="toggleUserMenu(event)">
                         <div class="user-avatar-small">
-                            #{empty cc.attrs.user.displayName ? 'U' : cc.attrs.user.displayName.substring(0,1).toUpperCase()}
+                            #{empty cc.attrs.user.displayName ? 'U'
+                              : cc.attrs.user.displayName.substring(0,1).toUpperCase()}
                         </div>
                         <div class="user-info-mini">
-                            <span class="user-name">
-                                #{cc.attrs.user.displayName}
-                            </span>
-                            <span class="user-role">
-                                #{cc.attrs.user.roleName}
-                            </span>
+                            <span class="user-name">#{cc.attrs.user.displayName}</span>
+                            <span class="user-role">#{cc.attrs.user.roleName}</span>
                         </div>
                         <span class="material-symbols-outlined">expand_more</span>
                     </button>
+
                     <div class="dropdown-menu user-menu" id="userMenu">
                         <div class="user-header">
                             <div class="user-avatar-large">
-                                #{cc.attrs.user.email}
+                                #{empty cc.attrs.user.displayName ? 'U'
+                                  : cc.attrs.user.displayName.substring(0,1).toUpperCase()}
                             </div>
                             <div>
                                 <strong>#{cc.attrs.user.fullName}</strong>
                                 <span>#{cc.attrs.user.email}</span>
                             </div>
                         </div>
-                        <div class="dropdown-divider"></div>
-                        <h:link outcome="/views/shared/profile" 
-                                styleClass="menu-item">
-                            <f:param name="mode" value="VIEW" />
+                        <div class="dropdown-divider"/>
+                        <h:link outcome="/views/shared/profile" styleClass="menu-item">
+                            <f:param name="mode" value="VIEW"/>
                             <span class="material-symbols-outlined">person</span>
                             Mi Perfil
                         </h:link>
-                        <h:link outcome="/views/shared/profile" 
-                                styleClass="menu-item">
-                            <f:param name="mode" value="EDIT" />
+                        <h:link outcome="/views/shared/profile" styleClass="menu-item">
+                            <f:param name="mode" value="EDIT"/>
                             <span class="material-symbols-outlined">settings</span>
                             Configuración
                         </h:link>
-                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-divider"/>
                         <h:form>
                             <p:commandLink action="#{loginController.logout}"
                                            styleClass="menu-item text-danger">
@@ -128,23 +211,244 @@
             </div>
         </header>
 
-        <!-- JavaScript encapsulado en el componente -->
-        <script>
+        <!-- ══ ESTILOS DEL BADGE Y DROPDOWN ═════════════════════════ -->
+        <style>
+            .notif-badge {
+                position: absolute;
+                top: -4px;
+                right: -4px;
+                min-width: 18px;
+                height: 18px;
+                border-radius: 9px;
+                background: #dc2626;
+                color: #fff;
+                font-size: .65rem;
+                font-weight: 800;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 4px;
+                border: 2px solid var(--bg-card, #fff);
+                animation: badgePop .3s cubic-bezier(.34,1.56,.64,1);
+                pointer-events: none;
+            }
+            @keyframes badgePop {
+                from {
+                    transform: scale(0);
+                }
+                to   {
+                    transform: scale(1);
+                }
+            }
 
-            function toggleUserMenu() {
+            .notif-count-label {
+                font-size: .72rem;
+                font-weight: 700;
+                color: #dc2626;
+                margin-left: 6px;
+            }
+
+            .notif-mark-all {
+                font-size: .75rem;
+                color: var(--primary);
+                font-weight: 600;
+                cursor: pointer;
+                background: none;
+                border: none;
+                text-decoration: underline;
+            }
+
+            .notif-list {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+            .notif-list::-webkit-scrollbar {
+                width: 4px;
+            }
+            .notif-list::-webkit-scrollbar-thumb {
+                background: var(--border-light);
+                border-radius: 2px;
+            }
+
+            .notification-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 11px 14px;
+                border-bottom: 1px solid var(--border-light);
+                transition: background .15s;
+            }
+            .notification-item:last-child {
+                border-bottom: none;
+            }
+            .notification-item:hover {
+                background: rgba(11,60,93,.04);
+            }
+            .notification-item.unread {
+                background: rgba(11,60,93,.05);
+            }
+
+            .notif-icon {
+                font-size: 18px;
+                color: var(--primary);
+                flex-shrink: 0;
+                margin-top: 2px;
+            }
+            .notif-body {
+                flex: 1;
+                min-width: 0;
+            }
+            .notif-title {
+                font-size: .82rem;
+                font-weight: 700;
+                color: var(--text);
+                margin: 0 0 3px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .notif-msg {
+                font-size: .77rem;
+                color: var(--text-muted);
+                margin: 0 0 3px;
+                line-height: 1.4;
+            }
+            .notif-time {
+                font-size: .7rem;
+                color: var(--text-muted);
+                font-style: italic;
+            }
+            .notif-dot {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: var(--primary);
+                flex-shrink: 0;
+                margin-top: 6px;
+            }
+
+            .notif-empty {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 32px 16px;
+                gap: 8px;
+                color: var(--text-muted);
+            }
+            .notif-empty .material-symbols-outlined {
+                font-size: 2rem;
+                opacity: .3;
+            }
+            .notif-empty p {
+                margin: 0;
+                font-size: .82rem;
+            }
+        </style>
+
+        <!-- ══ JAVASCRIPT ════════════════════════════════════════════ -->
+        <script>
+            //<![CDATA[
+
+            /* ── Toggles del navbar ── */
+            function toggleSidebar(sidebarId) {
+                document.getElementById(sidebarId).classList.toggle('collapsed');
+                document.body.classList.toggle('sidebar-collapsed');
+            }
+
+            function toggleUserMenu(e) {
+                e.stopPropagation();
                 document.getElementById('userMenu').classList.toggle('show');
                 document.getElementById('notificationsMenu').classList.remove('show');
             }
-            function toggleNotifications() {
+
+            function toggleNotifications(e) {
+                e.stopPropagation();
                 document.getElementById('notificationsMenu').classList.toggle('show');
                 document.getElementById('userMenu').classList.remove('show');
             }
+
             document.addEventListener('click', function (e) {
                 if (!e.target.closest('.dropdown')) {
                     document.querySelectorAll('.dropdown-menu')
-                            .forEach(m => m.classList.remove('show'));
+                            .forEach(function (m) {
+                                m.classList.remove('show');
+                            });
                 }
             });
+
+            /* ── WebSocket callbacks ── */
+
+            /**
+             * Llamado por f:websocket cuando llega una notificación.
+             * 1. Recarga el panel via Ajax (refreshNotifPanel = p:remoteCommand)
+             * 2. Muestra un toast flotante
+             */
+            function onNotificationReceived(msg) {
+                try {
+                    var data = typeof msg === 'string' ? JSON.parse(msg) : msg;
+                    refreshNotifPanel(); // p:remoteCommand
+                    showNotifToast(data);
+                } catch (e) {
+                    console.warn('Error al procesar notificación WebSocket:', e);
+                }
+            }
+
+            function onNotificationClose(code) {
+                if (code !== 1000) {
+                    console.warn('WebSocket de notificaciones cerrado. Código:', code);
+                }
+            }
+
+            /**
+             * Toast flotante en esquina superior derecha.
+             */
+            function showNotifToast(data) {
+                var toast = document.createElement('div');
+                toast.style.cssText = [
+                    'position:fixed', 'top:76px', 'right:20px', 'z-index:99999',
+                    'background:#fff', 'border:1px solid #e2e8f0',
+                    'border-left:4px solid #0b3c5d', 'border-radius:12px',
+                    'padding:13px 16px', 'box-shadow:0 8px 24px rgba(0,0,0,.12)',
+                    'display:flex', 'align-items:flex-start', 'gap:11px',
+                    'max-width:310px', 'font-family:inherit',
+                    'animation:toastIn .3s ease'
+                ].join(';');
+
+                toast.innerHTML =
+                        '<span class="material-symbols-outlined" ' +
+                        'style="color:#0b3c5d;font-size:20px;margin-top:1px;flex-shrink:0;">notifications</span>' +
+                        '<div>' +
+                        '<div style="font-weight:700;font-size:.83rem;color:#0f172a;margin-bottom:3px;">'
+                        + (data.title || 'Nueva notificación') + '</div>' +
+                        '<div style="font-size:.77rem;color:#64748b;line-height:1.4;">'
+                        + (data.message || '') + '</div>' +
+                        '</div>' +
+                        '<button onclick="this.parentElement.remove()" ' +
+                        'style="background:none;border:none;cursor:pointer;color:#94a3b8;' +
+                        'font-size:16px;line-height:1;padding:0;margin-left:4px;">×</button>';
+
+                document.body.appendChild(toast);
+
+                setTimeout(function () {
+                    toast.style.opacity = '0';
+                    toast.style.transition = 'opacity .3s';
+                    setTimeout(function () {
+                        if (toast.parentElement)
+                            toast.remove();
+                    }, 300);
+                }, 5000);
+            }
+
+            /* Keyframes del toast */
+            if (!document.getElementById('notif-toast-css')) {
+                var s = document.createElement('style');
+                s.id = 'notif-toast-css';
+                s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}';
+                document.head.appendChild(s);
+            }
+
+            //]]>
         </script>
 
     </cc:implementation>

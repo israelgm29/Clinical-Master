@@ -5,7 +5,6 @@ import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -186,6 +185,7 @@ public class TuserService {
      *
      * TODO: conecta tu EmailService aquí:
      * emailService.sendVerification(user.getEmail(), token, verificationUrl);
+     * @param user
      */
 //    @Transactional
 //    public void sendVerificationEmail(Tuser user) {
@@ -207,12 +207,18 @@ public class TuserService {
 //                html
 //        );
 //    }
+    @Transactional
     public void sendVerificationEmail(Tuser user) {
         String token = UUID.randomUUID().toString();
         user.setVerificationtoken(token);
+        user.setVerificationTokenExpiration(LocalDateTime.now().plusHours(24));
         em.merge(user);
 
-        System.out.println("TOKEN GENERADO: " + token);
+        emailService.sendVerificationEmail(
+                user.getEmail(),
+                user.getFullName(),
+                token
+        );
     }
 
     /**
@@ -221,6 +227,8 @@ public class TuserService {
      *
      * TODO: conecta tu EmailService aquí:
      * emailService.sendPasswordReset(user.getEmail(), tempPassword);
+     * @param user
+     * @return 
      */
     @Transactional
     public String resetPasswordAndNotify(Tuser user) {
@@ -245,6 +253,8 @@ public class TuserService {
     /**
      * Verifica el token de email y activa la cuenta. Llamar desde el endpoint
      * que el usuario visita al hacer clic en el link del correo.
+     * @param token
+     * @return 
      */
     @Transactional
     public boolean verifyEmail(String token) {

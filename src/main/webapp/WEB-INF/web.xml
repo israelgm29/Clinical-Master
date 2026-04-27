@@ -8,6 +8,10 @@
         <param-name>primefaces.THEME</param-name>
         <param-value>saga</param-value>
     </context-param>
+    <context-param>
+        <param-name>jakarta.faces.ENABLE_WEBSOCKET_ENDPOINT</param-name>
+        <param-value>true</param-value>
+    </context-param>
     <servlet>
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>jakarta.faces.webapp.FacesServlet</servlet-class>
@@ -18,10 +22,16 @@
         <url-pattern>*.xhtml</url-pattern>
     </servlet-mapping>
     <session-config>
-        <session-timeout>
-            30
-        </session-timeout>
+        <session-timeout>30</session-timeout>
     </session-config>
+    <error-page>
+        <exception-type>jakarta.faces.application.ViewExpiredException</exception-type>
+        <location>/views/errors/session-expired.xhtml</location>
+    </error-page>
+    <error-page>
+        <error-code>401</error-code>
+        <location>/views/errors/session-expired.xhtml</location>
+    </error-page>
     <welcome-file-list>
         <welcome-file>login.xhtml</welcome-file>
     </welcome-file-list>

@@ -531,6 +531,38 @@
     font-size: 0.875rem;
 }
 
+/* DESPUÉS */
+.dashboard-direct {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 9px 14px !important;
+    border-radius: var(--radius-md);
+    text-decoration: none !important;
+    transition: background var(--transition-base), color var(--transition-base);
+    margin: -4px -8px 4px -8px !important;
+    width: calc(100% + 16px) !important;
+    box-sizing: border-box;
+    justify-content: center !important;
+}
+
+.dashboard-direct:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+}
+
+.medic-sidebar.collapsed .dashboard-direct {
+    justify-content: center !important;
+    padding: 11px 0 !important;
+    margin: -4px -4px 4px -4px !important;
+    width: calc(100% + 8px) !important;
+}
+
+.medic-sidebar.collapsed .dashboard-direct .ui-menuitem-text {
+    display: none !important;
+}
+
 /* ── Responsive médico ──────────────────────── */
 @media (max-width: 768px) {
     .medic-layout { flex-direction: column; }

@@ -15,6 +15,12 @@
                 <div class="subtitle">Médico</div>
             </div>
         </div>
+        
+         <h:link outcome="/views/medic/dashboard.xhtml"
+                    styleClass="ui-menuitem-link dashboard-direct">
+                <i class="pi pi-th-large ui-menuitem-icon"></i>
+                <span class="ui-menuitem-text">Dashboard</span>
+            </h:link>
 
         <!-- MENU -->
         <p:panelMenu model="#{medicMenuBean.menuModel}" 

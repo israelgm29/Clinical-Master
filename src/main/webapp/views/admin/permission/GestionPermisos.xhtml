@@ -5,322 +5,718 @@
                 xmlns:f="jakarta.faces.core"
                 template="/WEB-INF/templates/admin-template.xhtml">
 
-    <ui:define name="titulo">Administración de Permisos</ui:define>
+    <ui:define name="page-title">Administración de Permisos</ui:define>
 
     <ui:define name="content">
 
         <style>
-            .permission-matrix {
-                font-size: 12px;
+            /* ── Page header ── */
+            .perm-page-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                margin-bottom: 20px;
+                padding-bottom: 18px;
+                border-bottom: 2px solid var(--border-light);
+                flex-wrap: wrap;
             }
-            .perm-cell {
-                text-align: center;
-                padding: 8px 4px;
+            .perm-page-header-left {
+                display: flex;
+                align-items: center;
+                gap: 16px;
             }
-            .perm-checkbox .ui-chkbox-box {
-                width: 20px;
-                height: 20px;
+            .perm-page-icon {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                background: linear-gradient(135deg, var(--primary), var(--secondary, #1e7ec8));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 22px;
+                flex-shrink: 0;
+                box-shadow: 0 4px 14px rgba(11,60,93,.25);
             }
-            .perm-true {
-                color: #16a34a;
-                font-weight: bold;
+            .perm-page-header h1 {
+                margin: 0 0 4px;
+                font-size: 1.55rem;
+                font-weight: 800;
+                color: var(--text);
+                letter-spacing: -.3px;
             }
-            .perm-false {
-                color: #dc2626;
+            .perm-page-header p {
+                margin: 0;
+                font-size: .9rem;
+                color: var(--text-muted);
             }
-            .role-header {
-                background: #f0f9ff;
-                font-weight: bold;
-                padding: 12px;
+            .perm-header-actions {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
             }
-            .module-col {
-                background: #f8fafc;
-                font-weight: 600;
-                min-width: 150px;
-            }
-            .stats-panel {
-                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+
+            /* ── Alerta cambios pendientes ── */
+            .perm-pending-alert {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                padding: 14px 20px;
+                background: #fff7ed;
+                border: 1.5px solid #fb923c;
+                border-left: 5px solid #f97316;
                 border-radius: 12px;
-                padding: 1rem;
-                margin-bottom: 1rem;
+                margin-bottom: 18px;
+                animation: slideDown .25s ease;
             }
-            .pending-changes {
-                background: #fee2e2;
-                border-left: 4px solid #ef4444;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                border-radius: 0 8px 8px 0;
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-8px);
+                }
+                to   {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .perm-pending-alert i {
+                color: #f97316;
+                font-size: 1.3rem;
+                flex-shrink: 0;
+            }
+            .perm-pending-alert strong {
+                color: #c2410c;
+                font-size: .92rem;
+            }
+            .perm-pending-alert span  {
+                color: #9a3412;
+                font-size: .83rem;
+                display: block;
+                margin-top: 2px;
+            }
+
+            /* ── Main card ── */
+            .perm-card {
+                background: var(--bg-card);
+                border: 1px solid var(--border-light);
+                border-radius: 18px;
+                overflow: hidden;
+                box-shadow: 0 2px 14px rgba(0,0,0,.06);
+            }
+            .perm-card-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 16px 22px;
+                border-bottom: 1px solid var(--border-light);
+                background: linear-gradient(135deg, rgba(11,60,93,.04) 0%, rgba(11,60,93,.01) 100%);
+            }
+            .perm-card-header-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 9px;
+                background: rgba(11,60,93,.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--primary);
+                font-size: 15px;
+                flex-shrink: 0;
+            }
+            .perm-card-header h3 {
+                margin: 0 0 2px;
+                font-size: .95rem;
+                font-weight: 700;
+                color: var(--text);
+            }
+            .perm-card-header span {
+                font-size: .78rem;
+                color: var(--text-muted);
+            }
+
+            /* ── Leyenda CRUD ── */
+            .perm-legend {
+                display: flex;
+                align-items: center;
+                gap: 18px;
+                padding: 10px 22px;
+                border-bottom: 1px solid var(--border-light);
+                background: var(--bg);
+                flex-wrap: wrap;
+            }
+            .perm-legend-item {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: .78rem;
+                color: var(--text-muted);
+                font-weight: 600;
+            }
+            .perm-legend-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 3px;
+            }
+            .dot-c {
+                background: #3b82f6;
+            }
+            .dot-r {
+                background: #10b981;
+            }
+            .dot-u {
+                background: #f59e0b;
+            }
+            .dot-d {
+                background: #ef4444;
+            }
+
+            /* ── Table tweaks ── */
+            .perm-matrix-wrap .ui-datatable thead th {
+                background: var(--bg) !important;
+                color: var(--text-muted) !important;
+                font-size: .78rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: .5px !important;
+                border-bottom: 2px solid var(--border-light) !important;
+                padding: 12px 10px !important;
+                text-align: center !important;
+            }
+            .perm-matrix-wrap .ui-datatable tbody td {
+                padding: 10px 10px !important;
+                border-bottom: 1px solid var(--border-light) !important;
+                vertical-align: middle !important;
+            }
+            .perm-matrix-wrap .ui-datatable tbody tr:hover td {
+                background: rgba(11,60,93,.02) !important;
+            }
+            .perm-matrix-wrap .ui-datatable tbody tr:last-child td {
+                border-bottom: none !important;
+            }
+
+            /* ── Módulo cell ── */
+            .perm-module-cell {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .perm-module-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                background: linear-gradient(135deg, var(--primary), var(--secondary, #1e7ec8));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 12px;
+                flex-shrink: 0;
+            }
+            .perm-module-name {
+                font-weight: 700;
+                color: var(--text);
+                font-size: .88rem;
+            }
+
+            /* ── Rol header ── */
+            .perm-role-header {
+                text-align: center;
+            }
+            .perm-role-name {
+                font-weight: 700;
+                color: var(--text);
+                font-size: .85rem;
+            }
+            .perm-role-desc {
+                font-size: .72rem;
+                color: var(--text-muted);
+                margin-top: 2px;
+            }
+
+            /* ── CRUD checkboxes cell ── */
+            .perm-crud-cell {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+            }
+            .perm-crud-row {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            .perm-crud-label {
+                font-size: .7rem;
+                font-weight: 700;
+                width: 14px;
+                text-align: center;
+                border-radius: 3px;
+                padding: 1px 0;
+                color: #fff;
+            }
+            .lbl-c {
+                background: #3b82f6;
+            }
+            .lbl-r {
+                background: #10b981;
+            }
+            .lbl-u {
+                background: #f59e0b;
+            }
+            .lbl-d {
+                background: #ef4444;
+            }
+
+            /* ── Quick action buttons ── */
+            .perm-quick-actions {
+                display: flex;
+                justify-content: center;
+                gap: 5px;
+                margin-top: 4px;
+                padding-top: 6px;
+                border-top: 1px dashed var(--border-light);
+            }
+            .perm-quick-btn {
+                width: 26px;
+                height: 26px;
+                border-radius: 7px;
+                border: 1.5px solid var(--border-light);
+                background: var(--bg-card);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 11px;
+                transition: all .15s;
+            }
+            .perm-quick-btn.grant {
+                color: #16a34a;
+                border-color: rgba(22,163,74,.3);
+            }
+            .perm-quick-btn.grant:hover {
+                background: rgba(22,163,74,.1);
+                border-color: #16a34a;
+            }
+            .perm-quick-btn.revoke {
+                color: #dc2626;
+                border-color: rgba(220,38,38,.3);
+            }
+            .perm-quick-btn.revoke:hover {
+                background: rgba(220,38,38,.1);
+                border-color: #dc2626;
+            }
+
+            /* ── Dialog tweaks ── */
+            .perm-dialog-role-header {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                padding: 16px 20px;
+                background: linear-gradient(135deg, rgba(11,60,93,.06) 0%, rgba(11,60,93,.02) 100%);
+                border-radius: 12px;
+                margin-bottom: 16px;
+                border: 1px solid var(--border-light);
+            }
+            .perm-dialog-role-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 11px;
+                background: linear-gradient(135deg, var(--primary), var(--secondary, #1e7ec8));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 17px;
+                flex-shrink: 0;
+            }
+            .perm-dialog-role-name {
+                font-weight: 800;
+                color: var(--text);
+                font-size: 1rem;
+            }
+            .perm-dialog-role-desc {
+                font-size: .8rem;
+                color: var(--text-muted);
+                margin-top: 2px;
+            }
+
+            .perm-dialog-select {
+                margin-bottom: 18px;
+            }
+            .perm-dialog-select label {
+                display: block;
+                font-size: .8rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: .5px;
+                color: var(--text-muted);
+                margin-bottom: 6px;
+            }
+
+            /* ── Dialog table ── */
+            .perm-dialog-table .ui-datatable thead th {
+                background: var(--bg) !important;
+                font-size: .78rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: .4px !important;
+                color: var(--text-muted) !important;
+                border-bottom: 2px solid var(--border-light) !important;
+                padding: 10px 14px !important;
+                text-align: center !important;
+            }
+            .perm-dialog-table .ui-datatable tbody td {
+                padding: 10px 14px !important;
+                border-bottom: 1px solid var(--border-light) !important;
+                text-align: center !important;
+                vertical-align: middle !important;
+            }
+
+            /* ── Empty state ── */
+            .perm-empty {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 56px 24px;
+                gap: 10px;
+                color: var(--text-muted);
+            }
+            .perm-empty i {
+                font-size: 2.8rem;
+                opacity: .25;
+            }
+            .perm-empty p {
+                margin: 0;
+                font-size: .88rem;
             }
         </style>
 
         <h:form id="form">
-            <p:growl id="messages" showDetail="true" />
+            <p:growl id="messages" showDetail="true" life="5000" sticky="false"/>
 
-            <!-- HEADER -->
-            <div class="flex-between mb-4">
-                <div>
-                    <h2 class="text-primary font-bold m-0">
-                        <i class="pi pi-shield mr-2"></i>Matriz de Permisos
-                    </h2>
-                    <div class="text-muted" style="font-size: 14px;">
-                        Gestiona permisos CRUD por Rol y Módulo
+            <!-- ══ PAGE HEADER ═══════════════════════════════════════ -->
+            <div class="perm-page-header">
+                <div class="perm-page-header-left">
+                    <div class="perm-page-icon">
+                        <i class="pi pi-shield"/>
+                    </div>
+                    <div>
+                        <h1>Matriz de Permisos</h1>
+                        <p>Gestiona los permisos CRUD por rol y módulo del sistema</p>
                     </div>
                 </div>
-                <div class="flex gap-2">
-                    <p:commandButton value="Guardar Cambios" 
-                                     icon="pi pi-save" 
-                                     actionListener="#{permissionController.saveAllChanges}"
-                                     update=":form:messages :form:matrixPanel"
-                                     disabled="#{!permissionController.hasPendingChanges()}"
-                                     styleClass="ui-button-success" />
-
-                    <p:commandButton value="Ver por Rol" 
-                                     icon="pi pi-users" 
+                <div class="perm-header-actions">
+                    <p:commandButton value="Ver por Rol"
+                                     icon="pi pi-users"
                                      onclick="PF('roleDetailDialog').show()"
-                                     styleClass="ui-button-secondary" />
+                                     styleClass="ui-button-secondary"/>
+                    <p:commandButton value="Guardar Cambios"
+                                     icon="pi pi-save"
+                                     actionListener="#{permissionController.saveAllChanges}"
+                                     update=":form:messages :form:matrixPanel :form:pendingPanel"
+                                     disabled="#{!permissionController.hasPendingChanges()}"
+                                     styleClass="ui-button-success"/>
                 </div>
             </div>
 
-            <!-- ALERTA DE CAMBIOS PENDIENTES -->
-            <p:outputPanel id="pendingPanel" rendered="#{permissionController.hasPendingChanges()}">
-                <div class="pending-changes">
-                    <div class="flex align-items-center gap-2">
-                        <i class="pi pi-exclamation-circle" style="color: #ef4444; font-size: 1.2rem;"></i>
-                        <span class="font-bold">Hay cambios sin guardar</span>
+            <!-- ══ ALERTA CAMBIOS PENDIENTES ════════════════════════ -->
+            <p:outputPanel id="pendingPanel">
+                <p:outputPanel rendered="#{permissionController.hasPendingChanges()}">
+                    <div class="perm-pending-alert">
+                        <i class="pi pi-exclamation-triangle"/>
+                        <div>
+                            <strong>Cambios sin guardar</strong>
+                            <span>
+                                #{permissionController.pendingChanges.size()} modificación(es) pendiente(s).
+                                Presiona "Guardar Cambios" para persistir.
+                            </span>
+                        </div>
                     </div>
-                    <div class="text-sm mt-1">
-                        #{permissionController.pendingChanges.size()} modificación(es) pendiente(s). 
-                        Haz clic en "Guardar Cambios" para persistir.
-                    </div>
-                </div>
+                </p:outputPanel>
             </p:outputPanel>
 
-            <!-- PANEL DE MATRIZ -->
+            <!-- ══ MATRIZ CARD ═══════════════════════════════════════ -->
             <p:outputPanel id="matrixPanel">
-                <div class="card shadow-sm permission-matrix">
+                <div class="perm-card">
 
-                    <!-- TABLA DE PERMISOS -->
-                    <p:dataTable id="dt-permissions" 
-                                 var="module" 
-                                 value="#{permissionController.modules}"
-                                 scrollable="true"
-                                 scrollHeight="600px"
-                                 styleClass="permission-matrix-table">
+                    <!-- Card header -->
+                    <div class="perm-card-header">
+                        <div class="perm-card-header-icon"><i class="pi pi-table"/></div>
+                        <div>
+                            <h3>Matriz de Control de Acceso</h3>
+                            <span>Módulos en filas · Roles en columnas · C=Crear R=Leer U=Actualizar D=Eliminar</span>
+                        </div>
+                    </div>
 
-                        <!-- COLUMNA MÓDULO -->
-                        <p:column headerText="Módulo" styleClass="module-col" style="min-width: 160px;">
-                            <div class="flex align-items-center gap-2">
-                                <i class="pi pi-folder" style="color: #0284c7;"></i>
-                                <div>
-                                    <div class="font-bold">#{module.name}</div>
+                    <!-- Leyenda -->
+                    <div class="perm-legend">
+                        <span style="font-size:.78rem; font-weight:700; color:var(--text-muted);">Leyenda:</span>
+                        <div class="perm-legend-item">
+                            <div class="perm-legend-dot dot-c"/>
+                            C — Crear
+                        </div>
+                        <div class="perm-legend-item">
+                            <div class="perm-legend-dot dot-r"/>
+                            R — Leer
+                        </div>
+                        <div class="perm-legend-item">
+                            <div class="perm-legend-dot dot-u"/>
+                            U — Actualizar
+                        </div>
+                        <div class="perm-legend-item">
+                            <div class="perm-legend-dot dot-d"/>
+                            D — Eliminar
+                        </div>
+                        <div class="perm-legend-item" style="margin-left:auto;">
+                            <i class="pi pi-check-square" style="color:#16a34a; font-size:.85rem;"/>
+                            Conceder todos
+                        </div>
+                        <div class="perm-legend-item">
+                            <i class="pi pi-times" style="color:#dc2626; font-size:.85rem;"/>
+                            Revocar todos
+                        </div>
+                    </div>
+
+                    <!-- Tabla -->
+                    <div class="perm-matrix-wrap">
+                        <p:dataTable id="dt-permissions"
+                                     var="module"
+                                     value="#{permissionController.modules}"
+                                     scrollable="true"
+                                     scrollHeight="600px"
+                                     emptyMessage=" ">
+
+                            <!-- Módulo -->
+                            <p:column headerText="Módulo" style="min-width:160px;">
+                                <div class="perm-module-cell">
+                                    <div class="perm-module-icon"><i class="pi pi-folder"/></div>
+                                    <span class="perm-module-name">#{module.name}</span>
                                 </div>
-                            </div>
-                        </p:column>
+                            </p:column>
 
-                        <!-- COLUMNAS DINÁMICAS POR ROL -->
-                        <p:columns value="#{permissionController.roles}" var="role" columnIndexVar="colIdx">
-                            <f:facet name="header">
-                                <div class="text-center">
-                                    <div class="font-bold">#{role.name}</div>
-                                    <div class="text-xs text-muted">#{role.description}</div>
-                                </div>
-                            </f:facet>
+                            <!-- Columnas dinámicas por rol -->
+                            <p:columns value="#{permissionController.roles}" var="role">
+                                <f:facet name="header">
+                                    <div class="perm-role-header">
+                                        <div class="perm-role-name">#{role.name}</div>
+                                        <div class="perm-role-desc">#{role.description}</div>
+                                    </div>
+                                </f:facet>
 
-                            <div class="perm-cell">
-                                <ui:param name="perm" value="#{permissionController.getPermission(role.id, module.id)}" />
+                                <div class="perm-crud-cell">
+                                    <ui:param name="perm"
+                                              value="#{permissionController.getPermission(role.id, module.id)}"/>
 
-                                <div class="flex flex-column gap-1 align-items-center">
-                                    <!-- CREATE -->
-                                    <div class="flex align-items-center gap-1">
-                                        <p:selectBooleanCheckbox value="#{perm.canCreate}" 
-                                                                 styleClass="perm-checkbox">
+                                    <!-- C -->
+                                    <div class="perm-crud-row">
+                                        <span class="perm-crud-label lbl-c">C</span>
+                                        <p:selectBooleanCheckbox value="#{perm.canCreate}">
                                             <p:ajax listener="#{permissionController.togglePermission(role.id, module.id, 'CREATE')}"
                                                     update=":form:pendingPanel :form:messages"/>
                                         </p:selectBooleanCheckbox>
-                                        <span class="text-xs">C</span>
                                     </div>
-
-                                    <!-- READ -->
-                                    <div class="flex align-items-center gap-1">
-                                        <p:selectBooleanCheckbox value="#{perm.canRead}" 
-                                                                 styleClass="perm-checkbox">
+                                    <!-- R -->
+                                    <div class="perm-crud-row">
+                                        <span class="perm-crud-label lbl-r">R</span>
+                                        <p:selectBooleanCheckbox value="#{perm.canRead}">
                                             <p:ajax listener="#{permissionController.togglePermission(role.id, module.id, 'READ')}"
                                                     update=":form:pendingPanel :form:messages"/>
                                         </p:selectBooleanCheckbox>
-                                        <span class="text-xs">R</span>
                                     </div>
-
-                                    <!-- UPDATE -->
-                                    <div class="flex align-items-center gap-1">
-                                        <p:selectBooleanCheckbox value="#{perm.canUpdate}" 
-                                                                 styleClass="perm-checkbox">
+                                    <!-- U -->
+                                    <div class="perm-crud-row">
+                                        <span class="perm-crud-label lbl-u">U</span>
+                                        <p:selectBooleanCheckbox value="#{perm.canUpdate}">
                                             <p:ajax listener="#{permissionController.togglePermission(role.id, module.id, 'UPDATE')}"
                                                     update=":form:pendingPanel :form:messages"/>
                                         </p:selectBooleanCheckbox>
-                                        <span class="text-xs">U</span>
                                     </div>
-
-                                    <!-- DELETE -->
-                                    <div class="flex align-items-center gap-1">
-                                        <p:selectBooleanCheckbox value="#{perm.canDelete}" 
-                                                                 styleClass="perm-checkbox">
+                                    <!-- D -->
+                                    <div class="perm-crud-row">
+                                        <span class="perm-crud-label lbl-d">D</span>
+                                        <p:selectBooleanCheckbox value="#{perm.canDelete}">
                                             <p:ajax listener="#{permissionController.togglePermission(role.id, module.id, 'DELETE')}"
                                                     update=":form:pendingPanel :form:messages"/>
                                         </p:selectBooleanCheckbox>
-                                        <span class="text-xs">D</span>
                                     </div>
 
-                                    <!-- ACCIONES RÁPIDAS -->
-                                    <div class="flex gap-1 mt-2">
-                                        <p:commandButton icon="pi pi-check-square" 
+                                    <!-- Quick actions -->
+                                    <div class="perm-quick-actions">
+                                        <p:commandButton type="button" styleClass="rounded-button ui-button-flat"
                                                          title="Conceder todos"
+                                                         icon="pi pi-check-square"
                                                          actionListener="#{permissionController.grantFullPermission(role.id, module.id)}"
                                                          update=":form:matrixPanel :form:pendingPanel :form:messages"
-                                                         styleClass="ui-button-xs ui-button-success" 
-                                                         process="@this"/>
-                                        <p:commandButton icon="pi pi-times" 
+                                                         process="@this">
+                                        </p:commandButton>
+                                        <p:commandButton type="button" styleClass="rounded-button ui-button-flat"
                                                          title="Revocar todos"
+                                                         icon="pi pi-times"
                                                          actionListener="#{permissionController.revokeAllPermissions(role.id, module.id)}"
                                                          update=":form:matrixPanel :form:pendingPanel :form:messages"
-                                                         styleClass="ui-button-xs ui-button-danger" 
-                                                         process="@this"/>
+                                                         process="@this">
+                                        </p:commandButton>
                                     </div>
                                 </div>
-                            </div>
-                        </p:columns>
 
-                    </p:dataTable>
+                            </p:columns>
+
+                        </p:dataTable>
+
+                        <!-- Empty state -->
+                        <p:outputPanel rendered="#{empty permissionController.modules}">
+                            <div class="perm-empty">
+                                <i class="pi pi-shield"/>
+                                <p>No hay módulos configurados para mostrar permisos</p>
+                            </div>
+                        </p:outputPanel>
+
+                    </div>
                 </div>
             </p:outputPanel>
+
         </h:form>
 
-        <!-- DIÁLOGO DE DETALLE POR ROL -->
+        <!-- ══ DIÁLOGO: VER POR ROL ══════════════════════════════════ -->
         <h:form id="roleDialog">
-            <p:dialog header="Gestión de Permisos por Rol" 
-                      widgetVar="roleDetailDialog" 
-                      modal="true" 
-                      responsive="true" 
-                      width="900" 
-                      height="600"
-                      resizable="false" 
-                      showEffect="fade">
+            <p:dialog header="Gestión de Permisos por Rol"
+                      widgetVar="roleDetailDialog"
+                      modal="true"
+                      responsive="true"
+                      width="860"
+                      height="620"
+                      resizable="false"
+                      showEffect="fade"
+                      hideEffect="fade">
 
-                <div class="grid mb-3">
-                    <div class="col-12 md:col-6">
-                        <div class="field">
-                            <p:outputLabel value="Seleccionar Rol:" styleClass="font-bold"/>
-                            <p:selectOneMenu value="#{permissionController.selectedRole}" 
-                                             converter="roleConverter"
-                                             style="width: 100%;">
-                                <f:selectItem itemLabel="-- Seleccione un rol --" itemValue="#{null}"/>
-                                <f:selectItems value="#{permissionController.roles}" 
-                                               var="r" 
-                                               itemLabel="#{r.name}" 
-                                               itemValue="#{r}"/>
-                                <p:ajax event="change" 
-                                        listener="#{permissionController.loadRolePermissions()}"
-                                        update=":roleDialog:roleDetailPanel"/>
-                            </p:selectOneMenu>
+                <!-- Selector de rol -->
+                <div class="perm-dialog-select">
+                    <label>Seleccionar rol</label>
+                    <p:selectOneMenu value="#{permissionController.selectedRole}"
+                                     converter="roleConverter"
+                                     style="width:100%;">
+                        <f:selectItem itemLabel="— Seleccione un rol —" itemValue="#{null}"/>
+                        <f:selectItems value="#{permissionController.roles}"
+                                       var="r"
+                                       itemLabel="#{r.name}"
+                                       itemValue="#{r}"/>
+                        <p:ajax event="change"
+                                listener="#{permissionController.loadRolePermissions()}"
+                                update=":roleDialog:roleDetailPanel"/>
+                    </p:selectOneMenu>
+                </div>
+
+                <!-- Panel de detalle -->
+                <p:outputPanel id="roleDetailPanel">
+
+                    <!-- Con rol seleccionado -->
+                    <p:outputPanel rendered="#{permissionController.selectedRole != null}">
+
+                        <div class="perm-dialog-role-header">
+                            <div class="perm-dialog-role-icon"><i class="pi pi-users"/></div>
+                            <div>
+                                <div class="perm-dialog-role-name">
+                                    #{permissionController.selectedRole.name}
+                                </div>
+                                <div class="perm-dialog-role-desc">
+                                    #{permissionController.selectedRole.description}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-12 md:col-6 flex align-items-end">
-                        <p:commandButton value="Guardar Permisos del Rol" 
+
+                        <div class="perm-dialog-table">
+                            <p:dataTable id="dt-role-perms"
+                                         var="wrapper"
+                                         value="#{permissionController.rolePermissions}"
+                                         scrollable="true"
+                                         scrollHeight="340px"
+                                         emptyMessage="No hay módulos configurados">
+
+                                <p:column headerText="Módulo" style="width:200px; text-align:left !important;">
+                                    <div class="perm-module-cell">
+                                        <div class="perm-module-icon"><i class="pi pi-folder"/></div>
+                                        <span class="perm-module-name">#{wrapper.module.name}</span>
+                                    </div>
+                                </p:column>
+
+                                <p:column headerText="Crear" style="width:90px;">
+                                    <p:selectBooleanCheckbox value="#{wrapper.permission.canCreate}">
+                                        <p:ajax/>
+                                    </p:selectBooleanCheckbox>
+                                </p:column>
+
+                                <p:column headerText="Leer" style="width:90px;">
+                                    <p:selectBooleanCheckbox value="#{wrapper.permission.canRead}">
+                                        <p:ajax/>
+                                    </p:selectBooleanCheckbox>
+                                </p:column>
+
+                                <p:column headerText="Actualizar" style="width:90px;">
+                                    <p:selectBooleanCheckbox value="#{wrapper.permission.canUpdate}">
+                                        <p:ajax/>
+                                    </p:selectBooleanCheckbox>
+                                </p:column>
+
+                                <p:column headerText="Eliminar" style="width:90px;">
+                                    <p:selectBooleanCheckbox value="#{wrapper.permission.canDelete}">
+                                        <p:ajax/>
+                                    </p:selectBooleanCheckbox>
+                                </p:column>
+
+                                <p:column headerText="Acciones" style="width:120px;">
+                                    <div style="display:flex; justify-content:center; gap:6px;">
+                                        <p:commandButton styleClass="rounded-button ui-button-flat"
+                                                         icon="pi pi-check-square"
+                                                         title="Conceder todos"
+                                                         actionListener="#{wrapper.permission.grantAll()}"
+                                                         update=":roleDialog:dt-role-perms"
+                                                         process="@this">
+                                        </p:commandButton>
+                                        <p:commandButton styleClass="rounded-button ui-button-flat"
+                                                         icon="pi pi-times"
+                                                         title="Revocar todos"
+                                                         actionListener="#{wrapper.permission.revokeAll()}"
+                                                         update=":roleDialog:dt-role-perms"
+                                                         process="@this">
+                                        </p:commandButton>
+                                    </div>
+                                </p:column>
+
+                            </p:dataTable>
+                        </div>
+
+                    </p:outputPanel>
+
+                    <!-- Sin rol seleccionado -->
+                    <p:outputPanel rendered="#{permissionController.selectedRole == null}">
+                        <div class="perm-empty">
+                            <i class="pi pi-users"/>
+                            <p>Selecciona un rol para ver y editar sus permisos</p>
+                        </div>
+                    </p:outputPanel>
+
+                </p:outputPanel>
+
+                <f:facet name="footer">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <p:commandButton value="Cerrar"
+                                         icon="pi pi-times"
+                                         onclick="PF('roleDetailDialog').hide()"
+                                         styleClass="ui-button-secondary"
+                                         type="button"/>
+                        <p:commandButton value="Guardar Permisos del Rol"
                                          icon="pi pi-save"
                                          actionListener="#{permissionController.saveRolePermissions()}"
                                          update=":form:messages :form:matrixPanel"
                                          disabled="#{permissionController.selectedRole == null}"
-                                         styleClass="ui-button-success w-full"/>
+                                         styleClass="ui-button-success"/>
                     </div>
-                </div>
-
-                <p:outputPanel id="roleDetailPanel">
-                    <p:outputPanel rendered="#{permissionController.selectedRole != null}">
-
-                        <div class="stats-panel mb-3">
-                            <div class="flex align-items-center gap-2">
-                                <i class="pi pi-users text-primary" style="font-size: 1.5rem;"></i>
-                                <div>
-                                    <div class="font-bold text-lg">#{permissionController.selectedRole.name}</div>
-                                    <div class="text-sm">#{permissionController.selectedRole.description}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <p:dataTable id="dt-role-perms" 
-                                     var="wrapper" 
-                                     value="#{permissionController.rolePermissions}"
-                                     scrollable="true"
-                                     scrollHeight="400px"
-                                     emptyMessage="No hay módulos configurados">
-
-                            <p:column headerText="Módulo" style="width: 200px;">
-                                <div class="flex align-items-center gap-2">
-                                    <i class="pi pi-folder" style="color: #0284c7;"></i>
-                                    <div>
-                                        <div class="font-bold">#{wrapper.module.name}</div>
-                                    </div>
-                                </div>
-                            </p:column>
-
-                            <p:column headerText="Crear" style="width: 100px; text-align: center;">
-                                <p:selectBooleanCheckbox value="#{wrapper.permission.canCreate}">
-                                    <p:ajax/>
-                                </p:selectBooleanCheckbox>
-                            </p:column>
-
-                            <p:column headerText="Leer" style="width: 100px; text-align: center;">
-                                <p:selectBooleanCheckbox value="#{wrapper.permission.canRead}">
-                                    <p:ajax/>
-                                </p:selectBooleanCheckbox>
-                            </p:column>
-
-                            <p:column headerText="Actualizar" style="width: 100px; text-align: center;">
-                                <p:selectBooleanCheckbox value="#{wrapper.permission.canUpdate}">
-                                    <p:ajax/>
-                                </p:selectBooleanCheckbox>
-                            </p:column>
-
-                            <p:column headerText="Eliminar" style="width: 100px; text-align: center;">
-                                <p:selectBooleanCheckbox value="#{wrapper.permission.canDelete}">
-                                    <p:ajax/>
-                                </p:selectBooleanCheckbox>
-                            </p:column>
-
-                            <p:column headerText="Acciones" style="width: 150px; text-align: center;">
-                                <div class="flex justify-content-center gap-2">
-                                    <p:commandButton icon="pi pi-check-square" 
-                                                     title="Todos"
-                                                     actionListener="#{wrapper.permission.grantAll()}"
-                                                     update=":roleDialog:dt-role-perms"
-                                                     styleClass="ui-button-xs ui-button-success"/>
-                                    <p:commandButton icon="pi pi-times" 
-                                                     title="Ninguno"
-                                                     actionListener="#{wrapper.permission.revokeAll()}"
-                                                     update=":roleDialog:dt-role-perms"
-                                                     styleClass="ui-button-xs ui-button-danger"/>
-                                </div>
-                            </p:column>
-
-                        </p:dataTable>
-
-                    </p:outputPanel>
-
-                    <p:outputPanel rendered="#{permissionController.selectedRole == null}">
-                        <div class="text-center p-5 text-muted">
-                            <i class="pi pi-info-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                            <div>Selecciona un rol para ver y editar sus permisos</div>
-                        </div>
-                    </p:outputPanel>
-                </p:outputPanel>
-
-                <f:facet name="footer">
-                    <p:commandButton value="Cerrar" 
-                                     icon="pi pi-times" 
-                                     onclick="PF('roleDetailDialog').hide()" 
-                                     styleClass="ui-button-secondary" 
-                                     type="button"/>
                 </f:facet>
+
             </p:dialog>
         </h:form>
+
     </ui:define>
 </ui:composition>

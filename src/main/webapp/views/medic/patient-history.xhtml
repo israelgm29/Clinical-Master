@@ -436,13 +436,13 @@
                         </div>
                     </div>
                     <div class="ph-alerts">
-                        <h:panelGroup rendered="#{patientHistoryController.allergies}">
+                        <h:panelGroup rendered="#{patientHistoryController.allergiesA}">
                             <span class="ph-alert danger">
                                 <i class="pi pi-exclamation-triangle"/>
                                 ALERGIAS
                             </span>
                         </h:panelGroup>
-                        <h:panelGroup rendered="#{patientHistoryController.chronicConditions}">
+                        <h:panelGroup rendered="#{patientHistoryController.chronicConditionsA}">
                             <span class="ph-alert">
                                 <i class="pi pi-info-circle"/>
                                 CRÓNICO
@@ -513,12 +513,12 @@
 
                         <!-- Alergias -->
                         <p:panel header="Alergias" styleClass="sidebar-card">
-                            <h:panelGroup rendered="#{empty patientHistoryController.allergies}">
+                            <h:panelGroup rendered="#{empty patientHistoryController.allergiesA}">
                                 <div style="text-align: center; padding: 1rem; color: var(--text-color-secondary);">
                                     <p>No hay alergias registradas</p>
                                 </div>
                             </h:panelGroup>
-                            <h:panelGroup rendered="#{not empty patientHistoryController.allergies}">
+                            <h:panelGroup rendered="#{not empty patientHistoryController.allergiesA}">
                                 <ui:repeat value="#{patientHistoryController.allergies}" var="allergy">
                                     <div class="sidebar-value alert" style="margin-bottom: 0.5rem;">
                                         <i class="pi pi-times-circle" style="font-size: 0.75rem;"/>
@@ -530,12 +530,12 @@
 
                         <!-- Condiciones crónicas -->
                         <p:panel header="Condiciones Crónicas" styleClass="sidebar-card">
-                            <h:panelGroup rendered="#{empty patientHistoryController.chronicConditions}">
+                            <h:panelGroup rendered="#{empty patientHistoryController.chronicConditionsA}">
                                 <div style="text-align: center; padding: 1rem; color: var(--text-color-secondary);">
                                     <p>No hay condiciones crónicas registradas</p>
                                 </div>
                             </h:panelGroup>
-                            <h:panelGroup rendered="#{not empty patientHistoryController.chronicConditions}">
+                            <h:panelGroup rendered="#{not empty patientHistoryController.chronicConditionsA}">
                                 <ui:repeat value="#{patientHistoryController.chronicConditions}" var="chronic">
                                     <span class="chronic-badge">#{chronic}</span>
                                 </ui:repeat>
@@ -757,7 +757,6 @@
                                                 <ui:repeat value="#{record.medicalexamCollection}" var="exam">
                                                     <div class="detail-list-item">
                                                         <div class="detail-list-main">#{exam.examid.name}</div>
-                                                        <div class="detail-list-sub">#{exam.done != null ? exam.done : 'Pendiente'}</div>
                                                     </div>
                                                 </ui:repeat>
                                             </div>
@@ -768,7 +767,7 @@
                                     <div class="timeline-actions">
                                         <p:commandButton value="Ver consulta completa"
                                                          icon="pi pi-eye"
-                                                         action="#{patientHistoryController.viewFullConsultation(record)}"
+                                                         action="#{patientHistoryController.backToMyPatients()}"
                                                          styleClass="ui-button-outlined"/>
                                         <p:commandButton value="Nueva consulta similar"
                                                          icon="pi pi-copy"

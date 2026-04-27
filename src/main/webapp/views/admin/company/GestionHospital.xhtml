@@ -5,223 +5,471 @@
                 xmlns:f="jakarta.faces.core"
                 template="/WEB-INF/templates/admin-template.xhtml">
 
-    <ui:define name="titulo">Configuración del Hospital</ui:define>
 
+    <ui:define name="page-title">Hospital</ui:define>
     <ui:define name="content">
 
         <style>
-            .color-preview {
-                width: 50px;
-                height: 50px;
-                border-radius: 8px;
-                border: 2px solid #ddd;
-                display: inline-block;
+            /* ── Variables que heredan el tema de la app ── */
+            .hosp-config {
+                max-width: 960px;
+                margin: 0 auto;
+                padding-bottom: 100px; /* espacio para el sticky bar */
             }
-            .logo-preview {
-                max-width: 200px;
-                max-height: 100px;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 10px;
+
+            /* ── Page header ── */
+            .hosp-page-header {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                margin-bottom: 32px;
+                padding-bottom: 20px;
+                border-bottom: 2px solid var(--border-light);
             }
-            .config-section {
-                background: #f8fafc;
+            .hosp-page-icon {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                background: linear-gradient(135deg, var(--primary), var(--secondary, #1e7ec8));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 22px;
+                flex-shrink: 0;
+                box-shadow: 0 4px 14px rgba(11,60,93,.25);
+            }
+            .hosp-page-header h1 {
+                margin: 0 0 4px;
+                font-size: 1.55rem;
+                font-weight: 800;
+                color: var(--text);
+                letter-spacing: -.3px;
+            }
+            .hosp-page-header p {
+                margin: 0;
+                font-size: .9rem;
+                color: var(--text-muted);
+            }
+
+            /* ── Section card ── */
+            .hosp-card {
+                background: var(--bg-card);
+                border: 1px solid var(--border-light);
+                border-radius: 18px;
+                margin-bottom: 24px;
+                overflow: hidden;
+                box-shadow: 0 2px 12px rgba(0,0,0,.06);
+                transition: box-shadow .2s;
+            }
+            .hosp-card:hover {
+                box-shadow: 0 6px 24px rgba(0,0,0,.10);
+            }
+            .hosp-card-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 18px 24px;
+                border-bottom: 1px solid var(--border-light);
+                background: linear-gradient(135deg,
+                    rgba(11,60,93,.04) 0%,
+                    rgba(11,60,93,.01) 100%);
+            }
+            .hosp-card-header-icon {
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                background: rgba(11,60,93,.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--primary);
+                font-size: 16px;
+                flex-shrink: 0;
+            }
+            .hosp-card-header h3 {
+                margin: 0 0 2px;
+                font-size: 1rem;
+                font-weight: 700;
+                color: var(--text);
+            }
+            .hosp-card-header span {
+                font-size: .8rem;
+                color: var(--text-muted);
+            }
+            .hosp-card-body {
+                padding: 24px;
+            }
+
+            /* ── Field group ── */
+            .hosp-field-grid {
+                display: grid;
+                gap: 20px;
+            }
+            .hosp-field-grid.cols-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+            .hosp-field-grid.cols-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+            .hosp-field-grid.cols-4 {
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+            }
+
+            @media (max-width: 768px) {
+                .hosp-field-grid.cols-2,
+                .hosp-field-grid.cols-3,
+                .hosp-field-grid.cols-4 {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .hosp-field {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+            .hosp-field label {
+                font-size: .82rem;
+                font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: .5px;
+            }
+            .hosp-field .required-dot::after {
+                content: ' *';
+                color: var(--danger, #e53e3e);
+            }
+            .hosp-field .field-hint {
+                font-size: .78rem;
+                color: var(--text-muted);
+                margin-top: 2px;
+            }
+
+            /* ── Color picker row ── */
+            .color-row {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-top: 8px;
+            }
+            .color-swatch {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                border: 2px solid var(--border-light);
+                flex-shrink: 0;
+                box-shadow: 0 2px 6px rgba(0,0,0,.12);
+                transition: transform .15s;
+            }
+            .color-swatch:hover {
+                transform: scale(1.1);
+            }
+            .color-hex {
+                font-size: .82rem;
+                font-weight: 600;
+                color: var(--text-muted);
+                font-family: monospace;
+            }
+
+            /* ── Logo preview ── */
+            .logo-upload-area {
+                border: 2px dashed var(--border-light);
                 border-radius: 12px;
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
+                padding: 20px;
+                text-align: center;
+                background: var(--bg, #f8fafc);
+                transition: border-color .2s;
+            }
+            .logo-upload-area:hover {
+                border-color: var(--primary);
+            }
+            .logo-preview-img {
+                max-width: 180px;
+                max-height: 80px;
+                border-radius: 8px;
+                margin-bottom: 10px;
+                object-fit: contain;
+            }
+
+            /* ── Sticky footer bar ── */
+            .hosp-sticky-bar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 999;
+                background: rgba(255,255,255,.92);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border-top: 1px solid var(--border-light);
+                padding: 14px 32px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                box-shadow: 0 -4px 24px rgba(0,0,0,.08);
+            }
+            .hosp-sticky-bar .save-hint {
+                font-size: .85rem;
+                color: var(--text-muted);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .hosp-sticky-bar .save-hint i {
+                color: var(--primary);
+            }
+
+            /* ── Input override para inputs dentro de cards ── */
+            .hosp-card-body .ui-inputtext,
+            .hosp-card-body .ui-inputtextarea {
+                border-radius: 10px !important;
+                border: 1.5px solid var(--border-light) !important;
+                padding: 10px 14px !important;
+                font-size: .92rem !important;
+                transition: border-color .2s, box-shadow .2s !important;
+                width: 100% !important;
+                background: var(--bg-card) !important;
+            }
+            .hosp-card-body .ui-inputtext:focus,
+            .hosp-card-body .ui-inputtextarea:focus {
+                border-color: var(--primary) !important;
+                box-shadow: 0 0 0 3px rgba(11,60,93,.1) !important;
+                outline: none !important;
             }
         </style>
 
         <h:form id="form" enctype="multipart/form-data">
-            <p:growl id="messages" showDetail="true" life="5000" sticky="false" />
+            <p:growl id="messages" showDetail="true" life="5000" sticky="false"/>
 
-       
+            <div class="hosp-config">
 
-            <div class="grid">
+                <!-- ══ PAGE HEADER ══════════════════════════════════════ -->
+                <div class="hosp-page-header">
+                    <div class="hosp-page-icon">
+                        <i class="pi pi-building"></i>
+                    </div>
+                    <div>
+                        <h1>Configuración del Hospital</h1>
+                        <p>Administra la información institucional, branding y datos de contacto</p>
+                    </div>
+                </div>
 
-                <!-- INFORMACIÓN GENERAL -->
-                <div class="col-12 md:col-6">
-                    <div class="config-section">
-                        <h3 class="text-primary font-bold mb-3">
-                            <i class="pi pi-info-circle mr-2"></i>Información General
-                        </h3>
-
-                        <div class="field mb-3">
-                            <p:outputLabel for="name" value="Nombre del Hospital" styleClass="font-bold"/>
-                            <p:inputText id="name" 
-                                         value="#{companyController.company.name}" 
-                                         required="true"
-                                         maxlength="50"
-                                         style="width: 100%;"/>
+                <!-- ══ CARD 1: INFORMACIÓN GENERAL ══════════════════════ -->
+                <div class="hosp-card">
+                    <div class="hosp-card-header">
+                        <div class="hosp-card-header-icon">
+                            <i class="pi pi-info-circle"></i>
                         </div>
-
-                        <div class="field mb-3">
-                            <p:outputLabel for="smallname" value="Nombre Corto" styleClass="font-bold"/>
-                            <p:inputText id="smallname" 
-                                         value="#{companyController.company.smallname}" 
-                                         maxlength="25"
-                                         placeholder="Ej: HospGen"
-                                         style="width: 100%;"/>
+                        <div>
+                            <h3>Información General</h3>
+                            <span>Datos institucionales y de identificación</span>
                         </div>
+                    </div>
+                    <div class="hosp-card-body">
+                        <div class="hosp-field-grid cols-2">
 
-                        <div class="field mb-3">
-                            <p:outputLabel for="description" value="Descripción" styleClass="font-bold"/>
-                            <p:inputTextarea id="description" 
-                                             value="#{companyController.company.description}" 
-                                             rows="3"
-                                             maxlength="150"
-                                             autoResize="true"
-                                             style="width: 100%;"/>
-                        </div>
+                            <div class="hosp-field" style="grid-column: 1 / -1;">
+                                <label class="required-dot">Nombre del Hospital</label>
+                                <p:inputText id="name"
+                                             value="#{companyController.company.name}"
+                                             required="true"
+                                             maxlength="50"
+                                             placeholder="Ej: Hospital General del Norte"/>
+                            </div>
 
-                        <div class="field mb-3">
-                            <p:outputLabel for="ruc" value="RUC" styleClass="font-bold"/>
-                            <p:inputText id="ruc" 
-                                         value="#{companyController.company.ruc}" 
-                                         maxlength="10"
-                                         style="width: 100%;"/>
-                        </div>
+                            <div class="hosp-field">
+                                <label>Nombre Corto</label>
+                                <p:inputText id="smallname"
+                                             value="#{companyController.company.smallname}"
+                                             maxlength="25"
+                                             placeholder="Ej: HGN"/>
+                                <span class="field-hint">Aparece en el navbar y encabezados</span>
+                            </div>
 
-                        <div class="field mb-3">
-                            <p:outputLabel for="manager" value="Gerente/Administrador" styleClass="font-bold"/>
-                            <p:inputText id="manager" 
-                                         value="#{companyController.company.manager}" 
-                                         maxlength="50"
-                                         style="width: 100%;"/>
+                            <div class="hosp-field">
+                                <label>RUC</label>
+                                <p:inputText id="ruc"
+                                             value="#{companyController.company.ruc}"
+                                             maxlength="13"
+                                             placeholder="0000000000001"/>
+                            </div>
+
+                            <div class="hosp-field">
+                                <label>Gerente / Administrador</label>
+                                <p:inputText id="manager"
+                                             value="#{companyController.company.manager}"
+                                             maxlength="50"
+                                             placeholder="Nombre completo"/>
+                            </div>
+
+                            <div class="hosp-field" style="grid-column: 1 / -1;">
+                                <label>Descripción</label>
+                                <p:inputTextarea id="description"
+                                                 value="#{companyController.company.description}"
+                                                 rows="3"
+                                                 maxlength="150"
+                                                 autoResize="true"
+                                                 placeholder="Breve descripción del hospital..."/>
+                                <span class="field-hint">Máximo 150 caracteres</span>
+                            </div>
+
                         </div>
                     </div>
                 </div>
 
-                <!-- COLORES Y BRANDING -->
-                <div class="col-12 md:col-6">
-                    <div class="config-section">
-                        <h3 class="text-primary font-bold mb-3">
-                            <i class="pi pi-palette mr-2"></i>Colores del Sistema
-                        </h3>
-
-                        <div class="grid mb-3">
-                            <div class="col-6">
-                                <div class="field">
-                                    <p:outputLabel for="primarycolor" value="Color Primario" styleClass="font-bold"/>
-                                    <p:colorPicker id="primarycolor" 
-                                                   value="#{companyController.company.primarycolor}"
-                                                   style="width: 100%;">
-                                        <p:ajax event="change" listener="#{companyController.previewColors}"/>
-                                    </p:colorPicker>
-                                    <small class="text-muted">Fondos, headers, botones principales</small>
-                                </div>
-                                <div class="mt-2">
-                                    <span class="color-preview" 
-                                          style="background-color: #{companyController.company.primarycolor};">
-                                    </span>
-                                    <span class="ml-2">#{companyController.company.primarycolor}</span>
-                                </div>
-                            </div>
-
-                            <div class="col-6">
-                                <div class="field">
-                                    <p:outputLabel for="secondarycolor" value="Color Secundario" styleClass="font-bold"/>
-                                    <p:colorPicker id="secondarycolor" 
-                                                   value="#{companyController.company.secondarycolor}"
-                                                   style="width: 100%;">
-                                        <p:ajax event="change" listener="#{companyController.previewColors}"/>
-                                    </p:colorPicker>
-                                    <small class="text-muted">Iconos, acentos, botones secundarios</small>
-                                </div>
-                                <div class="mt-2">
-                                    <span class="color-preview" 
-                                          style="background-color: #{companyController.company.secondarycolor};">
-                                    </span>
-                                    <span class="ml-2">#{companyController.company.secondarycolor}</span>
-                                </div>
-                            </div>
+                <!-- ══ CARD 2: CONTACTO ══════════════════════════════════ -->
+                <div class="hosp-card">
+                    <div class="hosp-card-header">
+                        <div class="hosp-card-header-icon">
+                            <i class="pi pi-phone"></i>
                         </div>
-
-                        <div class="field mb-3">
-                            <p:outputLabel for="logo" value="Logo del Hospital" styleClass="font-bold"/>
-                            <p:fileUpload id="logo"
-                                          mode="simple"
-                                          skinSimple="true"
-                                          label="Seleccionar"
-                                          accept="image/*"
-                                          style="width: 100%;"/>
-                            <small class="text-muted">Formato recomendado: PNG o JPG, máx 200KB</small>
+                        <div>
+                            <h3>Información de Contacto</h3>
+                            <span>Teléfonos, correo y dirección del hospital</span>
                         </div>
-
-                        <p:outputPanel rendered="#{not empty companyController.company.logo}">
-                            <div class="field">
-                                <label class="font-bold">Logo Actual:</label>
-                                <div>
-                                    <img src="#{request.contextPath}/uploads/#{companyController.company.logo}" 
-                                         class="logo-preview" 
-                                         alt="Logo"/>
-                                </div>
-                            </div>
-                        </p:outputPanel>
                     </div>
-                </div>
+                    <div class="hosp-card-body">
+                        <div class="hosp-field-grid cols-4">
 
-                <!-- CONTACTO -->
-                <div class="col-12">
-                    <div class="config-section">
-                        <h3 class="text-primary font-bold mb-3">
-                            <i class="pi pi-phone mr-2"></i>Información de Contacto
-                        </h3>
-
-                        <div class="grid">
-                            <div class="col-12 md:col-3">
-                                <div class="field">
-                                    <p:outputLabel for="telephone" value="Teléfono" styleClass="font-bold"/>
-                                    <p:inputText id="telephone" 
-                                                 value="#{companyController.company.telephone}" 
-                                                 maxlength="13"
-                                                 style="width: 100%;"/>
-                                </div>
+                            <div class="hosp-field">
+                                <label>Teléfono Fijo</label>
+                                <p:inputText id="telephone"
+                                             value="#{companyController.company.telephone}"
+                                             maxlength="13"
+                                             placeholder="02 000-0000"/>
                             </div>
 
-                            <div class="col-12 md:col-3">
-                                <div class="field">
-                                    <p:outputLabel for="mobile" value="Móvil" styleClass="font-bold"/>
-                                    <p:inputText id="mobile" 
-                                                 value="#{companyController.company.mobile}" 
-                                                 maxlength="13"
-                                                 style="width: 100%;"/>
-                                </div>
+                            <div class="hosp-field">
+                                <label>Móvil</label>
+                                <p:inputText id="mobile"
+                                             value="#{companyController.company.mobile}"
+                                             maxlength="13"
+                                             placeholder="09X XXX-XXXX"/>
                             </div>
 
-                            <div class="col-12 md:col-6">
-                                <div class="field">
-                                    <p:outputLabel for="email" value="Email" styleClass="font-bold"/>
-                                    <p:inputText id="email" 
-                                                 value="#{companyController.company.email}" 
-                                                 maxlength="50"
-                                                 style="width: 100%;"/>
-                                </div>
+                            <div class="hosp-field" style="grid-column: span 2;">
+                                <label>Correo Electrónico</label>
+                                <p:inputText id="email"
+                                             value="#{companyController.company.email}"
+                                             maxlength="50"
+                                             placeholder="info@hospital.com"/>
                             </div>
 
-                            <div class="col-12">
-                                <div class="field">
-                                    <p:outputLabel for="address" value="Dirección" styleClass="font-bold"/>
-                                    <p:inputText id="address" 
-                                                 value="#{companyController.company.address}" 
-                                                 required="true"
-                                                 maxlength="100"
-                                                 style="width: 100%;"/>
-                                </div>
+                            <div class="hosp-field" style="grid-column: 1 / -1;">
+                                <label class="required-dot">Dirección</label>
+                                <p:inputText id="address"
+                                             value="#{companyController.company.address}"
+                                             required="true"
+                                             maxlength="100"
+                                             placeholder="Av. Principal y Calle Secundaria, Ciudad"/>
                             </div>
+
                         </div>
                     </div>
                 </div>
 
-            </div>
+                <!-- ══ CARD 3: BRANDING ══════════════════════════════════ -->
+                <div class="hosp-card">
+                    <div class="hosp-card-header">
+                        <div class="hosp-card-header-icon">
+                            <i class="pi pi-palette"></i>
+                        </div>
+                        <div>
+                            <h3>Identidad Visual</h3>
+                            <span>Logo y colores corporativos del sistema</span>
+                        </div>
+                    </div>
+                    <div class="hosp-card-body">
 
-            <div class="flex justify-content-end mt-4">
-                <p:commandButton value="Guardar Configuración" 
-                                 icon="pi pi-save" 
+                        <!-- Colores -->
+                        <div class="hosp-field-grid cols-2" style="margin-bottom: 24px;">
+
+                            <div class="hosp-field">
+                                <label>Color Primario</label>
+                                <p:colorPicker id="primarycolor"
+                                               value="#{companyController.company.primarycolor}">
+                                    <p:ajax event="change" listener="#{companyController.previewColors}"
+                                            update="primaryPreview"/>
+                                </p:colorPicker>
+                                <div class="color-row">
+                                    <p:badge class="color-swatch" id="primaryPreview"
+                                             style="background-color: #{companyController.company.primarycolor};"/>
+                                    <span class="color-hex">#{companyController.company.primarycolor}</span>
+                                    <span class="field-hint">Fondos, headers y botones principales</span>
+                                </div>
+                            </div>
+
+                            <div class="hosp-field">
+                                <label>Color Secundario</label>
+                                <p:colorPicker id="secondarycolor"
+                                               value="#{companyController.company.secondarycolor}">
+                                    <p:ajax event="change" listener="#{companyController.previewColors}"
+                                            update="secondaryPreview"/>
+                                </p:colorPicker>
+                                <div class="color-row">
+                                    <p:badge class="color-swatch" id="secondaryPreview"
+                                             style="background-color: #{companyController.company.secondarycolor};"/>
+                                    <span class="color-hex">#{companyController.company.secondarycolor}</span>
+                                    <span class="field-hint">Iconos, acentos y botones secundarios</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Logo -->
+                        <div class="hosp-field">
+                            <label>Logo del Hospital</label>
+
+                            <p:outputPanel rendered="#{not empty companyController.company.logo}">
+                                <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 14px;">
+                                    <img src="#{request.contextPath}/uploads/#{companyController.company.logo}"
+                                         class="logo-preview-img"
+                                         alt="Logo actual"/>
+                                    <div>
+                                        <div style="font-size:.85rem; font-weight:600; color:var(--text);">
+                                            Logo actual
+                                        </div>
+                                        <div style="font-size:.78rem; color:var(--text-muted);">
+                                            Sube uno nuevo para reemplazarlo
+                                        </div>
+                                    </div>
+                                </div>
+                            </p:outputPanel>
+
+                            <div class="logo-upload-area">
+                                <i class="pi pi-cloud-upload"
+                                   style="font-size:2rem; color:var(--primary); margin-bottom:8px; display:block;"/>
+                                <p:fileUpload id="logo"
+                                              mode="simple"
+                                              skinSimple="true"
+                                              label="Seleccionar archivo"
+                                              accept="image/*"/>
+                                <div class="field-hint" style="margin-top:8px;">
+                                    PNG o JPG · Fondo transparente recomendado · Máx. 200 KB
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div><!-- /.hosp-config -->
+
+            <!-- ══ STICKY SAVE BAR ═══════════════════════════════════════ -->
+            <div class="hosp-sticky-bar">
+                <div class="save-hint">
+                    <i class="pi pi-info-circle"/>
+                    Los cambios se aplicarán en toda la plataforma al guardar
+                </div>
+                <p:commandButton value="Guardar Configuración"
+                                 icon="pi pi-save"
                                  actionListener="#{companyController.save}"
                                  update=":form:messages"
-                                 styleClass=" ui-button-lg"/>
+                                 styleClass="ui-button-lg"/>
             </div>
+
         </h:form>
+
     </ui:define>
 </ui:composition>

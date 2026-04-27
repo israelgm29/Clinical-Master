@@ -17,12 +17,12 @@ import org.primefaces.PrimeFaces;
 public class ModuleController implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final Integer DEFAULT_USER_ID = 1;
 
     @Inject
     private ModuleService moduleService;
 
     private List<Module> modules;
+    private List<Module> filteredModules; // ← para el filtro global del dataTable
     private Module selectedModule;
     private Module newModule;
     private boolean editMode;
@@ -47,54 +47,113 @@ public class ModuleController implements Serializable {
         this.editMode = true;
     }
 
-    // Cambiar estos métodos:
     public void save() {
         try {
             if (newModule.getName() == null || newModule.getName().trim().isEmpty()) {
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Validación", "El nombre del módulo es obligatorio"));
+                addMessage(FacesMessage.SEVERITY_WARN, "Validación", "El nombre del módulo es obligatorio");
                 return;
             }
 
             if (!editMode) {
                 Module existing = moduleService.findByName(newModule.getName().trim());
                 if (existing != null) {
-                    FacesContext.getCurrentInstance().addMessage(null,
-                            new FacesMessage(FacesMessage.SEVERITY_WARN, "Validación", "Ya existe un módulo con ese nombre"));
+                    addMessage(FacesMessage.SEVERITY_WARN, "Validación", "Ya existe un módulo con ese nombre");
                     return;
                 }
             }
 
-            moduleService.save(newModule); // Sin userId
+            moduleService.save(newModule);
             loadModules();
 
-            String msg = editMode ? "Módulo actualizado" : "Módulo creado";
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", msg));
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito",
+                    editMode ? "Módulo actualizado" : "Módulo creado");
 
             PrimeFaces.current().resetInputs(":dialogs:manage-module-content");
 
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage());
         }
     }
 
     public void delete(Module module) {
         try {
-            moduleService.delete(module.getId()); // Sin userId
+            // Verificar si tiene permisos asignados antes de eliminar
+            if (module.getPermissionCollection() != null
+                    && !module.getPermissionCollection().isEmpty()) {
+                addMessage(FacesMessage.SEVERITY_WARN, "No se puede eliminar",
+                        "El módulo '" + module.getName() + "' tiene "
+                        + module.getPermissionCollection().size()
+                        + " permiso(s) asignado(s)");
+                return;
+            }
+
+            moduleService.delete(module.getId());
             loadModules();
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Módulo eliminado"));
+            addMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Módulo eliminado");
+
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage()));
+            addMessage(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage());
         }
     }
 
+    // ══════════════════════════════════════════════════
+    // KPIs — calculados desde la lista ya cargada
+    // No hacen queries adicionales, reusan `modules`
+    // ══════════════════════════════════════════════════
+    /**
+     * Total de módulos registrados
+     */
+    public int getTotalModules() {
+        return modules != null ? modules.size() : 0;
+    }
+
+    /**
+     * Módulos que tienen al menos un permiso asignado
+     */
+    public int getActiveCount() {
+        if (modules == null) {
+            return 0;
+        }
+        return (int) modules.stream()
+                .filter(m -> m.getPermissionCollection() != null
+                && !m.getPermissionCollection().isEmpty())
+                .count();
+    }
+
+    /**
+     * Total de permisos en todos los módulos
+     */
+    public int getTotalPermissions() {
+        if (modules == null) {
+            return 0;
+        }
+        return modules.stream()
+                .filter(m -> m.getPermissionCollection() != null)
+                .mapToInt(m -> m.getPermissionCollection().size())
+                .sum();
+    }
+
+    // ══════════════════════════════════════════════════
+    // Helper privado para mensajes
+    // ══════════════════════════════════════════════════
+    private void addMessage(FacesMessage.Severity severity, String summary, String detail) {
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(severity, summary, detail));
+    }
+
+    // ══════════════════════════════════════════════════
     // Getters y Setters
+    // ══════════════════════════════════════════════════
     public List<Module> getModules() {
         return modules;
+    }
+
+    public List<Module> getFilteredModules() {
+        return filteredModules;
+    }
+
+    public void setFilteredModules(List<Module> filteredModules) {
+        this.filteredModules = filteredModules;
     }
 
     public Module getSelectedModule() {

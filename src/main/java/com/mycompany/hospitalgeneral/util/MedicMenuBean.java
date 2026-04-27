@@ -23,14 +23,7 @@ public class MedicMenuBean implements Serializable {
         // Al usar *.xhtml en web.xml, JSF se encarga de todo.
         String redirect = "?faces-redirect=true";
 
-        // === DASHBOARD ===
-        menuModel.getElements().add(
-                DefaultMenuItem.builder()
-                        .value("Mi Agenda")
-                        .icon("pi pi-calendar")
-                        .outcome("/views/medic/dashboard.xhtml" + redirect)
-                        .build()
-        );
+      
 
         // === PACIENTES (Submenú) ===
         DefaultSubMenu pacientesSub = DefaultSubMenu.builder()

@@ -5,108 +5,786 @@
       xmlns:p="primefaces">
     <h:head>
         <title>Login - Hospital General</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        
+        <link rel="stylesheet" 
+              href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"/>
+        <link rel="stylesheet" 
+              href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24..48,100..700,0..1,-50..200&amp;display=swap"/>
+        <link rel="stylesheet" 
+              href="https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css"/>
         
         <style>
             :root {
                 --primary: #0b3c5d;
+                --primary-dark: #072a42;
                 --primary-light: #1d5f8b;
                 --accent: #2a9d8f;
-                --bg: #f8f9fb;
+                --accent-light: #3dbfb0;
+                --danger: #e74c3c;
+                --bg: #f0f4f8;
+                --text: #2b2d42;
+                --text-muted: #6c7a89;
+                --border: #e1e8ed;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
             }
 
             body {
-                margin: 0;
-                padding: 0;
-                background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+                font-family: 'Inter', 'Segoe UI', sans-serif;
+                background: var(--bg);
                 min-height: 100vh;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-family: 'Segoe UI', sans-serif;
+                overflow: hidden;
             }
 
-            .login-container {
-                background: white;
-                padding: 40px;
-                border-radius: 16px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            .login-wrapper {
+                display: flex;
                 width: 100%;
-                max-width: 400px;
+                max-width: 1100px;
+                min-height: 650px;
+                background: white;
+                border-radius: 24px;
+                box-shadow: 0 25px 80px rgba(11, 60, 93, 0.15);
+                overflow: hidden;
+                animation: slideUp 0.6s ease-out;
             }
 
-            .login-header {
-                text-align: center;
-                margin-bottom: 32px;
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
 
-            .login-header h1 {
-                color: var(--primary);
-                margin: 0 0 8px 0;
-                font-size: 1.8rem;
+            /* ═══════════════════════════════════════════════
+               PANEL IZQUIERDO CON PARTÍCULAS
+               ═══════════════════════════════════════════════ */
+            .login-illustration {
+                flex: 1;
+                background: linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 50%, #0a1f2e 100%);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 48px;
+                position: relative;
+                overflow: hidden;
             }
 
-            .login-header p {
-                color: #6c757d;
-                margin: 0;
+            /* ── Efecto de brillo radial animado ─────────── */
+            .login-illustration::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -50%;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(circle, rgba(42, 157, 143, 0.15) 0%, transparent 70%);
+                animation: pulse 4s ease-in-out infinite;
+            }
+
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); opacity: 0.5; }
+                50% { transform: scale(1.1); opacity: 0.8; }
+            }
+
+            /* ── Contenedor de partículas ────────────────── */
+            .particles-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            .particle {
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.08);
+                animation: float-up linear infinite;
+                bottom: -20px;
+            }
+
+            .particle:nth-child(1) {
+                left: 10%;
+                width: 8px;
+                height: 8px;
+                animation-duration: 15s;
+                animation-delay: 0s;
+                opacity: 0.3;
+            }
+
+            .particle:nth-child(2) {
+                left: 20%;
+                width: 12px;
+                height: 12px;
+                animation-duration: 20s;
+                animation-delay: 2s;
+                opacity: 0.2;
+            }
+
+            .particle:nth-child(3) {
+                left: 35%;
+                width: 6px;
+                height: 6px;
+                animation-duration: 12s;
+                animation-delay: 4s;
+                opacity: 0.4;
+            }
+
+            .particle:nth-child(4) {
+                left: 50%;
+                width: 10px;
+                height: 10px;
+                animation-duration: 18s;
+                animation-delay: 1s;
+                opacity: 0.25;
+            }
+
+            .particle:nth-child(5) {
+                left: 65%;
+                width: 14px;
+                height: 14px;
+                animation-duration: 22s;
+                animation-delay: 3s;
+                opacity: 0.15;
+            }
+
+            .particle:nth-child(6) {
+                left: 75%;
+                width: 7px;
+                height: 7px;
+                animation-duration: 14s;
+                animation-delay: 5s;
+                opacity: 0.35;
+            }
+
+            .particle:nth-child(7) {
+                left: 85%;
+                width: 9px;
+                height: 9px;
+                animation-duration: 16s;
+                animation-delay: 1.5s;
+                opacity: 0.2;
+            }
+
+            .particle:nth-child(8) {
+                left: 5%;
+                width: 11px;
+                height: 11px;
+                animation-duration: 19s;
+                animation-delay: 6s;
+                opacity: 0.25;
+            }
+
+            .particle:nth-child(9) {
+                left: 45%;
+                width: 5px;
+                height: 5px;
+                animation-duration: 13s;
+                animation-delay: 7s;
+                opacity: 0.45;
+            }
+
+            .particle:nth-child(10) {
+                left: 90%;
+                width: 13px;
+                height: 13px;
+                animation-duration: 21s;
+                animation-delay: 2.5s;
+                opacity: 0.18;
+            }
+
+            .particle:nth-child(11) {
+                left: 15%;
+                width: 6px;
+                height: 6px;
+                animation-duration: 17s;
+                animation-delay: 8s;
+                opacity: 0.3;
+            }
+
+            .particle:nth-child(12) {
+                left: 55%;
+                width: 8px;
+                height: 8px;
+                animation-duration: 14s;
+                animation-delay: 4.5s;
+                opacity: 0.35;
+            }
+
+            .particle:nth-child(13) {
+                left: 30%;
+                width: 10px;
+                height: 10px;
+                animation-duration: 20s;
+                animation-delay: 9s;
+                opacity: 0.2;
+            }
+
+            .particle:nth-child(14) {
+                left: 70%;
+                width: 7px;
+                height: 7px;
+                animation-duration: 16s;
+                animation-delay: 3.5s;
+                opacity: 0.3;
+            }
+
+            .particle:nth-child(15) {
+                left: 40%;
+                width: 5px;
+                height: 5px;
+                animation-duration: 12s;
+                animation-delay: 10s;
+                opacity: 0.4;
+            }
+
+            @keyframes float-up {
+                0% {
+                    transform: translateY(0) translateX(0) scale(1);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: var(--particle-opacity, 0.3);
+                }
+                25% {
+                    transform: translateY(-25vh) translateX(15px) scale(1.1);
+                }
+                50% {
+                    transform: translateY(-50vh) translateX(-10px) scale(0.9);
+                }
+                75% {
+                    transform: translateY(-75vh) translateX(20px) scale(1.05);
+                }
+                90% {
+                    opacity: var(--particle-opacity, 0.3);
+                }
+                100% {
+                    transform: translateY(-110vh) translateX(0) scale(1);
+                    opacity: 0;
+                }
+            }
+
+            /* ── Líneas de conexión sutiles entre partículas ─ */
+            .connection-line {
+                position: absolute;
+                background: linear-gradient(180deg, 
+                    transparent 0%, 
+                    rgba(42, 157, 143, 0.1) 50%, 
+                    transparent 100%);
+                width: 1px;
+                animation: line-float linear infinite;
+                bottom: -50px;
+            }
+
+            .connection-line:nth-child(16) {
+                left: 25%;
+                height: 80px;
+                animation-duration: 18s;
+                animation-delay: 3s;
+            }
+
+            .connection-line:nth-child(17) {
+                left: 60%;
+                height: 120px;
+                animation-duration: 22s;
+                animation-delay: 7s;
+            }
+
+            .connection-line:nth-child(18) {
+                left: 80%;
+                height: 60px;
+                animation-duration: 15s;
+                animation-delay: 1s;
+            }
+
+            @keyframes line-float {
+                0% {
+                    transform: translateY(0);
+                    opacity: 0;
+                }
+                15% {
+                    opacity: 0.6;
+                }
+                85% {
+                    opacity: 0.6;
+                }
+                100% {
+                    transform: translateY(-110vh);
+                    opacity: 0;
+                }
+            }
+
+            /* ── Contenido del panel (z-index sobre partículas) ─ */
+            .illustration-header {
+                position: relative;
+                z-index: 1;
+            }
+
+            .brand-logo {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                color: white;
+                margin-bottom: 40px;
+            }
+
+            .brand-logo .material-symbols-outlined {
+                font-size: 36px;
+                color: var(--accent);
+            }
+
+            .brand-logo span {
+                font-size: 1.4rem;
+                font-weight: 700;
+                letter-spacing: -0.5px;
+            }
+
+            .illustration-content {
+                position: relative;
+                z-index: 1;
+                color: white;
+            }
+
+            .illustration-content h2 {
+                font-size: 2.2rem;
+                font-weight: 700;
+                line-height: 1.2;
+                margin-bottom: 16px;
+                background: linear-gradient(135deg, white 0%, var(--accent-light) 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            .illustration-content p {
+                font-size: 1rem;
+                opacity: 0.75;
+                line-height: 1.6;
+                max-width: 320px;
+            }
+
+            .feature-list {
+                margin-top: 32px;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .feature-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                color: rgba(255,255,255,0.85);
                 font-size: 0.9rem;
             }
 
-            .field {
-                margin-bottom: 20px;
+            .feature-item .material-symbols-outlined {
+                font-size: 20px;
+                color: var(--accent);
+                background: rgba(42, 157, 143, 0.2);
+                padding: 6px;
+                border-radius: 8px;
             }
 
-            .field label {
+            .illustration-footer {
+                position: relative;
+                z-index: 1;
+                color: rgba(255,255,255,0.5);
+                font-size: 0.8rem;
+            }
+
+            /* ═══════════════════════════════════════════════
+               PANEL DERECHO (Formulario)
+               ═══════════════════════════════════════════════ */
+            .login-form-panel {
+                flex: 1;
+                padding: 48px 56px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                position: relative;
+            }
+
+            .form-header {
+                margin-bottom: 36px;
+            }
+
+            .form-header h1 {
+                font-size: 1.9rem;
+                font-weight: 800;
+                color: var(--text);
+                margin-bottom: 8px;
+                letter-spacing: -0.5px;
+            }
+
+            .form-header p {
+                color: var(--text-muted);
+                font-size: 0.95rem;
+            }
+
+            .form-header .accent-line {
+                width: 40px;
+                height: 4px;
+                background: linear-gradient(90deg, var(--accent), var(--primary-light));
+                border-radius: 2px;
+                margin-top: 16px;
+            }
+
+            .field-group {
+                margin-bottom: 24px;
+                position: relative;
+            }
+
+            .field-group label {
                 display: block;
-                margin-bottom: 6px;
-                font-size: 0.85rem;
+                margin-bottom: 8px;
+                font-size: 0.8rem;
                 font-weight: 600;
-                color: var(--primary);
+                color: var(--text);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .input-wrapper {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
+
+            .input-wrapper .input-icon {
+                position: absolute;
+                left: 14px;
+                color: var(--text-muted);
+                font-size: 18px;
+                z-index: 2;
+                pointer-events: none;
+                transition: color 0.2s;
+            }
+
+            .input-wrapper input,
+            .input-wrapper .ui-inputfield,
+            .input-wrapper .ui-password {
+                width: 100% !important;
+                padding: 14px 14px 14px 46px !important;
+                border: 2px solid var(--border) !important;
+                border-radius: 12px !important;
+                font-size: 0.95rem !important;
+                font-family: 'Inter', sans-serif !important;
+                background: #fafbfc !important;
+                transition: all 0.2s ease !important;
+                outline: none !important;
+                box-shadow: none !important;
+            }
+
+            .input-wrapper input:focus,
+            .input-wrapper .ui-inputfield:focus,
+            .input-wrapper .ui-password:focus {
+                border-color: var(--accent) !important;
+                background: white !important;
+                box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.1) !important;
+            }
+
+            .input-wrapper:focus-within .input-icon {
+                color: var(--accent);
+            }
+
+            .form-options {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 28px;
+                font-size: 0.85rem;
+            }
+
+            .remember-me {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: var(--text-muted);
+                cursor: pointer;
+            }
+
+            .remember-me input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+                accent-color: var(--accent);
+                cursor: pointer;
+            }
+
+            .forgot-link {
+                color: var(--primary-light);
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.2s;
+            }
+
+            .forgot-link:hover {
+                color: var(--accent);
+                text-decoration: underline;
             }
 
             .login-button {
                 width: 100%;
-                margin-top: 10px;
+                padding: 14px !important;
+                border-radius: 12px !important;
+                font-size: 1rem !important;
+                font-weight: 600 !important;
+                font-family: 'Inter', sans-serif !important;
+                background: linear-gradient(135deg, var(--accent) 0%, var(--primary-light) 100%) !important;
+                border: none !important;
+                color: white !important;
+                cursor: pointer;
+                transition: all 0.3s ease !important;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .login-button::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                transition: left 0.5s;
+            }
+
+            .login-button:hover::before {
+                left: 100%;
+            }
+
+            .login-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(42, 157, 143, 0.35) !important;
+            }
+
+            .login-button:active {
+                transform: translateY(0);
+            }
+
+            .form-footer {
+                margin-top: 32px;
+                text-align: center;
+                color: var(--text-muted);
+                font-size: 0.85rem;
+            }
+
+            .form-footer a {
+                color: var(--primary);
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .form-footer a:hover {
+                text-decoration: underline;
+            }
+
+            .decoration-circle {
+                position: absolute;
+                border-radius: 50%;
+                background: linear-gradient(135deg, var(--accent), transparent);
+                opacity: 0.05;
+            }
+
+            .circle-1 {
+                width: 300px;
+                height: 300px;
+                top: -100px;
+                right: -100px;
+            }
+
+            .circle-2 {
+                width: 200px;
+                height: 200px;
+                bottom: -60px;
+                left: -60px;
+            }
+
+            @media (max-width: 900px) {
+                .login-wrapper {
+                    flex-direction: column;
+                    max-width: 480px;
+                    min-height: auto;
+                    margin: 20px;
+                }
+
+                .login-illustration {
+                    padding: 32px;
+                    min-height: 200px;
+                }
+
+                .illustration-content h2 {
+                    font-size: 1.6rem;
+                }
+
+                .feature-list {
+                    display: none;
+                }
+
+                .login-form-panel {
+                    padding: 32px;
+                }
+            }
+
+            @media (max-width: 480px) {
+                body {
+                    background: white;
+                }
+
+                .login-wrapper {
+                    box-shadow: none;
+                    border-radius: 0;
+                    margin: 0;
+                }
+
+                .login-illustration {
+                    border-radius: 0 0 24px 24px;
+                }
+            }
+
+            .ui-growl {
+                z-index: 9999 !important;
+            }
+
+            .ui-growl-item {
+                border-radius: 12px !important;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important;
             }
         </style>
     </h:head>
     <h:body>
-        <div class="login-container">
-            <div class="login-header">
-                <h1>Hospital General</h1>
-                <p>Sistema de Gestión Médica</p>
+        <div class="login-wrapper">
+            
+            <div class="login-illustration">
+                <!-- ══ PARTÍCULAS ══ -->
+                <div class="particles-container">
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="connection-line"></div>
+                    <div class="connection-line"></div>
+                    <div class="connection-line"></div>
+                </div>
+
+                <div class="illustration-header">
+                    <div class="brand-logo">
+                        <span class="material-symbols-outlined">local_hospital</span>
+                        <span>#{appInfo.companyName.name}</span>
+                    </div>
+                </div>
+                
+                <div class="illustration-content">
+                    <h2>Cuidando la salud de nuestra comunidad</h2>
+                    <p>Acceda al sistema integral de gestión médica. Seguro, rápido y siempre disponible.</p>
+                    
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <span class="material-symbols-outlined">shield</span>
+                            <span>Datos protegidos con encriptación</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="material-symbols-outlined">speed</span>
+                            <span>Acceso rápido a expedientes</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="material-symbols-outlined">groups</span>
+                            <span>Gestión integral de pacientes</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="illustration-footer">
+                    © 2026 #{appInfo.companyName.name}. Todos los derechos reservados.
+                </div>
             </div>
 
-            <h:form id="loginForm">
-                <p:growl id="messages" showDetail="true" life="5000"/>
-
-                <div class="field">
-                    <label for="email">Correo Electrónico</label>
-                    <p:inputText id="email" 
-                                 value="#{loginController.email}"
-                                 required="true"
-                                 requiredMessage="Ingrese su email"
-                                 placeholder="usuario@hospital.com"
-                                 style="width: 100%"/>
+            <div class="login-form-panel">
+                <div class="decoration-circle circle-1"></div>
+                <div class="decoration-circle circle-2"></div>
+                
+                <div class="form-header">
+                    <h1>Bienvenido de vuelta</h1>
+                    <p>Ingrese sus credenciales para continuar</p>
+                    <div class="accent-line"></div>
                 </div>
 
-                <div class="field">
-                    <label for="password">Contraseña</label>
-                    <p:password id="password" 
-                                value="#{loginController.password}"
-                                required="true"
-                                requiredMessage="Ingrese su contraseña"
-                                placeholder="••••••••"
-                                toggleMask="true"
-                                style="width: 100%"/>
-                </div>
+                <h:form id="loginForm">
+                    <p:growl id="messages" showDetail="true" life="5000"/>
 
-                <p:commandButton value="Ingresar" 
-                                 action="#{loginController.login}"
-                                 update="messages"
-                                 styleClass="ui-button-success login-button"
-                                 icon="pi pi-sign-in"/>
-            </h:form>
+                    <div class="field-group">
+                        <label for="email">Correo Electrónico</label>
+                        <div class="input-wrapper">
+                            <span class="material-symbols-outlined input-icon">mail</span>
+                            <p:inputText id="email" 
+                                         value="#{loginController.email}"
+                                         required="true"
+                                         requiredMessage="Ingrese su email"
+                                         placeholder="usuario@hospital.com"
+                                         styleClass="login-input"/>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="password">Contraseña</label>
+                        <div class="input-wrapper">
+                            <span class="material-symbols-outlined input-icon">lock</span>
+                            <p:password id="password" 
+                                        value="#{loginController.password}"
+                                        required="true"
+                                        requiredMessage="Ingrese su contraseña"
+                                        placeholder="••••••••"
+                                        toggleMask="true"
+                                        styleClass="login-input"/>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox"/>
+                            <span>Recordarme</span>
+                        </label>
+                        <a href="#" class="forgot-link">¿Olvidó su contraseña?</a>
+                    </div>
+
+                    <p:commandButton value="Ingresar al Sistema" 
+                                     action="#{loginController.login}"
+                                     update="messages"
+                                     styleClass="login-button"
+                                     icon="pi pi-sign-in"/>
+                </h:form>
+
+                <div class="form-footer">
+                    ¿Necesita ayuda? <a href="#">Contacte a soporte técnico</a>
+                </div>
+            </div>
         </div>
-
     </h:body>
 </html>

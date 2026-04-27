@@ -5,161 +5,570 @@
                 xmlns:f="jakarta.faces.core"
                 template="/WEB-INF/templates/admin-template.xhtml">
 
-    <ui:define name="titulo">Administración de Módulos</ui:define>
+    <ui:define name="page-title">Administración de Módulos</ui:define>
 
     <ui:define name="content">
 
         <style>
-            .module-card {
-                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-                border-radius: 12px;
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
+            /* ── Layout ── */
+            .mod-page {
+                max-width: 960px;
+                margin: 0 auto;
             }
-            .stats-badge {
-                background: #0284c7;
-                color: white;
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: bold;
+
+            /* ── Page header ── */
+            .mod-page-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                margin-bottom: 28px;
+                padding-bottom: 20px;
+                border-bottom: 2px solid var(--border-light);
+                flex-wrap: wrap;
+            }
+            .mod-page-header-left {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+            .mod-page-icon {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                background: linear-gradient(135deg, var(--primary), var(--secondary, #1e7ec8));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 22px;
+                flex-shrink: 0;
+                box-shadow: 0 4px 14px rgba(11,60,93,.25);
+            }
+            .mod-page-header h1 {
+                margin: 0 0 4px;
+                font-size: 1.55rem;
+                font-weight: 800;
+                color: var(--text);
+                letter-spacing: -.3px;
+            }
+            .mod-page-header p {
+                margin: 0;
+                font-size: .9rem;
+                color: var(--text-muted);
+            }
+
+            /* ── KPI card ── */
+            .mod-kpi-row {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+            @media(max-width:600px) {
+                .mod-kpi-row {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .mod-kpi {
+                background: var(--bg-card);
+                border: 1px solid var(--border-light);
+                border-radius: 16px;
+                padding: 20px 22px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                box-shadow: 0 2px 10px rgba(0,0,0,.05);
+                transition: box-shadow .2s, transform .2s;
+            }
+            .mod-kpi:hover {
+                box-shadow: 0 6px 22px rgba(0,0,0,.09);
+                transform: translateY(-2px);
+            }
+            .mod-kpi-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                flex-shrink: 0;
+            }
+            .mod-kpi-icon.blue  {
+                background: rgba(11,60,93,.1);
+                color: var(--primary);
+            }
+            .mod-kpi-icon.green {
+                background: rgba(22,163,74,.1);
+                color: #16a34a;
+            }
+            .mod-kpi-icon.amber {
+                background: rgba(217,119,6,.1);
+                color: #d97706;
+            }
+            .mod-kpi-value {
+                font-size: 1.8rem;
+                font-weight: 800;
+                color: var(--text);
+                line-height: 1;
+            }
+            .mod-kpi-label {
+                font-size: .8rem;
+                color: var(--text-muted);
+                margin-top: 3px;
+            }
+
+            /* ── Main card ── */
+            .mod-card {
+                background: var(--bg-card);
+                border: 1px solid var(--border-light);
+                border-radius: 18px;
+                overflow: hidden;
+                box-shadow: 0 2px 12px rgba(0,0,0,.06);
+            }
+            .mod-card-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 18px 24px;
+                border-bottom: 1px solid var(--border-light);
+                background: linear-gradient(135deg, rgba(11,60,93,.04) 0%, rgba(11,60,93,.01) 100%);
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            .mod-card-header-left {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .mod-card-header-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 9px;
+                background: rgba(11,60,93,.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--primary);
+                font-size: 15px;
+                flex-shrink: 0;
+            }
+            .mod-card-header h3 {
+                margin: 0 0 2px;
+                font-size: .95rem;
+                font-weight: 700;
+                color: var(--text);
+            }
+            .mod-card-header span {
+                font-size: .78rem;
+                color: var(--text-muted);
+            }
+
+            /* ── Search bar ── */
+            .mod-search-bar {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 14px 24px;
+                border-bottom: 1px solid var(--border-light);
+                background: var(--bg-card);
+            }
+            .mod-search-bar .ui-inputtext {
+                border-radius: 10px !important;
+                border: 1.5px solid var(--border-light) !important;
+                padding: 8px 14px 8px 36px !important;
+                font-size: .88rem !important;
+                width: 260px !important;
+                background: var(--bg) !important;
+                transition: border-color .2s, box-shadow .2s !important;
+            }
+            .mod-search-bar .ui-inputtext:focus {
+                border-color: var(--primary) !important;
+                box-shadow: 0 0 0 3px rgba(11,60,93,.1) !important;
+            }
+            .mod-search-wrapper {
+                position: relative;
+            }
+            .mod-search-wrapper .pi-search {
+                position: absolute;
+                left: 11px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-muted);
+                font-size: .85rem;
+                pointer-events: none;
+            }
+
+            /* ── DataTable tweaks ── */
+            .mod-table-wrap .ui-datatable thead th {
+                background: var(--bg) !important;
+                color: var(--text-muted) !important;
+                font-size: .78rem !important;
+                font-weight: 700 !important;
+                text-transform: uppercase !important;
+                letter-spacing: .5px !important;
+                border-bottom: 2px solid var(--border-light) !important;
+                padding: 12px 16px !important;
+            }
+            .mod-table-wrap .ui-datatable tbody td {
+                padding: 14px 16px !important;
+                border-bottom: 1px solid var(--border-light) !important;
+                vertical-align: middle !important;
+            }
+            .mod-table-wrap .ui-datatable tbody tr:hover td {
+                background: rgba(11,60,93,.03) !important;
+            }
+            .mod-table-wrap .ui-datatable tbody tr:last-child td {
+                border-bottom: none !important;
+            }
+
+            /* ── Module badge (ID) ── */
+            .mod-id-badge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+                background: rgba(11,60,93,.1);
+                color: var(--primary);
+                font-size: .78rem;
+                font-weight: 800;
+            }
+
+            /* ── Module name cell ── */
+            .mod-name-cell {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .mod-name-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 9px;
+                background: linear-gradient(135deg, var(--primary), var(--secondary, #1e7ec8));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 13px;
+                flex-shrink: 0;
+            }
+            .mod-name-text {
+                font-weight: 700;
+                color: var(--text);
+                font-size: .92rem;
+            }
+
+            /* ── Action buttons ── */
+            .mod-actions {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+            }
+            .mod-btn {
+                width: 34px;
+                height: 34px;
+                border-radius: 9px;
+                border: 1.5px solid var(--border-light);
+                background: var(--bg-card);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 13px;
+                transition: all .15s;
+            }
+            .mod-btn:hover {
+                transform: scale(1.08);
+            }
+            .mod-btn.edit  {
+                color: #16a34a;
+                border-color: rgba(22,163,74,.25);
+            }
+            .mod-btn.edit:hover  {
+                background: rgba(22,163,74,.1);
+                border-color: #16a34a;
+            }
+            .mod-btn.del   {
+                color: #dc2626;
+                border-color: rgba(220,38,38,.25);
+            }
+            .mod-btn.del:hover   {
+                background: rgba(220,38,38,.1);
+                border-color: #dc2626;
+            }
+
+            /* ── Empty state ── */
+            .mod-empty {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 56px 24px;
+                gap: 12px;
+                color: var(--text-muted);
+            }
+            .mod-empty i {
+                font-size: 2.8rem;
+                opacity: .3;
+            }
+            .mod-empty p {
+                margin: 0;
+                font-size: .9rem;
+            }
+
+            /* ── Dialog ── */
+            .mod-dialog-field {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                margin-bottom: 18px;
+            }
+            .mod-dialog-field label {
+                font-size: .8rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: .5px;
+                color: var(--text-muted);
+            }
+            .mod-dialog-field .ui-inputtext {
+                border-radius: 10px !important;
+                border: 1.5px solid var(--border-light) !important;
+                padding: 10px 14px !important;
+                font-size: .92rem !important;
+                transition: border-color .2s, box-shadow .2s !important;
+            }
+            .mod-dialog-field .ui-inputtext:focus {
+                border-color: var(--primary) !important;
+                box-shadow: 0 0 0 3px rgba(11,60,93,.1) !important;
             }
         </style>
 
         <h:form id="form">
-            <p:growl id="messages" showDetail="true" />
+            <p:growl id="messages" showDetail="true" life="5000" sticky="false"/>
 
-            <!-- HEADER -->
-            <div class="flex-between mb-4">
-                <div>
-                    <h2 class="text-primary font-bold m-0">
-                        <i class="pi pi-th-large mr-2"></i>Módulos del Sistema
-                    </h2>
-                    <div class="text-muted" style="font-size: 14px;">
-                        Gestiona los módulos disponibles para asignación de permisos
+            <div class="mod-page">
+
+                <!-- ══ PAGE HEADER ══════════════════════════════════════ -->
+                <div class="mod-page-header">
+                    <div class="mod-page-header-left">
+                        <div class="mod-page-icon">
+                            <i class="pi pi-th-large"/>
+                        </div>
+                        <div>
+                            <h1>Módulos del Sistema</h1>
+                            <p>Gestiona los módulos disponibles para asignación de permisos</p>
+                        </div>
+                    </div>
+                    <p:commandButton value="Nuevo Módulo"
+                                     icon="pi pi-plus"
+                                     actionListener="#{moduleController.prepareNewModule}"
+                                     update=":dialogs:manage-module-content"
+                                     oncomplete="PF('manageModuleDialog').show()"
+                                     styleClass="ui-button-success"/>
+                </div>
+
+                <!-- ══ KPI ROW ══════════════════════════════════════════ -->
+                <div class="mod-kpi-row">
+                    <div class="mod-kpi">
+                        <div class="mod-kpi-icon blue"><i class="pi pi-th-large"/></div>
+                        <div>
+                            <!-- totalModules → modules.size() -->
+                            <div class="mod-kpi-value">#{moduleController.totalModules}</div>
+                            <div class="mod-kpi-label">Total de módulos</div>
+                        </div>
+                    </div>
+                    <div class="mod-kpi">
+                        <div class="mod-kpi-icon green"><i class="pi pi-check-circle"/></div>
+                        <div>
+                            <!-- activeCount → módulos con al menos 1 permiso -->
+                            <div class="mod-kpi-value">#{moduleController.activeCount}</div>
+                            <div class="mod-kpi-label">Con permisos asignados</div>
+                        </div>
+                    </div>
+                    <div class="mod-kpi">
+                        <div class="mod-kpi-icon amber"><i class="pi pi-key"/></div>
+                        <div>
+                            <!-- totalPermissions → suma de permissionCollection -->
+                            <div class="mod-kpi-value">#{moduleController.totalPermissions}</div>
+                            <div class="mod-kpi-label">Permisos en total</div>
+                        </div>
                     </div>
                 </div>
-                <p:commandButton value="Nuevo Módulo" 
-                                 icon="pi pi-plus" 
-                                 actionListener="#{moduleController.prepareNewModule}"
-                                 update=":dialogs:manage-module-content" 
-                                 oncomplete="PF('manageModuleDialog').show()"
-                                 styleClass="ui-button-success" />
-            </div>
 
-            <!-- ESTADÍSTICAS -->
-            <div class="module-card card mb-4">
-                <div class="flex align-items-center gap-3">
-                    <i class="pi pi-th-large text-primary" style="font-size: 2rem;"></i>
-                    <div>
-                        <div class="text-2xl font-bold">#{moduleController.modules.size()}</div>
-                        <div class="text-muted">Módulos registrados</div>
+                <!-- ══ TABLE CARD ═══════════════════════════════════════ -->
+                <div class="mod-card">
+
+                    <!-- Card header -->
+                    <div class="mod-card-header">
+                        <div class="mod-card-header-left">
+                            <div class="mod-card-header-icon"><i class="pi pi-list"/></div>
+                            <div>
+                                <h3>Listado de Módulos</h3>
+                                <span>#{moduleController.modules.size()} módulo(s) registrado(s)</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- TABLA DE MÓDULOS -->
-            <div class="card shadow-sm">
-                <p:dataTable id="dt-modules" 
-                             widgetVar="dtModules" 
-                             var="m" 
-                             value="#{moduleController.modules}"
-                             reflow="true" 
-                             rowKey="#{m.id}" 
-                             paginator="true" 
-                             rows="10" 
-                             paginatorPosition="bottom"
-                             emptyMessage="No hay módulos registrados"
-                             sortMode="multiple">
-
-                    <p:column headerText="ID" sortBy="#{m.id}" style="width: 80px; text-align: center;">
-                        <span class="stats-badge">#{m.id}</span>
-                    </p:column>
-
-                    <p:column headerText="Nombre" sortBy="#{m.name}">
-                        <div class="flex align-items-center gap-2">
-                            <i class="pi pi-folder" style="color: #0284c7;"></i>
-                            <span class="font-bold">#{m.name}</span>
+                    <!-- Search bar -->
+                    <div class="mod-search-bar">
+                        <div class="mod-search-wrapper">
+                            <i class="pi pi-search"/>
+                            <p:inputText id="globalFilter"
+                                         onkeyup="PF('dtModules').filter()"
+                                         placeholder="Buscar módulo..."
+                                         styleClass="global-filter"/>
                         </div>
-                    </p:column>
+                    </div>
 
-                    <p:column headerText="Acciones" exportable="false" style="width: 120px; text-align: center">
-                        <div class="flex-center gap-2">
-                            <p:commandButton icon="pi pi-pencil" 
-                                             title="Editar"
-                                             actionListener="#{moduleController.prepareEdit(m)}"
-                                             update=":dialogs:manage-module-content"
-                                             oncomplete="PF('manageModuleDialog').show()"
-                                             styleClass="ui-button-flat ui-button-success" 
-                                             process="@this"/>
+                    <!-- DataTable -->
+                    <div class="mod-table-wrap">
+                        <p:dataTable id="dt-modules"
+                                     widgetVar="dtModules"
+                                     var="m"
+                                     value="#{moduleController.modules}"
+                                     reflow="true"
+                                     rowKey="#{m.id}"
+                                     paginator="true"
+                                     rows="10"
+                                     paginatorPosition="bottom"
+                                     emptyMessage=" "
+                                     sortMode="multiple"
+                                     filteredValue="#{moduleController.filteredModules}">
 
-                            <p:commandButton icon="pi pi-trash" 
-                                             title="Eliminar"
-                                             actionListener="#{moduleController.delete(m)}"
-                                             update=":form:dt-modules :form:messages" 
-                                             styleClass="ui-button-flat ui-button-danger"
-                                             process="@this">
-                                <p:confirm header="Confirmar" 
-                                           message="¿Eliminar el módulo '#{m.name}'?" 
-                                           icon="pi pi-exclamation-triangle"/>
-                            </p:commandButton>
-                        </div>
-                    </p:column>
-                </p:dataTable>
-            </div>
+                            <!-- ID -->
+                            <p:column headerText="ID"
+                                      sortBy="#{m.id}"
+                                      style="width:70px; text-align:center;">
+                                <span class="mod-id-badge">#{m.id}</span>
+                            </p:column>
 
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
-                <p:commandButton value="Sí" type="button" styleClass="ui-button-danger" icon="pi pi-check"/>
-                <p:commandButton value="No" type="button" styleClass="ui-button-secondary" icon="pi pi-times"/>
+                            <!-- Nombre -->
+                            <p:column headerText="Módulo" sortBy="#{m.name}">
+                                <div class="mod-name-cell">
+                                    <div class="mod-name-icon">
+                                        <i class="pi pi-folder"/>
+                                    </div>
+                                    <span class="mod-name-text">#{m.name}</span>
+                                </div>
+                            </p:column>
+
+                            <!-- Acciones -->
+                            <p:column headerText="Acciones"
+                                      exportable="false"
+                                      style="width:100px; text-align:center;">
+                                <div class="mod-actions">
+                                    <p:commandButton 
+                                        icon="pi pi-pencil"
+                                        title="Editar módulo"
+                                        styleClass="ui-button-flat"
+                                        actionListener="#{moduleController.prepareEdit(m)}"
+                                        update=":dialogs:manage-module-content"
+                                        oncomplete="PF('manageModuleDialog').show()"
+                                        process="@this">
+                                    </p:commandButton>
+
+                                    <p:commandButton 
+                                        icon="pi pi-trash"
+                                        title="Eliminar módulo"
+                                        styleClass="ui-button-flat"
+                                        style="background: #fee2e2; color: #dc2626; border-radius: 6px; padding: 6px 10px;"
+                                        actionListener="#{moduleController.delete(m)}"
+                                        update=":form:dt-modules :form:messages"
+                                        process="@this">
+                                        <p:confirm header="Confirmar eliminación"
+                                                   message="¿Estás seguro de eliminar el módulo '#{m.name}'? Esta acción no se puede deshacer."
+                                                   icon="pi pi-exclamation-triangle"/>
+                                    </p:commandButton>
+                                </div>
+                            </p:column>
+
+                        </p:dataTable>
+
+                        <!-- Empty state -->
+                        <p:outputPanel rendered="#{empty moduleController.modules}">
+                            <div class="mod-empty">
+                                <i class="pi pi-th-large"/>
+                                <p>No hay módulos registrados aún</p>
+                                <p:commandButton value="Crear primer módulo"
+                                                 icon="pi pi-plus"
+                                                 actionListener="#{moduleController.prepareNewModule}"
+                                                 update=":dialogs:manage-module-content"
+                                                 oncomplete="PF('manageModuleDialog').show()"
+                                                 styleClass="ui-button-outlined"/>
+                            </div>
+                        </p:outputPanel>
+                    </div>
+
+                </div><!-- /.mod-card -->
+
+            </div><!-- /.mod-page -->
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="400">
+                <p:commandButton value="Sí, eliminar" 
+                                 type="button" 
+                                 styleClass="ui-confirmdialog-yes ui-button-danger" 
+                                 icon="pi pi-check"/>
+                <p:commandButton value="Cancelar" 
+                                 type="button" 
+                                 styleClass="ui-confirmdialog-no ui-button-secondary" 
+                                 icon="pi pi-times"/>
             </p:confirmDialog>
+
         </h:form>
 
-        <!-- DIÁLOGO DE GESTIÓN -->
+        <!-- ══ DIÁLOGO ═══════════════════════════════════════════════ -->
         <h:form id="dialogs">
-            <p:dialog header="#{moduleController.editMode ? 'Editar' : 'Nuevo'} Módulo" 
-                      widgetVar="manageModuleDialog" 
-                      modal="true" 
-                      responsive="true" 
-                      width="400" 
-                      resizable="false" 
-                      showEffect="fade">
+            <p:dialog header="#{moduleController.editMode ? 'Editar módulo' : 'Nuevo módulo'}"
+                      widgetVar="manageModuleDialog"
+                      modal="true"
+                      responsive="true"
+                      width="420"
+                      resizable="false"
+                      showEffect="fade"
+                      hideEffect="fade"
+                      styleClass="mod-dialog">
 
                 <p:outputPanel id="manage-module-content" class="ui-fluid">
                     <p:outputPanel rendered="#{not empty moduleController.newModule}">
 
-                        <div class="field">
-                            <p:outputLabel for="name">
-                                Nombre <span style="color: var(--danger);">*</span>
-                            </p:outputLabel>
-                            <p:inputText id="name" 
-                                         value="#{moduleController.newModule.name}" 
+                        <div class="mod-dialog-field">
+                            <label>Nombre del módulo <span style="color:var(--danger);">*</span></label>
+                            <p:inputText id="name"
+                                         value="#{moduleController.newModule.name}"
                                          required="true"
                                          requiredMessage="El nombre es obligatorio"
                                          maxlength="25"
-                                         placeholder="Ej: Usuarios, Reportes, Configuración" />
+                                         placeholder="Ej: Usuarios, Reportes, Configuración"/>
                         </div>
 
                     </p:outputPanel>
                 </p:outputPanel>
 
                 <f:facet name="footer">
-                    <div class="flex justify-content-end gap-2">
-                        <p:commandButton value="Cancelar" 
-                                         icon="pi pi-times" 
-                                         onclick="PF('manageModuleDialog').hide()" 
-                                         styleClass="ui-button-secondary" 
-                                         type="button" />
-
-                        <p:commandButton value="#{moduleController.editMode ? 'Actualizar' : 'Guardar'}" 
-                                         icon="pi pi-save" 
+                    <div style="display:flex; justify-content:flex-end; gap:8px;">
+                        <p:commandButton value="Cancelar"
+                                         icon="pi pi-times"
+                                         onclick="PF('manageModuleDialog').hide()"
+                                         styleClass="ui-button-secondary"
+                                         type="button"/>
+                        <p:commandButton value="#{moduleController.editMode ? 'Actualizar' : 'Guardar'}"
+                                         icon="pi pi-save"
                                          actionListener="#{moduleController.save}"
-                                         update="manage-module-content :form:dt-modules :form:messages" 
+                                         update="manage-module-content :form:dt-modules :form:messages"
                                          process="manage-module-content @this"
                                          oncomplete="if (!args.validationFailed) { PF('manageModuleDialog').hide(); }"
-                                         styleClass="ui-button-primary" />
+                                         styleClass="ui-button-primary"/>
                     </div>
                 </f:facet>
+
             </p:dialog>
         </h:form>
+
     </ui:define>
 </ui:composition>
