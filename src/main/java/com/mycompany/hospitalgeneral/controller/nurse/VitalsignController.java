@@ -1,8 +1,11 @@
 package com.mycompany.hospitalgeneral.controller.nurse;
 
+import com.mycompany.hospitalgeneral.model.Medic;
 import com.mycompany.hospitalgeneral.model.Medicalrecord;
 import com.mycompany.hospitalgeneral.model.Patient;
+import com.mycompany.hospitalgeneral.model.Tuser;
 import com.mycompany.hospitalgeneral.model.Vitalsign;
+import com.mycompany.hospitalgeneral.services.NotificationService;
 import com.mycompany.hospitalgeneral.services.VitalsignService;
 import com.mycompany.hospitalgeneral.session.ConsultationContext;
 import com.mycompany.hospitalgeneral.session.UserSession;
@@ -31,7 +34,11 @@ public class VitalsignController implements Serializable {
     @Inject
     private VitalsignService vitalsignService;
 
-    // === SESSION CONTEXT (REUTILIZADO) ===
+    // ✅ Nuevo: notificaciones
+    @Inject
+    private NotificationService notificationService;
+
+    // === SESSION CONTEXT ===
     @Inject
     private ConsultationContext consultationContext;
 
@@ -53,15 +60,11 @@ public class VitalsignController implements Serializable {
     public void init() {
         loadContextData();
         prepareNewVitalsign();
-
         if (selectedRecord != null) {
             loadVitalsigns();
         }
     }
 
-    /**
-     * Cargar datos desde sesión (ConsultationContext)
-     */
     private void loadContextData() {
         selectedRecord = consultationContext.getCurrentMedicalRecord();
         currentPatient = consultationContext.getCurrentPatient();
@@ -81,7 +84,6 @@ public class VitalsignController implements Serializable {
 
     public void setSelectedVitalsign(Vitalsign vitalsign) {
         this.selectedVitalsign = vitalsign;
-
         if (vitalsign != null) {
             this.newVitalsign = vitalsign;
             this.editMode = true;
@@ -99,11 +101,16 @@ public class VitalsignController implements Serializable {
     }
 
     /**
-     * Guardar o actualizar signos vitales
+     * Guarda o actualiza signos vitales. ✅ Al guardar un registro NUEVO,
+     * notifica al médico asignado que el paciente está listo para ser atendido.
      */
     public void saveVitalsign() {
+        // Capturamos si es nuevo ANTES de guardar
+        boolean isNew = (newVitalsign.getId() == null);
+
         try {
             validateVitalRanges();
+
             if (selectedRecord == null) {
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_WARN,
@@ -113,31 +120,35 @@ public class VitalsignController implements Serializable {
 
             newVitalsign.setMedicalrecordid(selectedRecord);
 
-            if (newVitalsign.getId() == null) {
+            if (isNew) {
                 vitalsignService.save(newVitalsign, getCurrentUserId());
             } else {
                 vitalsignService.update(newVitalsign, getCurrentUserId());
             }
 
-            // Recargar lista
             loadVitalsigns();
-
-            // Limpiar
             prepareNewVitalsign();
 
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO,
                             "Éxito",
-                            editMode ? "Signos vitales actualizados correctamente"
-                                    : "Signos vitales registrados correctamente"));
+                            isNew ? "Signos vitales registrados correctamente"
+                                    : "Signos vitales actualizados correctamente"));
+
+            // ✅ Notificar al médico solo al GUARDAR signos nuevos
+            // (no en actualizaciones — el médico ya fue notificado)
+            if (isNew) {
+                notifyMedic();
+            }
 
             PrimeFaces.current().ajax().update("vitalForm:vitalsignsTable", "vitalForm");
 
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            // Error de validación de rango
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_WARN,
                             "Valor fuera de rango", e.getMessage()));
-
+        } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR,
                             "Error", "No se pudo guardar: " + e.getMessage()));
@@ -145,8 +156,44 @@ public class VitalsignController implements Serializable {
     }
 
     /**
-     * Validacion de rangos
+     * Envía notificación al médico asignado al registro médico. Obtiene el
+     * médico desde el Medicalrecord → Medic → Tuser.
+     *
+     * Se ejecuta solo al registrar signos vitales nuevos.
      */
+    private void notifyMedic() {
+        try {
+            if (selectedRecord == null) {
+                return;
+            }
+
+            Medic medic = selectedRecord.getMedicid();
+            if (medic == null || medic.getUserid() == null) {
+                return;
+            }
+
+            Tuser medicUser = medic.getUserid();
+
+            // Nombre del paciente
+            String patientName = currentPatient != null
+                    ? currentPatient.getFirstname() + " " + currentPatient.getLastname()
+                    : "el paciente";
+
+            // Nombre de la enfermera que tomó los signos
+            String nurseName = userSession.getUser() != null
+                    ? userSession.getUser().getFullName()
+                    : "Enfermería";
+
+            notificationService.notifyMedic(medicUser, patientName, nurseName);
+
+        } catch (Exception e) {
+            // No interrumpir el flujo si falla la notificación
+            System.err.println("[VitalsignController] Error al notificar al médico: "
+                    + e.getMessage());
+        }
+    }
+
+    // ==================== VALIDACIÓN ====================
     private void validateVitalRanges() {
         Vitalsign v = newVitalsign;
 
@@ -183,9 +230,7 @@ public class VitalsignController implements Serializable {
         }
     }
 
-    /**
-     * Eliminación lógica
-     */
+    // ==================== ELIMINACIÓN ====================
     public void deleteVitalsign() {
         if (selectedVitalsign == null || selectedVitalsign.getId() == null) {
             FacesContext.getCurrentInstance().addMessage(null,
@@ -197,7 +242,6 @@ public class VitalsignController implements Serializable {
         try {
             selectedVitalsign.setDeleted(true);
             vitalsignService.update(selectedVitalsign, getCurrentUserId());
-
             vitalsigns.remove(selectedVitalsign);
             selectedVitalsign = null;
 
@@ -215,22 +259,14 @@ public class VitalsignController implements Serializable {
     }
 
     // ==================== LÓGICA ====================
-    /**
-     * Cálculo de IMC automático
-     */
     public void calculateIMC() {
         try {
             if (newVitalsign.getWeight() != null && newVitalsign.getTall() != null) {
-
                 double peso = Double.parseDouble(newVitalsign.getWeight().toString());
                 double talla = Double.parseDouble(newVitalsign.getTall().toString()) / 100.0;
-
                 if (talla > 0) {
                     double imc = peso / (talla * talla);
-
-                    BigDecimal imcRounded = new BigDecimal(imc)
-                            .setScale(2, RoundingMode.HALF_UP);
-
+                    BigDecimal imcRounded = new BigDecimal(imc).setScale(2, RoundingMode.HALF_UP);
                     newVitalsign.setMass(imcRounded.toString());
                 }
             }
@@ -239,11 +275,7 @@ public class VitalsignController implements Serializable {
         }
     }
 
-    // ==================== HELPERS ====================
-    private Integer getCurrentUserId() {
-        return userSession.getUser() != null ? userSession.getUser().getId() : null;
-    }
-
+    // ==================== TRIAJE ====================
     public enum TriagePriority {
         EMERGENCIA("Rojo - Emergencia", "vital-danger"),
         URGENCIA("Naranja - Urgencia", "vital-warning"),
@@ -267,7 +299,6 @@ public class VitalsignController implements Serializable {
         }
     }
 
-    // 2. Método de conversión segura (Varchar a Double)
     private double safeParse(String value) {
         if (value == null || value.trim().isEmpty()) {
             return 0.0;
@@ -279,7 +310,6 @@ public class VitalsignController implements Serializable {
         }
     }
 
-    // 3. Lógica de Triaje (Formato compatible 100% con Java 21 estable)
     public TriagePriority getCalculatedTriage() {
         if (newVitalsign == null) {
             return TriagePriority.ESTABLE;
@@ -290,7 +320,6 @@ public class VitalsignController implements Serializable {
         double pulse = safeParse(newVitalsign.getPulse());
         double sys = safeParse(newVitalsign.getSystolicpressure());
 
-        // Lógica de decisión clínica
         if (temp >= 39.5 || (oxygen > 0 && oxygen < 88) || sys >= 180) {
             return TriagePriority.EMERGENCIA;
         } else if (temp >= 38.5 || (oxygen > 0 && oxygen < 92) || sys >= 140) {
@@ -302,7 +331,6 @@ public class VitalsignController implements Serializable {
         }
     }
 
-    // 4. Tus métodos de colores para las celdas de la tabla (Corregidos)
     public String getTemperatureClass(String tempStr) {
         double temp = safeParse(tempStr);
         if (temp == 0.0) {
@@ -331,13 +359,18 @@ public class VitalsignController implements Serializable {
         return "vital-normal";
     }
 
-    // ==================== GETTERS ====================
+    // ==================== HELPERS ====================
+    private Integer getCurrentUserId() {
+        return userSession.getUser() != null ? userSession.getUser().getId() : null;
+    }
+
+    // ==================== GETTERS / SETTERS ====================
     public Vitalsign getNewVitalsign() {
         return newVitalsign;
     }
 
-    public void setNewVitalsign(Vitalsign newVitalsign) {
-        this.newVitalsign = newVitalsign;
+    public void setNewVitalsign(Vitalsign v) {
+        this.newVitalsign = v;
     }
 
     public Vitalsign getSelectedVitalsign() {

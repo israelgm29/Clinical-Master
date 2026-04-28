@@ -22,10 +22,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author jhonatan
- */
 @Named
 @ViewScoped
 public class MedicConsultationController implements Serializable {
@@ -35,20 +31,22 @@ public class MedicConsultationController implements Serializable {
     // === SERVICES ===
     @Inject
     private ConsultationService consultationService;
-
     @Inject
     private MedicalRecordService medicalRecordService;
-
     @Inject
     private ReportService reportService;
+
+    // ✅ Nuevo: notificaciones
+    @Inject
+    private NotificationService notificationService;
+    @Inject
+    private TuserService tuserService;
 
     // === SESSION CONTEXT ===
     @Inject
     private UserSession userSession;
-
     @Inject
     private ConsultationContext consultationContext;
-
     @Inject
     private ReportContext reportContext;
 
@@ -70,11 +68,11 @@ public class MedicConsultationController implements Serializable {
     private String reason;
     private String currentIllness;
 
-    // === CROS (Revisión por Sistemas) ===
+    // === CROS ===
     private Cros cros;
     private boolean crosExists = false;
 
-    // === RPE (Revisión Física por Regiones) ===
+    // === RPE ===
     private Rpe rpe;
     private boolean rpeExists = false;
 
@@ -106,12 +104,8 @@ public class MedicConsultationController implements Serializable {
         loadConsultationData();
     }
 
-    /**
-     * Carga el médico desde la sesión
-     */
     private void loadCurrentMedic() {
         currentMedic = userSession.getMedic();
-
         if (currentMedic != null) {
             medicId = currentMedic.getId();
         } else {
@@ -121,9 +115,6 @@ public class MedicConsultationController implements Serializable {
         }
     }
 
-    /**
-     * Carga todos los datos de la consulta desde la sesión
-     */
     public void loadConsultationData() {
         try {
             medicalRecord = consultationContext.getCurrentMedicalRecord();
@@ -137,12 +128,9 @@ public class MedicConsultationController implements Serializable {
             }
 
             recordId = medicalRecord.getId();
-
-            // Recargar desde BD para tener datos frescos
             medicalRecord = consultationService.loadMedicalRecord(recordId);
             patient = medicalRecord.getPatientid();
 
-            // Cargar datos
             loadAntecedents();
             loadVitalSigns();
             loadFormData();
@@ -181,7 +169,8 @@ public class MedicConsultationController implements Serializable {
     }
 
     private void loadCros() {
-        if (medicalRecord.getCrosCollection() != null && !medicalRecord.getCrosCollection().isEmpty()) {
+        if (medicalRecord.getCrosCollection() != null
+                && !medicalRecord.getCrosCollection().isEmpty()) {
             cros = medicalRecord.getCrosCollection().iterator().next();
             crosExists = true;
         } else {
@@ -191,7 +180,8 @@ public class MedicConsultationController implements Serializable {
     }
 
     private void loadRpe() {
-        if (medicalRecord.getRpeCollection() != null && !medicalRecord.getRpeCollection().isEmpty()) {
+        if (medicalRecord.getRpeCollection() != null
+                && !medicalRecord.getRpeCollection().isEmpty()) {
             rpe = medicalRecord.getRpeCollection().iterator().next();
             rpeExists = true;
         } else {
@@ -201,12 +191,10 @@ public class MedicConsultationController implements Serializable {
     }
 
     private void loadDiagnostics() {
-        // Query directa a BD - evita caché del EntityManager
         diagnostics = consultationService.findDiagnosticsByRecord(recordId);
     }
 
     private void loadExams() {
-        // Query directa a BD - evita caché del EntityManager
         requestedExams = consultationService.findExamsByRecord(recordId);
         if (requestedExams == null) {
             requestedExams = new ArrayList<>();
@@ -215,6 +203,17 @@ public class MedicConsultationController implements Serializable {
 
     private void loadPrescriptions() {
         prescriptions = consultationService.findPrescriptionsByRecord(recordId);
+    }
+
+    private void loadPatientHistory() {
+        if (patient != null) {
+            patientHistory = consultationService.findPatientHistory(patient.getId(), recordId);
+        }
+    }
+
+    private void loadAvailableOptions() {
+        availableDiseases = consultationService.findAllDiseases();
+        availableExams = consultationService.findAllExams();
     }
 
     // ==================== ACCIONES - PRESCRIPCIONES ====================
@@ -270,77 +269,11 @@ public class MedicConsultationController implements Serializable {
         newInstructions = null;
     }
 
-    private void loadPatientHistory() {
-        if (patient != null) {
-            patientHistory = consultationService.findPatientHistory(patient.getId(), recordId);
-        }
-    }
-
-    private void loadAvailableOptions() {
-        availableDiseases = consultationService.findAllDiseases();
-        availableExams = consultationService.findAllExams();
-    }
-
-    // ==================== ACCIONES - GUARDAR ====================
-    /**
-     * Guarda motivo y enfermedad actual
-     */
-    public void saveMedicalRecordInfo() {
-        try {
-            consultationService.updateMedicalRecordInfo(recordId, reason, currentIllness, medicId);
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO,
-                            "Éxito", "Información guardada correctamente"));
-        } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", "No se pudo guardar: " + e.getMessage()));
-        }
-    }
-
-    /**
-     * Guarda la Revisión por Sistemas (Cros)
-     */
-    public void saveCros() {
-        try {
-            cros = consultationService.saveCros(cros, recordId, medicId);
-            crosExists = true;
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO,
-                            "Éxito", "Revisión por sistemas guardada"));
-        } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", "No se pudo guardar: " + e.getMessage()));
-        }
-    }
-
-    /**
-     * Guarda la Revisión Física por Regiones (Rpe)
-     */
-    public void saveRpe() {
-        try {
-            rpe = consultationService.saveRpe(rpe, recordId, medicId);
-            rpeExists = true;
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO,
-                            "Éxito", "Revisión física guardada"));
-        } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", "No se pudo guardar: " + e.getMessage()));
-        }
-    }
-
-    // ==================== ACCIONES - DIAGNÓSTICOS ====================
-    /**
-     * Agrega un diagnóstico
-     */
+    // ==================== DIAGNÓSTICOS / EXÁMENES ====================
     public void addDiagnostic() {
         if (selectedDisease == null) {
             return;
         }
-
         consultationService.addDiagnostic(recordId, selectedDisease.getId(), medicId);
         loadDiagnostics();
         selectedDisease = null;
@@ -355,7 +288,6 @@ public class MedicConsultationController implements Serializable {
         if (selectedExam == null) {
             return;
         }
-
         consultationService.requestExam(recordId, selectedExam.getId(), medicId);
         loadExams();
         selectedExam = null;
@@ -366,6 +298,7 @@ public class MedicConsultationController implements Serializable {
         loadExams();
     }
 
+    // ==================== COMPLETAR CONSULTA ====================
     public String completeConsultation() {
         try {
             consultationService.completeConsultation(recordId, medicId);
@@ -373,18 +306,63 @@ public class MedicConsultationController implements Serializable {
             Medicalrecord completed = consultationService.loadMedicalRecord(recordId);
             ReportResult report = reportService.generateConsultationReport(completed);
 
-            consultationContext.clear();
+            // ✅ Notificar a enfermería que la consulta finalizó
+            try {
+                List<Tuser> nurses = tuserService.findAllNurses();
+                String medicName = currentMedic != null
+                        ? currentMedic.getFirstname() + " " + currentMedic.getLastname()
+                        : "El médico";
+                String patientName = patient != null
+                        ? patient.getFirstname() + " " + patient.getLastname()
+                        : "el paciente";
 
+                notificationService.notifyNursesConsultationStatus(
+                        nurses,
+                        medicName,
+                        patientName,
+                        "Consulta finalizada"
+                );
+            } catch (Exception e) {
+                // No interrumpir el flujo si falla la notificación
+                System.err.println("[MedicConsultation] Error al notificar enfermería: "
+                        + e.getMessage());
+            }
+
+            consultationContext.clear();
             reportContext.setCurrentReport(report);
 
             return "/views/medic/view-report.xhtml?faces-redirect=true";
 
         } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", "No se pudo completar la consulta: " + e.getMessage()));
             return null;
         }
     }
 
     public String cancelConsultation() {
+        // ✅ Notificar a enfermería que se canceló la consulta
+        try {
+            List<Tuser> nurses = tuserService.findAllNurses();
+            String medicName = currentMedic != null
+                    ? currentMedic.getFirstname() + " " + currentMedic.getLastname()
+                    : "El médico";
+            String patientName = patient != null
+                    ? patient.getFirstname() + " " + patient.getLastname()
+                    : "el paciente";
+
+            notificationService.notifyNursesConsultationStatus(
+                    nurses,
+                    medicName,
+                    patientName,
+                    "Consulta cancelada"
+            );
+        } catch (Exception e) {
+            System.err.println("[MedicConsultation] Error al notificar cancelación: "
+                    + e.getMessage());
+        }
+
         consultationContext.clear();
         return "/views/medic/dashboard.xhtml?faces-redirect=true";
     }
@@ -408,8 +386,10 @@ public class MedicConsultationController implements Serializable {
         if (patient == null) {
             return "??";
         }
-        String first = patient.getFirstname() != null ? patient.getFirstname().substring(0, 1).toUpperCase() : "";
-        String last = patient.getLastname() != null ? patient.getLastname().substring(0, 1).toUpperCase() : "";
+        String first = patient.getFirstname() != null
+                ? patient.getFirstname().substring(0, 1).toUpperCase() : "";
+        String last = patient.getLastname() != null
+                ? patient.getLastname().substring(0, 1).toUpperCase() : "";
         return first + last;
     }
 
@@ -417,11 +397,10 @@ public class MedicConsultationController implements Serializable {
         if (dateTime == null) {
             return "N/A";
         }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        return dateTime.format(formatter);
+        return dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 
-    // ==================== GETTERS ====================
+    // ==================== GETTERS / SETTERS ====================
     public Medicalrecord getMedicalRecord() {
         return medicalRecord;
     }
@@ -518,112 +497,111 @@ public class MedicConsultationController implements Serializable {
         return vitalSigns;
     }
 
-    public void setVitalSigns(List<Vitalsign> vitalSigns) {
-        this.vitalSigns = vitalSigns;
+    public void setVitalSigns(List<Vitalsign> v) {
+        this.vitalSigns = v;
     }
 
     public MedicalRecordService getMedicalRecordService() {
         return medicalRecordService;
     }
 
-    public void setMedicalRecordService(MedicalRecordService medicalRecordService) {
-        this.medicalRecordService = medicalRecordService;
+    public void setMedicalRecordService(MedicalRecordService s) {
+        this.medicalRecordService = s;
     }
 
     public Medic getCurrentMedic() {
         return currentMedic;
     }
 
-    public void setCurrentMedic(Medic currentMedic) {
-        this.currentMedic = currentMedic;
+    public void setCurrentMedic(Medic m) {
+        this.currentMedic = m;
     }
 
     public Integer getMedicId() {
         return medicId;
     }
 
-    public void setMedicId(Integer medicId) {
-        this.medicId = medicId;
+    public void setMedicId(Integer id) {
+        this.medicId = id;
     }
 
     public Integer getRecordId() {
         return recordId;
     }
 
-    public void setRecordId(Integer recordId) {
-        this.recordId = recordId;
+    public void setRecordId(Integer id) {
+        this.recordId = id;
     }
 
     public Antecedent getAntecedent() {
         return antecedent;
     }
 
-    public void setAntecedent(Antecedent antecedent) {
-        this.antecedent = antecedent;
+    public void setAntecedent(Antecedent a) {
+        this.antecedent = a;
     }
 
     public Vitalsign getLastVitalSign() {
         return lastVitalSign;
     }
 
-    public void setLastVitalSign(Vitalsign lastVitalSign) {
-        this.lastVitalSign = lastVitalSign;
+    public void setLastVitalSign(Vitalsign v) {
+        this.lastVitalSign = v;
     }
 
     public String getReason() {
         return reason;
     }
 
-    public void setReason(String reason) {
-        this.reason = reason;
+    public void setReason(String r) {
+        this.reason = r;
     }
 
     public String getCurrentIllness() {
         return currentIllness;
     }
 
-    public void setCurrentIllness(String currentIllness) {
-        this.currentIllness = currentIllness;
+    public void setCurrentIllness(String c) {
+        this.currentIllness = c;
     }
 
     public Cros getCros() {
         return cros;
     }
 
-    public void setCros(Cros cros) {
-        this.cros = cros;
+    public void setCros(Cros c) {
+        this.cros = c;
     }
 
     public boolean isCrosExists() {
         return crosExists;
     }
 
-    public void setCrosExists(boolean crosExists) {
-        this.crosExists = crosExists;
+    public void setCrosExists(boolean b) {
+        this.crosExists = b;
     }
 
     public Rpe getRpe() {
         return rpe;
     }
 
-    public void setRpe(Rpe rpe) {
-        this.rpe = rpe;
+    public void setRpe(Rpe r) {
+        this.rpe = r;
     }
 
     public boolean isRpeExists() {
         return rpeExists;
     }
 
-    public void setRpeExists(boolean rpeExists) {
-        this.rpeExists = rpeExists;
+    public void setRpeExists(boolean b) {
+        this.rpeExists = b;
     }
 
     public List<Medicalrecord> getPatientHistory() {
         return patientHistory;
     }
 
-    public void setPatientHistory(List<Medicalrecord> patientHistory) {
-        this.patientHistory = patientHistory;
+    public void setPatientHistory(List<Medicalrecord> h) {
+        this.patientHistory = h;
     }
-
 }

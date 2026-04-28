@@ -10,74 +10,57 @@ import java.util.logging.Logger;
 
 /**
  * Servicio de push usando PushContext nativo de Jakarta Faces 4.1.
- * Reemplaza al NotificationEndpoint.java anterior.
  *
- * Los canales deben coincidir con los declarados en f:websocket del navbar:
- *   - medicChannel  → channel="medic_#{userId}"
- *   - adminChannel  → channel="admin_#{userId}"
- *   - nurseChannel  → channel="nurse_#{userId}"
+ * Un solo canal "notifications" para todos los roles. El filtrado por
+ * usuario/broadcast lo maneja PushContext internamente:
+ *
+ * send(msg, userId) → solo al usuario con ese ID send(msg) → broadcast a todos
+ * los conectados al canal
+ *
+ * El f:websocket en el navbar usa scope="session" para evitar conflictos de
+ * registro entre páginas.
  */
 @Named
 @ApplicationScoped
 public class NotificationPushService {
 
-    private static final Logger LOG =
-            Logger.getLogger(NotificationPushService.class.getName());
+    private static final Logger LOG
+            = Logger.getLogger(NotificationPushService.class.getName());
 
+    // ✅ Un solo canal para todos los roles
     @Inject
-    @Push(channel = "medicChannel")
-    private PushContext medicChannel;
-
-    @Inject
-    @Push(channel = "adminChannel")
-    private PushContext adminChannel;
-
-    @Inject
-    @Push(channel = "nurseChannel")
-    private PushContext nurseChannel;
+    @Push(channel = "notifications")
+    private PushContext notificationsChannel;
 
     /**
-     * Envía al médico específico por su userId.
-     * El f:websocket del médico debe tener scope de usuario.
+     * Envía notificación a un médico específico por su userId. Solo recibe la
+     * notificación ese usuario.
      *
      * @param userId ID del Tuser del médico
-     * @param msg    Mensaje a enviar
-     */
-    public void notifyMedic(Integer userId, NotificationMessage msg) {
-        try {
-            medicChannel.send(msg.toJson(), String.valueOf(userId));
-            LOG.fine("Notificación enviada al médico userId=" + userId);
-        } catch (Exception e) {
-            LOG.warning("Error al notificar médico userId=" + userId + ": " + e.getMessage());
-        }
-    }
-
-    /**
-     * Broadcast a todos los admins conectados.
-     *
      * @param msg Mensaje a enviar
      */
-    public void notifyAdmins(NotificationMessage msg) {
-        try {
-            adminChannel.send(msg.toJson());
-            LOG.fine("Notificación broadcast a admins");
-        } catch (Exception e) {
-            LOG.warning("Error al notificar admins: " + e.getMessage());
-        }
+    public void notifyMedic(Integer userId, NotificationMessage msg) {
+        send(msg, String.valueOf(userId), "médico userId=" + userId);
     }
 
     /**
      * Notifica a un admin específico por userId.
      *
      * @param userId ID del Tuser del admin
-     * @param msg    Mensaje a enviar
+     * @param msg Mensaje a enviar
      */
     public void notifyAdmin(Integer userId, NotificationMessage msg) {
-        try {
-            adminChannel.send(msg.toJson(), String.valueOf(userId));
-        } catch (Exception e) {
-            LOG.warning("Error al notificar admin userId=" + userId + ": " + e.getMessage());
-        }
+        send(msg, String.valueOf(userId), "admin userId=" + userId);
+    }
+
+    /**
+     * Broadcast a todos los usuarios conectados al canal. Usado para notificar
+     * a todos los admins o toda enfermería.
+     *
+     * @param msg Mensaje a enviar
+     */
+    public void notifyAdmins(NotificationMessage msg) {
+        broadcastAll(msg, "todos los admins");
     }
 
     /**
@@ -86,11 +69,25 @@ public class NotificationPushService {
      * @param msg Mensaje a enviar
      */
     public void notifyNurses(NotificationMessage msg) {
+        broadcastAll(msg, "toda enfermería");
+    }
+
+    // ── Privados ─────────────────────────────────────────────────────
+    private void send(NotificationMessage msg, String userId, String target) {
         try {
-            nurseChannel.send(msg.toJson());
-            LOG.fine("Notificación broadcast a enfermería");
+            notificationsChannel.send(msg.toJson(), userId);
+            LOG.fine("Notificación enviada a " + target);
         } catch (Exception e) {
-            LOG.warning("Error al notificar enfermería: " + e.getMessage());
+            LOG.warning("Error al notificar a " + target + ": " + e.getMessage());
+        }
+    }
+
+    private void broadcastAll(NotificationMessage msg, String target) {
+        try {
+            notificationsChannel.send(msg.toJson());
+            LOG.fine("Broadcast enviado a " + target);
+        } catch (Exception e) {
+            LOG.warning("Error al hacer broadcast a " + target + ": " + e.getMessage());
         }
     }
 }

@@ -20,7 +20,6 @@ import jakarta.inject.Named;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Named
 @ViewScoped
@@ -194,11 +193,7 @@ public class UserManagementController implements Serializable {
 
             // ✅ Notificar a admins solo cuando se ACTIVA una cuenta
             if (nuevoEstado) {
-                // ✅ Notificar a todos los admins que se reseteó la contraseña
-                List<Tuser> admins = tuserService.findAll()
-                        .stream()
-                        .filter((Tuser adm) -> adm.getRoleid().getName().contains("Administración"))
-                        .collect(Collectors.toList());
+                List<Tuser> admins = tuserService.findAllByRole("Administrador");
                 notificationService.notifyAdminsAccountActivated(
                         admins,
                         user.getFullName()
@@ -247,11 +242,7 @@ public class UserManagementController implements Serializable {
             tuserService.resetPasswordAndNotify(user);
 
             // ✅ Notificar a todos los admins que se reseteó la contraseña
-            List<Tuser> admins = tuserService.findAll()
-                    .stream()
-                    .filter((Tuser adm) -> adm.getRoleid().getName().contains("Administración"))
-                    .collect(Collectors.toList());
-
+            List<Tuser> admins = tuserService.findAllByRole("Administrador");
             notificationService.notifyAdminsPasswordChanged(
                     admins,
                     user.getFullName()

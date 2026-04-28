@@ -11,7 +11,7 @@
         <cc:attribute name="user"
                       type="com.mycompany.hospitalgeneral.services.interfaces.DisplayUser"
                       required="true"
-                      shortDescription="Objeto de usuario que implementa DisplayUser"/>
+                      shortDescription="Objeto que implementa DisplayUser"/>
         <cc:attribute name="showNotifications"
                       type="java.lang.Boolean"
                       default="true"
@@ -48,7 +48,6 @@
                 <!-- ══ NOTIFICACIONES ════════════════════════════════ -->
                 <ui:fragment rendered="#{cc.attrs.showNotifications}">
 
-                    <!-- Form para Ajax de notificaciones -->
                     <h:form id="notifForm" prependId="false">
 
                         <!-- RemoteCommand: recarga el panel al recibir push -->
@@ -63,17 +62,18 @@
                                 <!-- Botón con badge dinámico -->
                                 <button type="button"
                                         class="nav-btn"
+                                        style="position:relative;"
                                         onclick="toggleNotifications(event)">
                                     <span class="material-symbols-outlined">notifications</span>
                                     <ui:fragment rendered="#{notificationController.hasUnread}">
                                         <span class="notif-badge">
-                                            #{notificationController.unreadCount > 9
+                                            #{notificationController.unreadCount gt 9
                                               ? '9+' : notificationController.unreadCount}
                                         </span>
                                     </ui:fragment>
                                 </button>
 
-                                <!-- Dropdown dinámico -->
+                                <!-- Dropdown -->
                                 <div class="dropdown-menu notifications-menu" id="notificationsMenu">
 
                                     <!-- Header -->
@@ -94,11 +94,10 @@
                                                        rendered="#{notificationController.hasUnread}"/>
                                     </div>
 
-                                    <!-- Lista de notificaciones -->
+                                    <!-- Lista -->
                                     <div class="notif-list">
                                         <ui:fragment rendered="#{not empty notificationController.notifications}">
-                                            <ui:repeat value="#{notificationController.notifications}"
-                                                       var="n" varStatus="vs">
+                                            <ui:repeat value="#{notificationController.notifications}" var="n">
                                                 <div class="notification-item #{n.isread ? '' : 'unread'}">
                                                     <span class="material-symbols-outlined notif-icon">
                                                         #{n.type eq 'PATIENT_ASSIGNED'      ? 'person_add'
@@ -142,21 +141,19 @@
 
                     </h:form>
 
-                    <!-- ══ f:websocket — canal por rol y userId ════════
-                         El canal se determina automáticamente:
-                         - Médico    → medicChannel
-                         - Admin     → adminChannel
-                         - Enfermería → nurseChannel
-                         connected="#{cc.attrs.showNotifications}" asegura
-                         que solo se conecta si el navbar lo habilita.     -->
-                    <f:websocket channel="#{userSession.user.roleid.name eq 'Médico'
-                                            ? 'medicChannel'
-                                            : userSession.user.roleid.name eq 'Administrador'
-                                            ? 'adminChannel'
-                                            : 'nurseChannel'}"
-                                 user="#{userSession.user.id}"
+                    <!--
+                        ✅ UN SOLO canal "notifications" con scope="session"
+                        Evita el error:
+                        "channel X is already registered on a different scope"
+
+                        - scope="session"  → registrado una vez por sesión del usuario
+                        - connected="..."  → solo conecta si showNotifications=true
+                        - El filtrado por usuario lo hace PushContext.send(msg, userId)
+                          en NotificationPushService — no hace falta distinguir por rol aquí
+                    -->
+                    <f:websocket channel="notifications"
+                                 scope="session"
                                  onmessage="onNotificationReceived"
-                                 onclose="onNotificationClose"
                                  connected="#{cc.attrs.showNotifications}"/>
 
                 </ui:fragment>
@@ -211,7 +208,7 @@
             </div>
         </header>
 
-        <!-- ══ ESTILOS DEL BADGE Y DROPDOWN ═════════════════════════ -->
+        <!-- ══ ESTILOS ═══════════════════════════════════════════════ -->
         <style>
             .notif-badge {
                 position: absolute;
@@ -240,14 +237,12 @@
                     transform: scale(1);
                 }
             }
-
             .notif-count-label {
                 font-size: .72rem;
                 font-weight: 700;
                 color: #dc2626;
                 margin-left: 6px;
             }
-
             .notif-mark-all {
                 font-size: .75rem;
                 color: var(--primary);
@@ -257,7 +252,6 @@
                 border: none;
                 text-decoration: underline;
             }
-
             .notif-list {
                 max-height: 300px;
                 overflow-y: auto;
@@ -269,7 +263,6 @@
                 background: var(--border-light);
                 border-radius: 2px;
             }
-
             .notification-item {
                 display: flex;
                 align-items: flex-start;
@@ -287,7 +280,6 @@
             .notification-item.unread {
                 background: rgba(11,60,93,.05);
             }
-
             .notif-icon {
                 font-size: 18px;
                 color: var(--primary);
@@ -326,7 +318,6 @@
                 flex-shrink: 0;
                 margin-top: 6px;
             }
-
             .notif-empty {
                 display: flex;
                 flex-direction: column;
@@ -359,7 +350,9 @@
             function toggleUserMenu(e) {
                 e.stopPropagation();
                 document.getElementById('userMenu').classList.toggle('show');
-                document.getElementById('notificationsMenu').classList.remove('show');
+                var nm = document.getElementById('notificationsMenu');
+                if (nm)
+                    nm.classList.remove('show');
             }
 
             function toggleNotifications(e) {
@@ -381,27 +374,22 @@
 
             /**
              * Llamado por f:websocket cuando llega una notificación.
-             * 1. Recarga el panel via Ajax (refreshNotifPanel = p:remoteCommand)
+             * 1. Recarga el panel via Ajax (p:remoteCommand)
              * 2. Muestra un toast flotante
              */
             function onNotificationReceived(msg) {
                 try {
                     var data = typeof msg === 'string' ? JSON.parse(msg) : msg;
-                    refreshNotifPanel(); // p:remoteCommand
+                    refreshNotifPanel();
                     showNotifToast(data);
                 } catch (e) {
-                    console.warn('Error al procesar notificación WebSocket:', e);
-                }
-            }
-
-            function onNotificationClose(code) {
-                if (code !== 1000) {
-                    console.warn('WebSocket de notificaciones cerrado. Código:', code);
+                    console.warn('[Notificaciones] Error al procesar mensaje:', e);
                 }
             }
 
             /**
              * Toast flotante en esquina superior derecha.
+             * Se auto-cierra a los 5 segundos.
              */
             function showNotifToast(data) {
                 var toast = document.createElement('div');
@@ -417,16 +405,18 @@
 
                 toast.innerHTML =
                         '<span class="material-symbols-outlined" ' +
-                        'style="color:#0b3c5d;font-size:20px;margin-top:1px;flex-shrink:0;">notifications</span>' +
-                        '<div>' +
+                        'style="color:#0b3c5d;font-size:20px;margin-top:1px;flex-shrink:0;">' +
+                        'notifications</span>' +
+                        '<div style="flex:1;">' +
                         '<div style="font-weight:700;font-size:.83rem;color:#0f172a;margin-bottom:3px;">'
                         + (data.title || 'Nueva notificación') + '</div>' +
                         '<div style="font-size:.77rem;color:#64748b;line-height:1.4;">'
                         + (data.message || '') + '</div>' +
                         '</div>' +
                         '<button onclick="this.parentElement.remove()" ' +
-                        'style="background:none;border:none;cursor:pointer;color:#94a3b8;' +
-                        'font-size:16px;line-height:1;padding:0;margin-left:4px;">×</button>';
+                        'style="background:none;border:none;cursor:pointer;' +
+                        'color:#94a3b8;font-size:18px;line-height:1;' +
+                        'padding:0;margin-left:4px;flex-shrink:0;">×</button>';
 
                 document.body.appendChild(toast);
 
@@ -440,11 +430,13 @@
                 }, 5000);
             }
 
-            /* Keyframes del toast */
+            /* Keyframes del toast — se inserta una sola vez */
             if (!document.getElementById('notif-toast-css')) {
                 var s = document.createElement('style');
                 s.id = 'notif-toast-css';
-                s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}';
+                s.textContent = '@keyframes toastIn{' +
+                        'from{opacity:0;transform:translateX(16px)}' +
+                        'to{opacity:1;transform:translateX(0)}}';
                 document.head.appendChild(s);
             }
 

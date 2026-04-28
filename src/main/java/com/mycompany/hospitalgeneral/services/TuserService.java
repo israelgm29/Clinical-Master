@@ -12,11 +12,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Servicio para gestionar Tuser (usuarios del sistema).
- *
- * @author jhonatan
- */
 @Stateless
 public class TuserService {
 
@@ -27,6 +22,7 @@ public class TuserService {
     private EntityManager em;
 
     // ==================== BÚSQUEDAS ====================
+
     public Tuser findByEmail(String email) {
         try {
             return em.createNamedQuery("Tuser.findByEmail", Tuser.class)
@@ -41,17 +37,11 @@ public class TuserService {
         return em.find(Tuser.class, id);
     }
 
-    /**
-     * Lista todos los usuarios activos (no eliminados).
-     */
     public List<Tuser> findAll() {
         return em.createNamedQuery("Tuser.findAll", Tuser.class)
                 .getResultList();
     }
 
-    /**
-     * Búsqueda flexible por nombre, apellido o email.
-     */
     public List<Tuser> searchFlexible(String query) {
         String like = "%" + query.toLowerCase() + "%";
         return em.createQuery(
@@ -65,7 +55,52 @@ public class TuserService {
                 .getResultList();
     }
 
+    /**
+     * ✅ Busca todos los usuarios activos de un rol específico.
+     * Usado por NotificationService para broadcast a admins/enfermería.
+     *
+     * @param roleName Nombre exacto del rol: "Administrador", "Enfermería", etc.
+     */
+    public List<Tuser> findAllByRole(String roleName) {
+        return em.createQuery(
+                "SELECT t FROM Tuser t "
+                + "WHERE t.roleid.name = :roleName "
+                + "AND t.isactive = true "
+                + "AND (t.deleted = false OR t.deleted IS NULL)",
+                Tuser.class)
+                .setParameter("roleName", roleName)
+                .getResultList();
+    }
+
+    /** ✅ Atajo para admins activos */
+    public List<Tuser> findAllAdmins() {
+        return findAllByRole("Administrador");
+    }
+
+    /** ✅ Atajo para enfermeros activos */
+    public List<Tuser> findAllNurses() {
+        return findAllByRole("Enfermería");
+    }
+
+    /**
+     * ✅ Busca un usuario por su token de verificación.
+     * Usado por ActivateAccountServlet para obtener el nombre antes de verificar.
+     */
+    public Tuser findByVerificationToken(String token) {
+        if (token == null || token.isBlank()) return null;
+        try {
+            return em.createQuery(
+                    "SELECT t FROM Tuser t WHERE t.verificationtoken = :token",
+                    Tuser.class)
+                    .setParameter("token", token)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     // ==================== CONTADORES ====================
+
     public int countPendingRegistrations() {
         return em.createQuery(
                 "SELECT COUNT(t) FROM Tuser t "
@@ -88,10 +123,7 @@ public class TuserService {
     }
 
     // ==================== CRUD ====================
-    /**
-     * Crea un usuario nuevo. Hashea la contraseña con BCrypt antes de
-     * persistir. El usuario queda inactivo hasta confirmar email.
-     */
+
     @Transactional
     public void create(Tuser user, Integer createdBy) {
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
@@ -109,9 +141,6 @@ public class TuserService {
         return em.merge(user);
     }
 
-    /**
-     * Activa o desactiva la cuenta.
-     */
     @Transactional
     public void setActive(Integer userId, boolean active, Integer editedBy) {
         Tuser user = findById(userId);
@@ -123,9 +152,6 @@ public class TuserService {
         }
     }
 
-    /**
-     * Soft delete: marca deleted=true, no borra de la BD.
-     */
     @Transactional
     public void softDelete(Integer userId, Integer deletedBy) {
         Tuser user = findById(userId);
@@ -138,18 +164,14 @@ public class TuserService {
     }
 
     // ==================== LOGIN ====================
-    /**
-     * Verifica si la contraseña en texto plano coincide con el hash almacenado.
-     * Úsalo en tu LoginController en lugar de comparar strings directamente.
-     */
+
     public boolean checkPassword(String plainPassword, String hashedPassword) {
-        if (plainPassword == null || hashedPassword == null) {
-            return false;
-        }
+        if (plainPassword == null || hashedPassword == null) return false;
         return BCrypt.checkpw(plainPassword, hashedPassword);
     }
 
     // ==================== APROBACIONES ====================
+
     public List<Tuser> findPendingRegistrations() {
         return em.createQuery(
                 "SELECT t FROM Tuser t "
@@ -180,33 +202,7 @@ public class TuserService {
     }
 
     // ==================== EMAIL ====================
-    /**
-     * Genera un token de verificación y lo persiste.
-     *
-     * TODO: conecta tu EmailService aquí:
-     * emailService.sendVerification(user.getEmail(), token, verificationUrl);
-     * @param user
-     */
-//    @Transactional
-//    public void sendVerificationEmail(Tuser user) {
-//
-//        String token = UUID.randomUUID().toString();
-//        user.setVerificationtoken(token);
-//        em.merge(user);
-//
-//        String link = "http://localhost:8080/tuapp/activar?token=" + token;
-//
-//        String html = "<h2>Activación de cuenta</h2>"
-//                + "<p>Hola " + user.getFullName() + "</p>"
-//                + "<p>Haz clic en el siguiente enlace:</p>"
-//                + "<a href='" + link + "'>Activar cuenta</a>";
-//
-//        emailService.enviarCorreo(
-//                user.getEmail(),
-//                "Activación de cuenta",
-//                html
-//        );
-//    }
+
     @Transactional
     public void sendVerificationEmail(Tuser user) {
         String token = UUID.randomUUID().toString();
@@ -221,41 +217,20 @@ public class TuserService {
         );
     }
 
-    /**
-     * Genera una contraseña temporal, la hashea con BCrypt y la persiste. Envía
-     * el email con la clave temporal al usuario.
-     *
-     * TODO: conecta tu EmailService aquí:
-     * emailService.sendPasswordReset(user.getEmail(), tempPassword);
-     * @param user
-     * @return 
-     */
     @Transactional
     public String resetPasswordAndNotify(Tuser user) {
-        // Contraseña temporal legible: HG- + 8 chars en mayúsculas
         String tempPassword = "HG-" + UUID.randomUUID().toString()
                 .substring(0, 8).toUpperCase();
-
-        // Hashear con BCrypt antes de persistir
         String hashed = BCrypt.hashpw(tempPassword, BCrypt.gensalt());
         user.setPassword(hashed);
         user.setPassresettoken(UUID.randomUUID().toString());
         user.setEditedat(LocalDateTime.now());
         em.merge(user);
-
-        // TODO: reemplaza con tu EmailService real
         System.out.println("[EMAIL] Reset password → " + user.getEmail()
                 + " | temp: " + tempPassword);
-
         return tempPassword;
     }
 
-    /**
-     * Verifica el token de email y activa la cuenta. Llamar desde el endpoint
-     * que el usuario visita al hacer clic en el link del correo.
-     * @param token
-     * @return 
-     */
     @Transactional
     public boolean verifyEmail(String token) {
         try {
@@ -265,7 +240,6 @@ public class TuserService {
                     .setParameter("token", token)
                     .getSingleResult();
 
-            // 🔴 VALIDACIÓN CLAVE
             if (user.getVerificationTokenExpiration() == null
                     || user.getVerificationTokenExpiration().isBefore(LocalDateTime.now())) {
                 return false;
@@ -275,7 +249,6 @@ public class TuserService {
             user.setIsactive(true);
             user.setVerificationtoken(null);
             user.setVerificationTokenExpiration(null);
-
             em.merge(user);
             return true;
 

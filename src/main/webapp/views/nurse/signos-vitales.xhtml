@@ -150,7 +150,7 @@
                         <p:commandButton value="#{vitalsignController.editMode ? 'Actualizar' : 'Guardar Signos Vitales'}"
                                          icon="pi pi-save"
                                          action="#{vitalsignController.saveVitalsign}"
-                                         update="vitalForm :messages vitalsignsPanel"
+                                         update=":globalMessages :vitalsignsPanel"
                                          styleClass="ui-button-success"/>
                     </div>
                 </div>
@@ -200,7 +200,7 @@
                                                  title="Editar"/>
                                 <p:commandButton icon="pi pi-trash"
                                                  action="#{vitalsignController.deleteVitalsign}"
-                                                 update="vitalsignsPanel :messages"
+                                                 update="vitalsignsPanel :globalMessages"
                                                  styleClass="ui-button-danger ui-button-rounded"
                                                  title="Eliminar"
                                                  style="margin-left:4px;">
